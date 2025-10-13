@@ -122,23 +122,6 @@ function LienHe() {
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-400 outline-none"
                 required
               ></textarea>
-               { /* để sau khi lên hosting chỉnh lại */ }
-              <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  name="maXacNhan"
-                  placeholder="Mã xác nhận"
-                  value={formData.maXacNhan}
-                  onChange={handleChange}
-                  className="flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-400 outline-none"
-                />
-                <img
-                  src="/captcha.png"
-                  alt="Captcha"
-                  className="h-10 rounded-md border"
-                />
-              </div>
-
               <button
                 type="submit"
                 className="w-full py-3 bg-gradient-to-t from-purple-800 via-purple-500 to-purple-400 text-white font-semibold rounded-lg hover:opacity-90 transition-all"

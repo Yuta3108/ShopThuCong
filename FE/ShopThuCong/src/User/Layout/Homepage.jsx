@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
+import Banner from "./banner";
 const categories = [
   { name: "Dụng Cụ Đan Móc", link: "/san-pham/dung-cu-dan-moc", image: "https://picsum.photos/200/200?10" },
   { name: "Phụ Kiện Làm Túi Xách", link: "/san-pham/phu-kien-tui-xach", image: "https://picsum.photos/200/200?13" },
   { name: "Phụ Liệu Trang Trí", link: "/san-pham/phu-lieu-trang-tri", image: "https://picsum.photos/200/200?14" },
   { name: "Phụ Liệu Làm Thú Bông", link: "/san-pham/phu-lieu-thu-bong", image: "https://picsum.photos/200/200?15" },
-   { name: "Combo Tiết Kiệm",  link: "/san-pham/combo",image: "https://picsum.photos/200/200?18" },
+  { name: "Combo Tiết Kiệm", link: "/san-pham/combo", image: "https://picsum.photos/200/200?18" },
 ];
 
 const products = [
@@ -32,7 +32,7 @@ export default function HomePage() {
   const renderProductCard = (p) => (
     <div
       key={p.id}
-      className="group bg-white text-gray-900 rounded-md overflow-hidden transition-all hover:shadow-xl border border-gray-200"
+      className="group bg-white text-gray-900 rounded-md overflow-hidden border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
     >
       <div className="overflow-hidden">
         <img
@@ -74,29 +74,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900">
       {/* BANNER */}
-      <div
-        className="relative w-full h-96 md:h-[500px] bg-cover bg-center overflow-hidden group"
-        style={{ backgroundImage: `url('https://picsum.photos/1200/500?blur')` }}
-      >
-        <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-center text-center">
-          <h1 className="text-white text-4xl md:text-6xl font-light mb-4 drop-shadow-md">
-            Handmade & Crochet
-          </h1>
-          <p className="text-gray-200 text-lg md:text-2xl max-w-xl">
-            Sứ mệnh của chúng tôi là mang đến nét đẹp thủ công đến từng ngôi nhà
-          </p>
-        </div>
-
-        {/* Hiệu ứng zoom nhẹ khi hover */}
-        <style>
-          {`
-            .group:hover {
-              transform: scale(1.03);
-              transition: transform 0.6s ease;
-            }
-          `}
-        </style>
-      </div>
+      <Banner />
 
       <main className="flex-grow container mx-auto px-6 py-12">
         {/* DANH MỤC NGẮN */}
@@ -106,7 +84,7 @@ export default function HomePage() {
               <Link
                 to={cat.link}
                 key={cat.name}
-                className="flex flex-col items-center text-center hover:scale-105 transition"
+                className="flex flex-col items-center text-center transition-transform duration-300 hover:scale-105"
               >
                 <div className="w-20 h-20 md:w-24 md:h-24 mb-2">
                   <img
@@ -129,14 +107,17 @@ export default function HomePage() {
 
           <div className="flex flex-col md:flex-row gap-8">
             {/* Cột banner trái */}
-            <div className="md:w-1/4 relative overflow-hidden rounded-md group">
+            <div className="md:w-1/4 relative overflow-hidden rounded-md transform transition-transform duration-500 hover:scale-[1.05]">
               <img
                 src="https://picsum.photos/400/600?grayscale"
                 alt="New Arrivals"
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col justify-center items-center text-center">
-                <Link to ="/sanpham" className="bg-[#d81b60] hover:bg-[#ff3366] px-5 py-2 rounded-full text-white font-medium transition" >
+                <Link
+                  to="/sanpham"
+                  className="bg-[#d81b60] hover:bg-[#ff3366] px-5 py-2 rounded-full text-white font-medium transition"
+                >
                   SHOP NOW
                 </Link>
               </div>
