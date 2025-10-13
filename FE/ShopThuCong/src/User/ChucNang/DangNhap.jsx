@@ -11,7 +11,7 @@ function DangNhap() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  {/* const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -40,7 +40,7 @@ function DangNhap() {
       setError("Không thể kết nối đến máy chủ.");
     }
   };
-
+*/}
   return (
     <div className="bg-fixed bg-cover min-h-screen flex flex-col">
       <Header />
