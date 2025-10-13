@@ -13,7 +13,7 @@ function DangKy() {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-{/*
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -49,7 +49,7 @@ function DangKy() {
       setError("Lỗi kết nối đến máy chủ.");
     }
   };
-*/}
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-100 via-white to-purple-100">
       {/* Header */}
