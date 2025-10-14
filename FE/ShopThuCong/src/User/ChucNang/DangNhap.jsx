@@ -14,9 +14,8 @@ function DangNhap() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     try {
-      const response = await fetch(`/api/khachhang/dangnhap`, {
+      const response = await fetch(`http://localhost:5000/api/khachhang/dangnhap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, matKhau: password }),
@@ -24,6 +23,7 @@ function DangNhap() {
 
       if (!response.ok) {
         setError("Sai tài khoản hoặc mật khẩu.");
+        setPassword("");
         return;
       }
 
@@ -31,7 +31,12 @@ function DangNhap() {
       if (data && data.email) {
         localStorage.setItem("user", JSON.stringify(data));
         localStorage.setItem("email", data.email);
-        navigate("/home");
+        localStorage.setItem("token", data.token);
+        if(data.role === "admin") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        } 
       } else {
         setError("Đăng nhập thất bại. Vui lòng thử lại.");
       }
