@@ -6,13 +6,14 @@ const categories = [
   { name: "Phụ Kiện Làm Túi Xách", link: "/san-pham/phu-kien-tui-xach", image: "https://picsum.photos/200/200?13" },
   { name: "Phụ Liệu Trang Trí", link: "/san-pham/phu-lieu-trang-tri", image: "https://picsum.photos/200/200?14" },
   { name: "Phụ Liệu Làm Thú Bông", link: "/san-pham/phu-lieu-thu-bong", image: "https://picsum.photos/200/200?15" },
-  { name: "Combo Tiết Kiệm", link: "/san-pham/combo", image: "https://picsum.photos/200/200?18" },
+  { name: "Combo Quà Tặng", link: "/san-pham/combo", image: "https://picsum.photos/200/200?30" },
+  { name: "Sản Phẩm Tiết Kiệm", link: "/san-pham/TietKiem", image: "https://picsum.photos/200/200?18" },
 ];
 
 const products = [
   { id: 1, name: "Giỏ hoa len thủ công", price: "250.000đ", image: "https://picsum.photos/400/400?1", category: "Dụng Cụ Đan Móc" },
   { id: 2, name: "Vòng tay gỗ handmade", price: "120.000đ", image: "https://picsum.photos/400/400?2", category: "Dụng Cụ Đan Móc" },
-  { id: 3, name: "Tranh thêu tay nghệ thuật", price: "350.000đ", image: "https://picsum.photos/400/400?3", category: "Dụng Cụ Đan Móc" },
+  { id: 3, name: "Tranh thêu nghệ thuật", price: "350.000đ", image: "https://picsum.photos/400/400?3", category: "Dụng Cụ Đan Móc" },
   { id: 4, name: "Bình gốm sứ mini", price: "180.000đ", image: "https://picsum.photos/400/400?4", category: "Phụ Kiện Làm Túi Xách" },
   { id: 5, name: "Móc khóa len nhỏ xinh", price: "90.000đ", image: "https://picsum.photos/400/400?5", category: "Phụ Liệu Trang Trí" },
   { id: 6, name: "Mắt thú nhựa an toàn", price: "50.000đ", image: "https://picsum.photos/400/400?6", category: "Phụ Liệu Làm Thú Bông" },
