@@ -15,7 +15,7 @@ function DangNhap() {
     e.preventDefault();
     setError("");
     try {
-      const response = await fetch(`https://shop-thu-cong.vercel.app/api/khachhang/dangnhap`, {
+      const response = await fetch(`https://shopthucong.vercel.app/api/khachhang/dangnhap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, matKhau: password }),

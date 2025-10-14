@@ -10,8 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api", userRoutes);
-
-app.get("/check", (req, res) => {
+app.get("/api/check", (req, res) => {
   res.send("✅ ShopThuCong API đang chạy trên Vercel!");
 });
 

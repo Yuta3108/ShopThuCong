@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api", userRoutes);
-app.get("/", (req, res) => {
+app.get("/check", (req, res) => {
   res.send("ShopThuCong User API is running...");
 });
 console.log("JWT_SECRET:", process.env.JWT_SECRET);

@@ -31,7 +31,7 @@ function DangKy() {
     const data = { tenKhachHang, email, matKhau, sdt, diaChi };
 
     try {
-      const response = await fetch(`https://shop-thu-cong.vercel.app/api/khachhang/dangky`, {
+      const response = await fetch(`https://shopthucong.vercel.app/api/khachhang/dangky`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
