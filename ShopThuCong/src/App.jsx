@@ -7,7 +7,7 @@ import LienHe from './User/Layout/Lienhe';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<TrangChu />} />
+      <Route path="/home" element={<TrangChu />} />
       <Route path="/auth" element={<DangNhap/>} />
       <Route path="/register" element={<DangKy />} />
       <Route path="/Lien-he" element={<LienHe />} />
