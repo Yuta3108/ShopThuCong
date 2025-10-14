@@ -82,14 +82,14 @@ const Footer = () => {
             <p className="font-semibold text-gray-800 mb-2">Follow Us:</p>
             <div className="flex justify-center md:justify-start gap-4">
               <a
-                href="/home"
+                href="/"
                 aria-label="Facebook"
                 className="hover:scale-110 transition-transform"
               >
                 <img src="/fb_icon.png" alt="Facebook" className="w-7 h-7" />
               </a>
               <a
-                href="/home"
+                href="/"
                 aria-label="Instagram"
                 className="hover:scale-110 transition-transform"
               >

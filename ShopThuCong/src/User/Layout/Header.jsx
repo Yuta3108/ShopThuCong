@@ -65,7 +65,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto flex justify-between items-center px-4 py-3 relative">
         {/* Logo */}
         <Link
-          to="/home"
+          to="/"
           className="text-xl md:text-2xl font-extrabold tracking-wider text-teal-600 whitespace-nowrap"
         >
           Then Fong Store
@@ -73,7 +73,7 @@ export default function Header() {
 
         {/* Desktop menu */}
         <nav className="hidden md:flex space-x-8 items-center text-base font-medium text-gray-700">
-          <Link to="/home" className="hover:text-teal-600 transition">
+          <Link to="/" className="hover:text-teal-600 transition">
             Trang chủ
           </Link>
 
@@ -172,7 +172,7 @@ export default function Header() {
         {/* Mobile menu */}
         {mobileMenu && (
           <div className="absolute top-full left-0 w-full bg-white shadow-md border-t border-gray-200 flex flex-col p-4 space-y-2 md:hidden animate-fadeSlide">
-            <Link to="/home" className="hover:text-teal-600 transition py-2">
+            <Link to="/" className="hover:text-teal-600 transition py-2">
               Trang chủ
             </Link>
 

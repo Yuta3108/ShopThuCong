@@ -35,7 +35,7 @@ function DangNhap() {
         if(data.role === "admin") {
           navigate("/admin");
         } else {
-          navigate("/home");
+          navigate("/");
         } 
       } else {
         setError("Đăng nhập thất bại. Vui lòng thử lại.");
