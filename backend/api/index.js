@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api", userRoutes);
 
-app.get("/", (req, res) => {
+app.get("/check", (req, res) => {
   res.send("✅ Backend API đang chạy trên Vercel");
 });
 
