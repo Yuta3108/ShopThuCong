@@ -10,10 +10,8 @@ app.use(cors());
 app.use(express.json());
 app.use("/api", userRoutes);
 
-app.get("/check", (req, res) => {
-  res.send("✅ Backend API đang chạy trên Vercel");
+app.get("/", (req, res) => {
+  res.send("Backend API đang chạy trên Vercel");
 });
 
-// 👇 KHÔNG có app.listen()
-// 👉 Thay vào đó export ra cho Vercel xử lý:
 export default app;
