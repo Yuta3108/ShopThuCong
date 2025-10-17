@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import KPIcard from "../ChucNang/KPIcard";
@@ -6,12 +7,13 @@ import LineChart from "../ChucNang/LineChart";
 import BarChart from "../ChucNang/BarChart";
 
 export default function DashBoard() {
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || user.role !== "admin") {
-      navigate("/");
-    }
-   }, [navigate]);
+    const navigate = useNavigate();
+    useEffect(() => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || user.role !== "admin") {
+        navigate("/");
+        }
+    }, [navigate]);
 
   return (
     <div className="flex min-h-screen bg-gray-900">

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Home, BarChart3, Settings } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 export default function Sidebar() {
   const [user, setUser] = useState(null);
-
+const navigate = useNavigate();
   useEffect(() => {
     // Lấy thông tin user từ localStorage
     const storedUser = localStorage.getItem("user");
@@ -16,7 +16,7 @@ export default function Sidebar() {
     <div className="w-64 min-h-screen bg-gray-900 text-gray-200 p-4 flex flex-col justify-between">
       {/* Phần menu */}
       <div>
-        <h1 className="text-xl font-bold mb-6">Admin Panel</h1>
+        <h1 className="text-xl font-bold mb-6">Admin DashBoard</h1>
         <ul className="space-y-3">
           <li className="flex items-center gap-3 hover:text-white cursor-pointer">
             <Home size={18}/> Dashboard
@@ -49,7 +49,7 @@ export default function Sidebar() {
           <button
             onClick={() => {
               localStorage.clear();
-              window.location.href = "/"; // quay về trang chủ
+              navigate("/");; // quay về trang chủ
             }}
             className="mt-3 text-xs text-red-400 hover:text-red-300"
           >
