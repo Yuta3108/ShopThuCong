@@ -9,9 +9,9 @@ export default function DashBoard() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user || user.role !== "admin") {
-      window.location.href = "/";
+      navigate("/");
     }
-  }, []);
+   }, [navigate]);
 
   return (
     <div className="flex min-h-screen bg-gray-900">
