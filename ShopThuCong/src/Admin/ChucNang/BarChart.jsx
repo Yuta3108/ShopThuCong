@@ -17,7 +17,7 @@ export default function BarChart() {
   };
   return (
     <div>
-      <h4 className="text-sm text-gray-300 mb-2">Website Views</h4>
+      <h4 className="text-sm text-black mb-2">Website Views</h4>
       <Bar data={data} options={{ responsive: true, plugins: { legend: { display: false }}}} />
     </div>
   );

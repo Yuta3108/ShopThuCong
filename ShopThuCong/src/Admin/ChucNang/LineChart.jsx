@@ -18,7 +18,7 @@ export default function LineChart() {
   };
   return (
     <div>
-      <h4 className="text-sm text-gray-300 mb-2">Sales Trend</h4>
+      <h4 className="text-sm text-black mb-2">Sales Trend</h4>
       <Line data={data} options={{ responsive: true, plugins: { legend: { display: false }}}} />
     </div>
   );
