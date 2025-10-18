@@ -1,52 +1,51 @@
+// controllers/userController.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../config/db.js";
 
-// Đăng ký
-export const dangKy = (req, res) => {
-  const { tenKhachHang, email, matKhau, sdt, diaChi, role } = req.body;
+// ===== Đăng ký =====
+export const dangKy = async (req, res) => {
+  try {
+    const { tenKhachHang, email, matKhau, sdt, diaChi, role } = req.body;
+    const userRole = role || "khachhang";
 
-  const userRole = role || "khachhang"; // mặc định là khách hàng
-
-  if (!tenKhachHang || !email || !matKhau) {
-    return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin." });
-  }
-
-  const checkEmail = "SELECT * FROM users WHERE email = ?";
-  db.query(checkEmail, [email], async (err, result) => {
-    if (err) return res.status(500).json({ message: "Lỗi máy chủ." });
-    if (result.length > 0) {
-      return res.status(400).json({ message: "Email đã tồn tại." });
+    if (!tenKhachHang || !email || !matKhau) {
+      return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin." });
     }
 
+    // Kiểm tra email tồn tại
+    const [exists] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (exists.length > 0) {
+      return res.status(400).json({ message: "Email đã tồn tại." });
+    }
     const hashedPassword = await bcrypt.hash(matKhau, 10);
     const sql =
       "INSERT INTO users (tenKhachHang, email, matKhau, sdt, diaChi, role) VALUES (?, ?, ?, ?, ?, ?)";
-    db.query(
-      sql,
-      [tenKhachHang, email, hashedPassword, sdt, diaChi, userRole],
-      (err, result) => {
-        if (err) return res.status(500).json({ message: "Lỗi khi tạo tài khoản." });
-        return res.status(201).json({ message: "Đăng ký thành công!" });
-      }
-    );
-  });
+    await db.query(sql, [tenKhachHang, email, hashedPassword, sdt, diaChi, userRole]);
+
+    res.status(201).json({ message: "Đăng ký thành công!" });
+  } catch (err) {
+    console.error("🔥 Lỗi trong đăng ký:", err);
+    res.status(500).json({ message: "Lỗi máy chủ", error: err.message });
+  }
 };
 
-// Đăng nhập
-export const dangNhap = (req, res) => {
-  const { email, matKhau } = req.body;
+// ===== Đăng nhập =====
+export const dangNhap = async (req, res) => {
+  try {
+    const { email, matKhau } = req.body;
 
-  const sql = "SELECT * FROM users WHERE email = ?";
-  db.query(sql, [email], async (err, result) => {
-    if (err) return res.status(500).json({ message: "Lỗi máy chủ." });
-    if (result.length === 0)
+    const [rows] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
+    if (rows.length === 0)
       return res.status(400).json({ message: "Email không tồn tại." });
 
-    const user = result[0];
-    const isMatch = await bcrypt.compare(matKhau, user.matKhau);
-    if (!isMatch) return res.status(400).json({ message: "Sai mật khẩu." });
+    const user = rows[0];
 
+    const isMatch = await bcrypt.compare(matKhau, user.matKhau);
+    if (!isMatch)
+      return res.status(400).json({ message: "Sai mật khẩu." });
+
+    // Tạo JWT token
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
@@ -60,5 +59,8 @@ export const dangNhap = (req, res) => {
       role: user.role,
       token,
     });
-  });
+  } catch (err) {
+    console.error("🔥 Lỗi trong đăng nhập:", err);
+    res.status(500).json({ message: "Lỗi máy chủ", error: err.message });
+  }
 };

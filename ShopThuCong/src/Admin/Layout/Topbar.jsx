@@ -19,7 +19,7 @@ export default function Topbar() {
       </h2>
 
       {/* Ô tìm kiếm */}
-      <div className="flex items-center bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full w-[480px] transition-all shadow-inner">
+      <div className="flex items-center bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full w-60 sm:w-72 md:w-96 lg:w-[420px] transition-all shadow-inner">
         <Search size={18} className="text-gray-500 mr-2" />
         <input
           type="text"
