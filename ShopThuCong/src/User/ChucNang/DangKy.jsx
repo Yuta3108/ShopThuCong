@@ -31,7 +31,7 @@ function DangKy() {
     const data = { tenKhachHang, email, matKhau, sdt, diaChi };
 
     try {
-      const response = await fetch(`http://localhost:5000/api/khachhang/dangky`, {
+      const response = await fetch(`https://backend-eta-ivory-29.vercel.app/api/khachhang/dangky`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
