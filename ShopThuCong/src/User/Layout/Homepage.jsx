@@ -73,7 +73,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-gray-900">
+    <div className="min-h-screen flex flex-col bg-[#EDEDED] text-gray-900">
       {/* BANNER */}
       <Banner />
 

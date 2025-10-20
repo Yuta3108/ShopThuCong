@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import Header from "../Layout/Header";
-import Footer from "../Layout/Footer";
-
+import Swal from "sweetalert2";
+import Header from "../../Layout/Header";
+import Footer from "../../Layout/Footer";
 
 function DangNhap() {
   const [email, setEmail] = useState("");
@@ -14,6 +14,7 @@ function DangNhap() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
       const response = await fetch(`https://backend-eta-ivory-29.vercel.app/api/khachhang/dangnhap`, {
         method: "POST",
@@ -21,37 +22,66 @@ function DangNhap() {
         body: JSON.stringify({ email, matKhau: password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        setError("Sai tài khoản hoặc mật khẩu.");
+        Swal.fire({
+          icon: "error",
+          title: "Đăng nhập thất bại!",
+          text: data.message || "Sai tài khoản hoặc mật khẩu.",
+          confirmButtonColor: "#a855f7",
+        });
         setPassword("");
         return;
       }
 
-      const data = await response.json();
+      // ✅ Thành công
       if (data && data.email) {
         localStorage.setItem("user", JSON.stringify(data));
         localStorage.setItem("email", data.email);
         localStorage.setItem("token", data.token);
-        if(data.role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/");
-        } 
+
+        Swal.fire({
+          icon: "success",
+          title: "Đăng nhập thành công !",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+
+        setTimeout(() => {
+          if (data.role === "admin") {
+            navigate("/admin");
+          } else {
+            navigate("/");
+          }
+        }, 1500);
       } else {
-        setError("Đăng nhập thất bại. Vui lòng thử lại.");
+        Swal.fire({
+          icon: "warning",
+          title: "Đăng nhập thất bại",
+          text: "Vui lòng thử lại.",
+        });
       }
     } catch (err) {
       console.error("Lỗi:", err);
-      setError("Không thể kết nối đến máy chủ.");
+      Swal.fire({
+        icon: "error",
+        title: "Không thể kết nối đến máy chủ!",
+        confirmButtonColor: "#a855f7",
+      });
     }
   };
 
   return (
     <div className="bg-fixed bg-cover min-h-screen flex flex-col">
       <Header />
+
       {/* Form Container */}
       <div className="flex-1 flex justify-center items-center px-4">
-        <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
+        <div
+          className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 
+                     animate-fadeIn transition-transform duration-700 ease-out transform hover:scale-[1.02]"
+        >
           <h2 className="text-3xl font-bold text-center mb-6 text-purple-700">
             Đăng Nhập
           </h2>
@@ -64,7 +94,7 @@ function DangNhap() {
             <input
               type="email"
               placeholder="Email"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-400 outline-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-purple-400 outline-none transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -74,7 +104,7 @@ function DangNhap() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Mật khẩu"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 outline-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 outline-none transition-all"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -85,14 +115,24 @@ function DangNhap() {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
               >
                 <span className="text-xl select-none">
-                    {showPassword ? "🙈" : "👁️"}
-                    </span>
+                  {showPassword ? "🙈" : "👁️"}
+                </span>
               </button>
             </div>
-            <button type="QuenMK" className=" text-blue-800  font-semibold hover:opacity-90 transition-all " >Quên Mật khẩu </button>
+
+            <div className="flex justify-between items-center mb-6">
+              <button
+                type="button"
+                className="text-blue-800 font-semibold hover:opacity-90 transition-all"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
+
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-t from-purple-800 via-purple-500 to-purple-400 text-white rounded-lg font-semibold hover:opacity-90 transition-all"
+              className="w-full py-3 bg-gradient-to-t from-purple-800 via-purple-500 to-purple-400 
+                         text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow-md hover:shadow-lg"
             >
               Đăng Nhập
             </button>
@@ -100,22 +140,12 @@ function DangNhap() {
 
           {/* Social Login */}
           <div className="space-y-3 mt-8">
-            <button className="flex items-center gap-3 justify-center shadow-md p-3 rounded-md bg-white border border-gray-200 w-full hover:bg-gray-50">
-              <img
-                src="./gg_icon.png"
-                height={24}
-                width={24}
-                alt="Google Logo"
-              />
+            <button className="flex items-center gap-3 justify-center shadow-md p-3 rounded-md bg-white border border-gray-200 w-full hover:bg-gray-50 transition-all">
+              <img src="./gg_icon.png" height={24} width={24} alt="Google Logo" />
               <span>Đăng nhập với Google</span>
             </button>
-            <button className="flex items-center gap-3 justify-center shadow-md p-3 rounded-md bg-white border border-gray-200 w-full hover:bg-gray-50">
-              <img
-                src="./fb_icon.png"
-                height={24}
-                width={24}
-                alt="Facebook Logo"
-              />
+            <button className="flex items-center gap-3 justify-center shadow-md p-3 rounded-md bg-white border border-gray-200 w-full hover:bg-gray-50 transition-all">
+              <img src="./fb_icon.png" height={24} width={24} alt="Facebook Logo" />
               <span>Đăng nhập với Facebook</span>
             </button>
           </div>
@@ -134,6 +164,7 @@ function DangNhap() {
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );

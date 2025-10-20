@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "../Layout/Header";
-import Footer from "../Layout/Footer";
+import Swal from "sweetalert2";
+import Header from "../../Layout/Header";
+import Footer from "../../Layout/Footer";
 
 function DangKy() {
   const [ho, setHo] = useState("");
@@ -10,20 +11,40 @@ function DangKy() {
   const [sdt, setSdt] = useState("");
   const [matKhau, setMatKhau] = useState("");
   const [diaChi, setDiaChi] = useState("");
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
 
+    // ✅ Kiểm tra ràng buộc dữ liệu
     if (!/[a-zA-Z]/.test(matKhau) || matKhau.length < 8) {
-      setError("Mật khẩu phải có chữ và ít nhất 8 ký tự.");
+      Swal.fire({
+        icon: "warning",
+        title: "Mật khẩu không hợp lệ",
+        text: "Mật khẩu phải có ít nhất 8 ký tự và chứa ít nhất một chữ cái.",
+        confirmButtonColor: "#a855f7",
+      });
       return;
     }
+
     if (!/^\d{10,11}$/.test(sdt)) {
-      setError("Số điện thoại phải gồm 10 đến 11 chữ số.");
+      Swal.fire({
+        icon: "warning",
+        title: "Số điện thoại không hợp lệ",
+        text: "Số điện thoại chỉ được chứa số và có 10–11 chữ số.",
+        confirmButtonColor: "#a855f7",
+      });
+      return;
+    }
+
+    if (!ho.trim() || !ten.trim() || !diaChi.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Thiếu thông tin!",
+        text: "Vui lòng điền đầy đủ họ, tên và địa chỉ.",
+        confirmButtonColor: "#a855f7",
+      });
       return;
     }
 
@@ -37,54 +58,63 @@ function DangKy() {
         body: JSON.stringify(data),
       });
 
+      const resData = await response.json();
+
       if (response.ok) {
-        alert("Đăng ký thành công!");
-        navigate("/auth");
+        Swal.fire({
+          icon: "success",
+          title: "Đăng ký thành công!",
+          text: "Bạn có thể đăng nhập ngay bây giờ.",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+        setTimeout(() => navigate("/auth"), 1500);
       } else {
-        const err = await response.json();
-        setError(err.message || "Đăng ký thất bại. Có thể email đã tồn tại.");
+        Swal.fire({
+          icon: "error",
+          title: "Đăng ký thất bại",
+          text: resData.message || "Email đã tồn tại, vui lòng thử lại.",
+          confirmButtonColor: "#a855f7",
+        });
       }
     } catch (err) {
       console.error("Lỗi đăng ký:", err);
-      setError("Lỗi kết nối đến máy chủ.");
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi kết nối máy chủ",
+        text: "Không thể kết nối đến server. Vui lòng thử lại sau.",
+      });
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-100 via-white to-purple-100">
-      {/* Header */}
       <Header />
 
-      {/* Nội dung chính */}
       <main className="flex-grow flex justify-center items-center py-10 px-4">
-        <div className="bg-white w-full max-w-md shadow-2xl rounded-2xl p-8 border border-gray-100">
+        <div
+          className="bg-white w-full max-w-md shadow-2xl rounded-2xl p-8 border border-gray-100 
+          animate-fadeIn transform transition-all duration-700 ease-out hover:scale-[1.02]"
+        >
           <h2 className="text-3xl font-bold text-center text-purple-700 mb-6">
             Đăng Ký Tài Khoản
           </h2>
-
-          {error && (
-            <p className="text-red-600 mb-4 text-center text-sm font-medium">
-              {error}
-            </p>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="Họ"
-                className="w-full px-4 py-2 border rounded-md mb-4"
+                className="w-full px-4 py-2 border rounded-md mb-4 focus:ring-2 focus:ring-purple-300 focus:outline-none"
                 value={ho}
                 onChange={(e) => setHo(e.target.value)}
-                required
               />
               <input
                 type="text"
                 placeholder="Tên"
-                className="w-full px-4 py-2 border rounded-md mb-4"
+                className="w-full px-4 py-2 border rounded-md mb-4 focus:ring-2 focus:ring-purple-300 focus:outline-none"
                 value={ten}
                 onChange={(e) => setTen(e.target.value)}
-                required
               />
             </div>
 
@@ -121,8 +151,8 @@ function DangKy() {
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-purple-600"
               >
                 <span className="text-xl select-none">
-                 {showPassword ? "🙈" : "👁️"}
-                  </span>
+                  {showPassword ? "🙈" : "👁️"}
+                </span>
               </button>
             </div>
 
@@ -137,7 +167,8 @@ function DangKy() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold rounded-lg hover:opacity-90 transition duration-200 shadow-md"
+              className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold 
+              rounded-lg hover:opacity-90 transition duration-200 shadow-md hover:shadow-lg"
             >
               Đăng Ký
             </button>
@@ -157,7 +188,6 @@ function DangKy() {
         </div>
       </main>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

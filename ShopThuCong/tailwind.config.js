@@ -5,7 +5,12 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
+
     extend: {
+       mint: {
+        50: "#e7fdf7",
+        100: "#c4f5e8",
+      },
       keyframes: {
         fadeSlide: {
           '0%': { opacity: '0', transform: 'translateY(-5px)' },

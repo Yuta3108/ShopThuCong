@@ -6,7 +6,12 @@ export const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // { id, role }
+
+    req.user = {
+      id: decoded.id || decoded.UserID,
+      role: decoded.role || decoded.Role,
+    };
+
     next();
   } catch (err) {
     res.status(403).json({ message: "Token không hợp lệ." });
