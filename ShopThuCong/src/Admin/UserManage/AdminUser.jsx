@@ -14,7 +14,7 @@ export default function AdminUserPage() {
   const handleToggleStatus = async (id, currentStatus) => {
   const newStatus = currentStatus ? 0 : 1;
   try {
-    const res = await fetch(`http://localhost:5000/api/users/${id}/status`, {
+    const res = await fetch(`https://backend-eta-ivory-29.vercel.app/api/users/${id}/status`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
