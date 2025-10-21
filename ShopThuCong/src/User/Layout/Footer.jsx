@@ -89,11 +89,11 @@ const Footer = () => {
                 <img src="/fb_icon.png" alt="Facebook" className="w-7 h-7" />
               </a>
               <a
-                href="/"
-                aria-label="Instagram"
+                href="https://www.tiktok.com/@thanhsannn"
+                aria-label="TikTok"
                 className="hover:scale-110 transition-transform"
               >
-                <img src="/instagram.png" alt="Instagram" className="w-7 h-7" />
+                <img src="/tiktok_icon" alt="tiktok" className="w-7 h-7" />
               </a>
             </div>
           </div>
