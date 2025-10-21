@@ -93,7 +93,7 @@ const Footer = () => {
                 aria-label="TikTok"
                 className="hover:scale-110 transition-transform"
               >
-                <img src="/tiktok_icon" alt="tiktok" className="w-7 h-7" />
+                <img src="/tiktok_icon.png" alt="tiktok" className="w-7 h-7" />
               </a>
             </div>
           </div>
