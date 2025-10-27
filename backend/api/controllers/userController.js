@@ -21,7 +21,7 @@ export const dangKy = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(matKhau, 10);
-    const finalRole = role?.toLowerCase() === "admin" ? "admin" : "khachhang";
+    const finalRole = role?.toLowerCase() === "admin" ? "admin" : "customer";
 
     await db.query(
       `INSERT INTO users (Email, Password, FullName, Phone, Address, Role, Status)
