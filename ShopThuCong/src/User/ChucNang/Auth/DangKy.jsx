@@ -105,14 +105,14 @@ function DangKy() {
               <input
                 type="text"
                 placeholder="Họ"
-                className="w-full px-4 py-2 border rounded-md mb-4 focus:ring-2 focus:ring-purple-300 focus:outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:outline-none"
                 value={ho}
                 onChange={(e) => setHo(e.target.value)}
               />
               <input
                 type="text"
                 placeholder="Tên"
-                className="w-full px-4 py-2 border rounded-md mb-4 focus:ring-2 focus:ring-purple-300 focus:outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:outline-none"
                 value={ten}
                 onChange={(e) => setTen(e.target.value)}
               />

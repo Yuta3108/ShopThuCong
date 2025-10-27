@@ -131,7 +131,7 @@ export default function Header() {
                 className="flex items-center gap-2 bg-teal-50 hover:bg-teal-100 px-3 py-1 rounded-full transition"
               >
                 <img
-                  src="/user-icon.png"
+                  src="/Public/LogoHinh.png"
                   alt="user avatar"
                   className="w-7 h-7 rounded-full border border-teal-300"
                 />
