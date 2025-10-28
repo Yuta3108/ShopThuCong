@@ -32,7 +32,7 @@ export default function Header() {
   };
 
   const handleProfileClick = () => {
-    if (user.role === "admin") navigate("/admin/users");
+    if (user.role === "admin") navigate("/admin");
     else navigate("/user");
   };
 

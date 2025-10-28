@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Home, BarChart3, Settings, Users } from "lucide-react";
+import { Home, BarChart3, Settings, Users, Package } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar() {
@@ -14,6 +14,7 @@ export default function Sidebar() {
   const menuItems = [
     { name: "Dashboard", icon: <Home size={18} />, path: "/admin" },
     { name: "User", icon: <Users size={18} />, path: "/admin/users" },
+    { name: "Products", icon: <Package size={18} />, path: "/admin/Products" },
     { name: "Reports", icon: <BarChart3 size={18} />, path: "/admin/reports" },
     { name: "Settings", icon: <Settings size={18} />, path: "/admin/settings" },
   ];

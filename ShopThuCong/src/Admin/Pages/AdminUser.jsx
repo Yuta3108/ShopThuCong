@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../Layout/Sidebar";
-
 export default function AdminUserPage() {
   const [users, setUsers] = useState([]);
   const [removing, setRemoving] = useState(null); // để làm animation khi xóa

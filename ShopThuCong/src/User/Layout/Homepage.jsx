@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import Banner from "./banner";
 const categories = [
   { name: "Dụng Cụ Đan Móc", link: "/san-pham/dung-cu-dan-moc", image: "https://picsum.photos/200/200?10" },
-  { name: "Phụ Kiện Làm Túi Xách", link: "/san-pham/phu-kien-tui-xach", image: "https://picsum.photos/200/200?13" },
+  { name: "Phụ Kiện Túi Xách", link: "/san-pham/phu-kien-tui-xach", image: "https://picsum.photos/200/200?13" },
   { name: "Phụ Liệu Trang Trí", link: "/san-pham/phu-lieu-trang-tri", image: "https://picsum.photos/200/200?14" },
-  { name: "Phụ Liệu Làm Thú Bông", link: "/san-pham/phu-lieu-thu-bong", image: "https://picsum.photos/200/200?15" },
+  { name: "Thú Bông", link: "/san-pham/phu-lieu-thu-bong", image: "https://picsum.photos/200/200?15" },
   { name: "Combo Quà Tặng", link: "/san-pham/combo", image: "https://picsum.photos/200/200?30" },
   { name: "Sản Phẩm Tiết Kiệm", link: "/san-pham/TietKiem", image: "https://picsum.photos/200/200?18" },
 ];

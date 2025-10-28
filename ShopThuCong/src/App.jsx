@@ -4,8 +4,9 @@ import { Routes, Route } from "react-router-dom";
 import DangKy from './User/ChucNang/Auth/DangKy';
 import LienHe from './User/Layout/Lienhe';
 import DashBoard from './Admin/Layout/DashBoard';
-import AdminUserPage from './Admin/UserManage/AdminUser';
+import AdminUserPage from './Admin/Pages/AdminUser';
 import UserProfile from './User/ChucNang/Auth/ProfileUser';
+import ProductManagement from './Admin/Pages/ProductManagement';
 function App() {
   return (
     
@@ -19,6 +20,7 @@ function App() {
       //== Admin Routes ==// 
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />
+      <Route path ="/admin/Products" element={<ProductManagement />} />
     </Routes>
   );
 }
