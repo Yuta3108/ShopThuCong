@@ -99,9 +99,8 @@ export default function AdminUserPage() {
       <Sidebar />
       <div className="flex-1 p-8">
         <h1 className="text-2xl font-bold text-teal-700 mb-6">
-          👥 Quản Lý Người Dùng
+          Quản Lý Người Dùng
         </h1>
-
         {error && <p className="text-red-600">{error}</p>}
         {loading ? (
           <p>Đang tải dữ liệu...</p>

@@ -253,7 +253,7 @@ export default function ProductManagement() {
       <div className="flex-1 p-6">
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý sản phẩm</h1>
+          <h1 className="text-2xl font-bold text-teal-700">Quản lý sản phẩm</h1>
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search

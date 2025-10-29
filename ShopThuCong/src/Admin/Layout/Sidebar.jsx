@@ -15,8 +15,6 @@ export default function Sidebar() {
     { name: "Dashboard", icon: <Home size={18} />, path: "/admin" },
     { name: "User", icon: <Users size={18} />, path: "/admin/users" },
     { name: "Products", icon: <Package size={18} />, path: "/admin/Products" },
-    { name: "Reports", icon: <BarChart3 size={18} />, path: "/admin/reports" },
-    { name: "Settings", icon: <Settings size={18} />, path: "/admin/settings" },
   ];
 
   return (
