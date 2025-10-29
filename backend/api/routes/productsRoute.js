@@ -8,37 +8,33 @@ import {
   createVariantController,
   updateVariantController,
   deleteVariantController,
-  addImageController,
+  uploadVariantImage,
   deleteImageController,
   setVariantAttributesController,
 } from "../controllers/productController.js";
-
-// import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js";
+import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/** Public (tuỳ bạn có khóa hay không) */
+/** Public routes */
 router.get("/", getProducts);
 router.get("/:id", getProductDetail);
 
-/** Admin (bạn bật middleware nếu cần) */
-// router.post("/", authMiddleware, adminMiddleware, createProductController);
-router.post("/", createProductController);
-// router.put("/:id", authMiddleware, adminMiddleware, updateProductController);
-router.put("/:id", updateProductController);
-// router.delete("/:id", authMiddleware, adminMiddleware, deleteProductController);
-router.delete("/:id", deleteProductController);
+/** Admin-only routes */
+router.post("/", authMiddleware, adminMiddleware, createProductController);
+router.put("/:id", authMiddleware, adminMiddleware, updateProductController);
+router.delete("/:id", authMiddleware, adminMiddleware, deleteProductController);
 
-/** Variants */
-router.post("/:id/variants", createVariantController);
-router.put("/variants/:variantId", updateVariantController);
-router.delete("/variants/:variantId", deleteVariantController);
+/** Variants (Admin only) */
+router.post("/:id/variants", authMiddleware, adminMiddleware, createVariantController);
+router.put("/variants/:variantId", authMiddleware, adminMiddleware, updateVariantController);
+router.delete("/variants/:variantId", authMiddleware, adminMiddleware, deleteVariantController);
 
-/** Images */
-router.post("/variants/:variantId/images", addImageController);
-router.delete("/images/:imageId", deleteImageController);
+/** Images (Admin only) */
+router.post("/variants/:variantId/images", authMiddleware, adminMiddleware, uploadVariantImage);
+router.delete("/images/:imageId", authMiddleware, adminMiddleware, deleteImageController);
 
-/** Attributes mapping cho variant */
-router.put("/variants/:variantId/attributes", setVariantAttributesController);
+/** Attributes mapping */
+router.put("/variants/:variantId/attributes", authMiddleware, adminMiddleware, setVariantAttributesController);
 
 export default router;
