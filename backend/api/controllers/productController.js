@@ -13,7 +13,7 @@ import {
 } from "../models/productsModel.js";
 import cloudinary from "../config/cloudinary.js";
 
-/** ===== PRODUCTS ===== */
+/* ==================== PRODUCTS ==================== */
 export const getProducts = async (req, res) => {
   try {
     const filters = {
@@ -47,37 +47,36 @@ export const getProductDetail = async (req, res) => {
 
 export const createProductController = async (req, res) => {
   try {
-    if ((req.user?.role || req.user?.Role) !== "admin") {
+    if ((req.user?.role || req.user?.Role) !== "admin")
       return res.status(403).json({ message: "Chỉ admin mới được thêm sản phẩm" });
-    }
 
     const { variants = [] } = req.body;
-
     const ProductID = await createProduct(req.body);
 
+    // 🟢 Tạo biến thể
     if (variants.length > 0) {
       for (const v of variants) {
-        await createVariant({
+        const VariantID = await createVariant({
           ProductID,
           SKU: v.SKU,
           Price: v.Price,
-          StockQuantity: v.StockQuantity,
+          StockQuantity: v.StockQuantity ?? 0,
           Weight: v.Weight || null,
-          Specification: v.Specification || "",
-          IsActive: v.IsActive ?? 1
+          IsActive: v.IsActive ?? 1,
+          attributeValueIds: v.attributeValueIds || [], // 🆕 Gắn thuộc tính
         });
       }
     }
+
     res.status(201).json({
       message: "Tạo sản phẩm và biến thể thành công",
-      ProductID
+      ProductID,
     });
   } catch (e) {
     console.error("createProduct error:", e);
     res.status(500).json({ message: "Lỗi máy chủ", error: e.message });
   }
 };
-
 
 export const updateProductController = async (req, res) => {
   try {
@@ -107,13 +106,13 @@ export const deleteProductController = async (req, res) => {
   }
 };
 
-/** ===== VARIANTS ===== */
+/* ==================== VARIANTS ==================== */
 export const createVariantController = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
       return res.status(403).json({ message: "Chỉ admin mới được thêm biến thể" });
 
-    const { Price, StockQuantity, SKU, Weight, Specification, IsActive } = req.body;
+    const { Price, StockQuantity, SKU, Weight, IsActive, attributeValueIds = [] } = req.body;
     if (Price < 0 || StockQuantity < 0)
       return res.status(400).json({ message: "Giá và số lượng phải ≥ 0" });
 
@@ -124,9 +123,10 @@ export const createVariantController = async (req, res) => {
       Price,
       StockQuantity,
       Weight,
-      Specification,
       IsActive,
+      attributeValueIds, // 🆕 lưu thuộc tính
     });
+
     res.status(201).json({ message: "Tạo biến thể thành công", VariantID });
   } catch (e) {
     console.error("createVariant error:", e);
@@ -162,7 +162,7 @@ export const deleteVariantController = async (req, res) => {
   }
 };
 
-/** ===== IMAGES ===== */
+/* ==================== IMAGES ==================== */
 export const uploadVariantImage = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
@@ -219,7 +219,7 @@ export const deleteImageController = async (req, res) => {
   }
 };
 
-/** ===== ATTRIBUTES ===== */
+/* ==================== ATTRIBUTES ==================== */
 export const setVariantAttributesController = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
@@ -227,6 +227,7 @@ export const setVariantAttributesController = async (req, res) => {
 
     const VariantID = Number(req.params.variantId);
     const { attributeValueIds = [] } = req.body;
+
     await setVariantAttributes(VariantID, attributeValueIds);
     res.json({ message: "Cập nhật thuộc tính cho biến thể thành công" });
   } catch (e) {

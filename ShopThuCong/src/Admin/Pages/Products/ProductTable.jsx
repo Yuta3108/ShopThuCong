@@ -34,7 +34,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
               <td className="px-4 py-3 text-gray-600">{p.CategoryName || "—"}</td>
               <td className="px-4 py-3 text-center text-teal-700 font-semibold">{p.minPrice ? p.minPrice.toLocaleString("vi-VN") + "₫" : "—"}</td>
               <td className="px-4 py-3 text-center">
-                {p.IsActive ? <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">Hoạt động</span> : <span className="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700">Ngừng bán</span>}
+                {p.IsActive ? <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">Đang Bán</span> : <span className="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700">Ngừng bán</span>}
               </td>
               <td className="px-4 py-3 text-center">
                 <button onClick={() => onEdit(p.ProductID)} className="inline-flex items-center p-2 rounded-lg bg-yellow-100 hover:bg-yellow-200 text-yellow-700 mr-2" title="Sửa">

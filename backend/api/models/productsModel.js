@@ -70,12 +70,24 @@ export const findProductById = async (id) => {
 
   for (const v of variants) {
     const [images] = await db.query(
-      `SELECT ImageID, VariantID, ImageURL, DisplayOrder FROM images WHERE VariantID = ? ORDER BY DisplayOrder ASC`,
+      `SELECT ImageID, VariantID, ImageURL, DisplayOrder
+     FROM images WHERE VariantID = ? ORDER BY DisplayOrder ASC`,
       [v.VariantID]
     );
     v.images = images;
-  }
 
+    // 🆕 Lấy danh sách thuộc tính cho từng biến thể
+    const [attrs] = await db.query(
+      `SELECT a.AttributeName, av.Value
+   FROM variant_attribute_values va
+   JOIN attribute_values av ON va.AttributeValueID = av.AttributeValueID
+   JOIN attributes a ON av.AttributeID = a.AttributeID
+   WHERE va.VariantID = ?`,
+      [v.VariantID]
+    );
+
+    v.attributes = attrs;
+  }
   product.variants = variants;
   return product;
 };
@@ -108,29 +120,73 @@ export const deleteProduct = async (id) => {
 
 /* ----------------------------- VARIANTS ----------------------------- */
 export const createVariant = async ({
-  ProductID, SKU, Price, StockQuantity = 0, Weight = null,
-  Specification = null, IsActive = 1,
+  ProductID,
+  SKU,
+  Price,
+  StockQuantity = 0,
+  Weight = null,
+  IsActive = 1,
+  attributeValueIds = []
 }) => {
-  const [res] = await db.query(
-    `INSERT INTO product_variants
-     (ProductID, SKU, Price, StockQuantity, Weight, Specification, IsActive, CreatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [ProductID, SKU, Price, StockQuantity, Weight, Specification, IsActive]
-  );
-  return res.insertId;
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 🟢 1. Tạo biến thể mới
+    const [variantRes] = await conn.query(
+      `INSERT INTO product_variants
+       (ProductID, SKU, Price, StockQuantity, Weight, IsActive, CreatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      [ProductID, SKU, Price, StockQuantity, Weight, IsActive]
+    );
+
+    const VariantID = variantRes.insertId;
+
+    // 🟢 2. Nếu có attributeValueIds thì chèn vào variant_attribute_values
+    if (Array.isArray(attributeValueIds) && attributeValueIds.length > 0) {
+      const values = attributeValueIds.map((valueId) => [VariantID, valueId]);
+      await conn.query(
+        `INSERT INTO variant_attribute_values (VariantID, AttributeValueID) VALUES ?`,
+        [values]
+      );
+    }
+
+    await conn.commit();
+    return { VariantID };
+  } catch (err) {
+    await conn.rollback();
+    console.error("❌ createVariant error:", err);
+    throw err;
+  } finally {
+    conn.release();
+  }
 };
+
 
 export const updateVariant = async (id, data) => {
-  const { Price, StockQuantity, Specification, IsActive } = data;
+  const { Price, StockQuantity, IsActive, attributeValueIds = [] } = data;
+
+  // 🟢 1. Cập nhật thông tin cơ bản
   const [res] = await db.query(
     `UPDATE product_variants
-     SET Price=?, StockQuantity=?, Specification=?, IsActive=?, UpdatedAt=NOW()
+     SET Price=?, StockQuantity=?, IsActive=?, UpdatedAt=NOW()
      WHERE VariantID=?`,
-    [Price, StockQuantity, Specification, IsActive, id]
+    [Price, StockQuantity, IsActive, id]
   );
+
+  // 🟢 2. Cập nhật lại danh sách thuộc tính (nếu có)
+  await db.query(`DELETE FROM variant_attribute_values WHERE VariantID = ?`, [id]);
+
+  if (attributeValueIds.length > 0) {
+    const values = attributeValueIds.map((attrValId) => [id, attrValId]);
+    await db.query(
+      `INSERT INTO variant_attribute_values (VariantID, AttributeValueID) VALUES ?`,
+      [values]
+    );
+  }
+
   return res.affectedRows > 0;
 };
-
 export const deleteVariant = async (id) => {
   const [res] = await db.query(`DELETE FROM product_variants WHERE VariantID = ?`, [id]);
   return res.affectedRows > 0;
@@ -156,8 +212,11 @@ export const deleteImage = async (ImageID) => {
 
 /* ---------------------------- ATTRIBUTES ---------------------------- */
 export const setVariantAttributes = async (variantId, attributeValueIds = []) => {
-  await db.query(`DELETE FROM variant_attributes WHERE VariantID = ?`, [variantId]);
+  await db.query(`DELETE FROM variant_attribute_values WHERE VariantID = ?`, [variantId]);
   if (!attributeValueIds.length) return;
   const values = attributeValueIds.map((v) => [variantId, v]);
-  await db.query(`INSERT INTO variant_attributes (VariantID, AttributeValueID) VALUES ?`, [values]);
+  await db.query(
+    `INSERT INTO variant_attribute_values (VariantID, AttributeValueID) VALUES ?`,
+    [values]
+  );
 };

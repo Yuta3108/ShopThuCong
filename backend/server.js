@@ -3,8 +3,11 @@ import cors from "cors";
 import dotenv from "dotenv";
 import userRoutes from "./api/routes/userRoutes.js";
 import userManageRoutes from "./api/routes/userManageRoutes.js";
-import productRoutes from "./api/routes/productsRoute.js";
 import categoryRoutes from "./api/routes/CategoryRoute.js";
+import productRoutes from "./api/routes/productsRoute.js";
+import attributesRoute from "./api/routes/attributesRoute.js";
+import attributeValuesRoute from "./api/routes/attributeValuesRoute.js";
+import variantAttributesRoute from "./api/routes/variantAttributesRoute.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -14,6 +17,11 @@ app.use("/api", userRoutes);
 app.use("/api/users", userManageRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/attributes", attributesRoute);
+app.use("/api/attribute-values", attributeValuesRoute);
+app.use("/api/variant-attributes", variantAttributesRoute);
+
 app.get("/check", (req, res) => {
   res.send("ShopThuCong User API is running...");
 });
