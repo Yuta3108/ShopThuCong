@@ -110,7 +110,7 @@ const handleAddOrEdit = async (prod) => {
       ProductID = Number(data.ProductID);
 
       if (isNaN(ProductID)) {
-        console.error("❌ ProductID không hợp lệ:", data);
+        console.error("ProductID không hợp lệ:", data);
         alert("Không thể xác định mã sản phẩm mới được tạo.");
         return;
       }

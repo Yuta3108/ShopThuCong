@@ -26,7 +26,7 @@ export const updateValue = async (id, Value) => {
   return res.affectedRows > 0;
 };
 
-// 🔧 Sửa tên bảng liên kết cho đúng schema của anh
+// Sửa tên bảng liên kết cho đúng schema của anh
 export const deleteValue = async (id) => {
   await db.query(
     `DELETE FROM variant_attribute_values WHERE AttributeValueID = ?`,

@@ -35,7 +35,7 @@ export default function ProductDialog({
     }
   );
 
-  // Khi sửa sản phẩm → ánh xạ lại attributeValueIds
+  // Sửa Sản phẩm - Cập nhật biến thể với attributeValueIds
   useEffect(() => {
     if (initialData) {
       const updatedVariants = (initialData.variants || []).map((v) => {
@@ -114,7 +114,7 @@ export default function ProductDialog({
 
   const handleSubmit = async (e) => {
   e.preventDefault();
-  if (isSaving) return; // ⛔ Ngăn click 2 lần
+  if (isSaving) return;
   setIsSaving(true);
 
   const cleanVariants = product.variants.map((v) => ({

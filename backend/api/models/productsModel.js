@@ -1,6 +1,5 @@
 import db from "../config/db.js";
 
-/* ========================= 🟢 PRODUCTS ========================= */
 export const findProducts = async (filters = {}) => {
   const {
     q, categoryId, minPrice, maxPrice,
@@ -89,7 +88,7 @@ export const deleteProduct = async (id) => {
   return res.affectedRows > 0;
 };
 
-/* ========================= 🟡 VARIANTS ========================= */
+/* ========================= VARIANTS ========================= */
 export const createVariant = async ({
   ProductID,
   SKU,
@@ -103,7 +102,7 @@ export const createVariant = async ({
   try {
     await conn.beginTransaction();
 
-    // 🔹 Nếu SKU bị trống → tự sinh SKU dựa theo SKU sản phẩm gốc
+    // Tự động tạo SKU nếu không có
     let finalSKU = SKU?.trim();
     if (!finalSKU) {
       // Lấy SKU gốc của sản phẩm
@@ -126,7 +125,7 @@ export const createVariant = async ({
       }
     }
 
-    // 🔹 Kiểm tra SKU trùng
+    // Kiểm tra SKU trùng
     const [[exists]] = await conn.query(
       "SELECT VariantID FROM product_variants WHERE SKU = ?",
       [finalSKU]
@@ -134,7 +133,7 @@ export const createVariant = async ({
     if (exists)
       throw new Error(`SKU '${finalSKU}' đã tồn tại, vui lòng chọn SKU khác.`);
 
-    // 1️⃣ Tạo biến thể
+    // Tạo biến thể
     const [variantRes] = await conn.query(
       `INSERT INTO product_variants 
        (ProductID, SKU, Price, StockQuantity, Weight, IsActive, CreatedAt)
@@ -143,7 +142,7 @@ export const createVariant = async ({
     );
     const VariantID = variantRes.insertId;
 
-    // 2️⃣ Gán thuộc tính (lọc trùng & tránh lỗi duplicate)
+    // Gán thuộc tính (lọc trùng & tránh lỗi duplicate)
     if (Array.isArray(attributeValueIds) && attributeValueIds.length > 0) {
       const uniqueIds = [...new Set(attributeValueIds)];
       const values = uniqueIds.map((v) => [VariantID, v]);
@@ -157,7 +156,7 @@ export const createVariant = async ({
     return { VariantID };
   } catch (err) {
     await conn.rollback();
-    console.error("❌ createVariant error:", err);
+    console.error("createVariant error:", err);
     throw err;
   } finally {
     conn.release();
@@ -190,7 +189,7 @@ export const deleteVariant = async (id) => {
   return res.affectedRows > 0;
 };
 
-/* ========================= 🟣 IMAGES ========================= */
+/* ========================= IMAGES ========================= */
 export const addVariantImage = async ({ VariantID, ImageURL, PublicID, DisplayOrder = 1 }) => {
   const [check] = await db.query(`SELECT VariantID FROM product_variants WHERE VariantID = ?`, [VariantID]);
   if (!check.length) throw new Error(`Biến thể ${VariantID} không tồn tại.`);
@@ -209,7 +208,7 @@ export const deleteImage = async (ImageID) => {
   return row.PublicID;
 };
 
-/* ========================= 🔵 ATTRIBUTES ========================= */
+/* ========================= ATTRIBUTES ========================= */
 export const setVariantAttributes = async (variantId, attributeValueIds = []) => {
   await db.query(`DELETE FROM variant_attribute_values WHERE VariantID = ?`, [variantId]);
   const uniqueIds = [...new Set(attributeValueIds)];
