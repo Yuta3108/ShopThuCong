@@ -5,7 +5,7 @@ import Sidebar from "../Layout/Sidebar";
 import ProductTable from "../Pages/Products/ProductTable";
 import ProductDialog from "../Pages/Products/ProductDialog";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
