@@ -97,7 +97,7 @@ const handleAddOrEdit = async (prod) => {
 
   try {
     if (!isEdit) {
-      // 🟢 TẠO MỚI SẢN PHẨM
+      // TẠO MỚI SẢN PHẨM
       const res = await fetch(`${API}/products`, {
         method: "POST",
         headers: {
@@ -115,7 +115,7 @@ const handleAddOrEdit = async (prod) => {
         return;
       }
     } else {
-      // 🟡 CẬP NHẬT SẢN PHẨM
+      // CẬP NHẬT SẢN PHẨM
       await fetch(`${API}/products/${ProductID}`, {
         method: "PUT",
         headers: {
@@ -125,12 +125,12 @@ const handleAddOrEdit = async (prod) => {
         body: JSON.stringify(prod),
       });
 
-      // 🧩 LẤY DANH SÁCH BIẾN THỂ HIỆN CÓ TRONG DB
+      // LẤY DANH SÁCH BIẾN THỂ HIỆN CÓ TRONG DB
       const resExist = await fetch(`${API}/products/${ProductID}`);
       const productData = await resExist.json();
       const existingVariants = productData.variants || [];
 
-      // 🧩 LỌC RA CÁC ID BIẾN THỂ CÒN GIỮ LẠI TRONG UI
+      // LỌC RA CÁC ID BIẾN THỂ CÒN GIỮ LẠI TRONG UI
       const currentVariantIds = prod.variants
         .map((v) => v.VariantID)
         .filter(Boolean);
@@ -150,7 +150,7 @@ const handleAddOrEdit = async (prod) => {
         let variantId = v.VariantID;
 
         if (variantId) {
-          // 🔹 UPDATE BIẾN THỂ
+          //  UPDATE BIẾN THỂ
           await fetch(`${API}/products/variants/${variantId}`, {
             method: "PUT",
             headers: {
@@ -190,7 +190,7 @@ const handleAddOrEdit = async (prod) => {
           variantId = Number(varData.VariantID);
         }
 
-        // 🖼️ UPLOAD ẢNH CHO BIẾN THỂ
+        //  UPLOAD ẢNH CHO BIẾN THỂ
         if (v.images?.length && variantId) {
           for (const img of v.images) {
             if (typeof img === "string" && img.startsWith("data:image")) {

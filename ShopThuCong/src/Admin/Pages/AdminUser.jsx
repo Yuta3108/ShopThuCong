@@ -14,7 +14,7 @@ export default function AdminUserPage() {
   const newStatus = currentStatus ? 0 : 1;
   try {
     const res = await fetch(`https://backend-eta-ivory-29.vercel.app/api/users/${id}/status`, {
-      method: "PUT",
+      method: "PUT", 
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
