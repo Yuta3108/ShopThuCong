@@ -14,6 +14,8 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.json());
 app.use("/api", userRoutes);
+
+
 app.use("/api/users", userManageRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);

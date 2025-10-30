@@ -90,38 +90,68 @@ export default function ProductManagement() {
   }, []);
 
   /* ================= CRUD: PRODUCT ================= */
-  const handleAddOrEdit = async (prod) => {
-    if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
-    const isEdit = !!selectedProduct;
-    let ProductID = prod.ProductID;
+const handleAddOrEdit = async (prod) => {
+  if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
+  const isEdit = !!selectedProduct;
+  let ProductID = prod.ProductID;
 
-    try {
-      if (!isEdit) {
-        const res = await fetch(`${API}/products`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-          },
-          body: JSON.stringify(prod),
-        });
-        const data = await res.json();
-        ProductID = data.ProductID;
-      } else {
-        await fetch(`${API}/products/${ProductID}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders(),
-          },
-          body: JSON.stringify(prod),
-        });
+  try {
+    if (!isEdit) {
+      // 🟢 TẠO MỚI SẢN PHẨM
+      const res = await fetch(`${API}/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(prod), // gửi luôn variants cho BE
+      });
+      const data = await res.json();
+      ProductID = Number(data.ProductID);
+
+      if (isNaN(ProductID)) {
+        console.error("❌ ProductID không hợp lệ:", data);
+        alert("Không thể xác định mã sản phẩm mới được tạo.");
+        return;
+      }
+    } else {
+      // 🟡 CẬP NHẬT SẢN PHẨM
+      await fetch(`${API}/products/${ProductID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(prod),
+      });
+
+      // 🧩 LẤY DANH SÁCH BIẾN THỂ HIỆN CÓ TRONG DB
+      const resExist = await fetch(`${API}/products/${ProductID}`);
+      const productData = await resExist.json();
+      const existingVariants = productData.variants || [];
+
+      // 🧩 LỌC RA CÁC ID BIẾN THỂ CÒN GIỮ LẠI TRONG UI
+      const currentVariantIds = prod.variants
+        .map((v) => v.VariantID)
+        .filter(Boolean);
+
+      //  XOÁ NHỮNG BIẾN THỂ KHÔNG CÒN Ở UI
+      for (const variant of existingVariants) {
+        if (!currentVariantIds.includes(variant.VariantID)) {
+          await fetch(`${API}/products/variants/${variant.VariantID}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          });
+        }
       }
 
+      //  CẬP NHẬT / THÊM MỚI BIẾN THỂ CÒN LẠI
       for (const v of prod.variants) {
-        // Nếu có VariantID -> đang sửa
-        if (v.VariantID) {
-          await fetch(`${API}/products/variants/${v.VariantID}`, {
+        let variantId = v.VariantID;
+
+        if (variantId) {
+          // 🔹 UPDATE BIẾN THỂ
+          await fetch(`${API}/products/variants/${variantId}`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
@@ -137,51 +167,57 @@ export default function ProductManagement() {
             }),
           });
         } else {
-          // Nếu không có -> tạo mới
-          const resVar = await fetch(`${API}/products/${ProductID}/variants`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthHeaders(),
-            },
-            body: JSON.stringify({
-              SKU: v.SKU,
-              Price: v.Price,
-              StockQuantity: v.StockQuantity,
-              Weight: v.Weight || 0,
-              IsActive: v.IsActive,
-              attributeValueIds: v.attributeValueIds || [],
-            }),
-          });
+          //  THÊM BIẾN THỂ MỚI
+          const resVar = await fetch(
+            `${API}/products/${ProductID}/variants`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeaders(),
+              },
+              body: JSON.stringify({
+                SKU: v.SKU,
+                Price: v.Price,
+                StockQuantity: v.StockQuantity,
+                Weight: v.Weight || 0,
+                IsActive: v.IsActive,
+                attributeValueIds: v.attributeValueIds || [],
+              }),
+            }
+          );
           const varData = await resVar.json();
-          v.VariantID = Number(varData.VariantID);
+          variantId = Number(varData.VariantID);
         }
 
-        // Xử lý ảnh (thêm ảnh mới)
-        if (v.images?.length && v.VariantID) {
+        // 🖼️ UPLOAD ẢNH CHO BIẾN THỂ
+        if (v.images?.length && variantId) {
           for (const img of v.images) {
             if (typeof img === "string" && img.startsWith("data:image")) {
-              await fetch(`${API}/products/variants/${v.VariantID}/images`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  ...getAuthHeaders(),
-                },
-                body: JSON.stringify({ image: img }),
-              });
+              await fetch(
+                `${API}/products/variants/${variantId}/images`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    ...getAuthHeaders(),
+                  },
+                  body: JSON.stringify({ image: img }),
+                }
+              );
             }
           }
         }
       }
-
-      setDialogOpen(false);
-      setSelectedProduct(null);
-      fetchProducts();
-    } catch (err) {
-      console.error("handleAddOrEdit error:", err);
-      alert("Có lỗi xảy ra khi lưu sản phẩm");
     }
-  };
+    setDialogOpen(false);
+    setSelectedProduct(null);
+    fetchProducts();
+  } catch (err) {
+    console.error("handleAddOrEdit error:", err);
+    alert("Có lỗi xảy ra khi lưu sản phẩm");
+  }
+};
 
   const handleEdit = async (id) => {
     const res = await fetch(`${API}/products/${id}`);
@@ -246,7 +282,15 @@ export default function ProductManagement() {
     });
     fetchAttributes();
   };
-
+  // ================= Tìm Sản Phẩm =================
+const filteredProducts = products.filter((p) => {
+  const keyword = search.toLowerCase().trim();
+  return (
+    p.ProductName?.toLowerCase().includes(keyword) ||
+    p.SKU?.toLowerCase().includes(keyword) ||
+    p.CategoryName?.toLowerCase().includes(keyword)
+  );
+});
   return (
     <div className="flex min-h-screen bg-[#EDEDED]">
       <Sidebar />
@@ -288,7 +332,7 @@ export default function ProductManagement() {
 
         {/* Table */}
         <ProductTable
-          products={products}
+          products={filteredProducts}
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import KPIcard from "../ChucNang/KPIcard";
-import LineChart from "../ChucNang/LineChart";
-import BarChart from "../ChucNang/BarChart";
+import KPIcard from "../Chart/KPIcard";
+import LineChart from "../Chart/LineChart";
+import BarChart from "../Chart/BarChart";
 
 export default function DashBoard() {
   const navigate = useNavigate();

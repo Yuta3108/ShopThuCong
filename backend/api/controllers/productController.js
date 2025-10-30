@@ -26,6 +26,7 @@ export const getProducts = async (req, res) => {
       pageSize: req.query.pageSize,
       sort: req.query.sort,
     };
+
     const result = await findProducts(filters);
     res.json(result);
   } catch (e) {
@@ -45,26 +46,44 @@ export const getProductDetail = async (req, res) => {
   }
 };
 
+/* ==================== CREATE PRODUCT ==================== */
 export const createProductController = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
       return res.status(403).json({ message: "Chỉ admin mới được thêm sản phẩm" });
 
-    const { variants = [] } = req.body;
-    const ProductID = await createProduct(req.body);
+    const { variants = [], ...productData } = req.body;
+    const ProductID = await createProduct(productData);
 
-    // 🟢 Tạo biến thể
-    if (variants.length > 0) {
-      for (const v of variants) {
-        const VariantID = await createVariant({
-          ProductID,
-          SKU: v.SKU,
-          Price: v.Price,
-          StockQuantity: v.StockQuantity ?? 0,
-          Weight: v.Weight || null,
-          IsActive: v.IsActive ?? 1,
-          attributeValueIds: v.attributeValueIds || [], // 🆕 Gắn thuộc tính
-        });
+    // Lặp qua các biến thể để thêm
+    for (const v of variants) {
+      const { VariantID: variantId } = await createVariant({
+        ProductID,
+        SKU: v.SKU,
+        Price: v.Price,
+        StockQuantity: v.StockQuantity ?? 0,
+        Weight: v.Weight || null,
+        IsActive: v.IsActive ?? 1,
+        attributeValueIds: v.attributeValueIds || [],
+      });
+
+      // Upload ảnh cho từng biến thể
+      if (v.images?.length) {
+        for (const img of v.images) {
+          if (typeof img === "string" && img.startsWith("data:image")) {
+            const result = await cloudinary.uploader.upload(img, {
+              folder: "shopthucong/public",
+              use_filename: true,
+              unique_filename: true,
+            });
+            await addVariantImage({
+              VariantID: variantId,
+              ImageURL: result.secure_url,
+              PublicID: result.public_id,
+              DisplayOrder: 1,
+            });
+          }
+        }
       }
     }
 
@@ -78,6 +97,7 @@ export const createProductController = async (req, res) => {
   }
 };
 
+/* ==================== UPDATE PRODUCT ==================== */
 export const updateProductController = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
@@ -92,6 +112,7 @@ export const updateProductController = async (req, res) => {
   }
 };
 
+/* ==================== DELETE PRODUCT ==================== */
 export const deleteProductController = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
@@ -112,53 +133,122 @@ export const createVariantController = async (req, res) => {
     if ((req.user?.role || req.user?.Role) !== "admin")
       return res.status(403).json({ message: "Chỉ admin mới được thêm biến thể" });
 
-    const { Price, StockQuantity, SKU, Weight, IsActive, attributeValueIds = [] } = req.body;
-    if (Price < 0 || StockQuantity < 0)
-      return res.status(400).json({ message: "Giá và số lượng phải ≥ 0" });
-
     const ProductID = Number(req.params.id);
-    const VariantID = await createVariant({
+    const {
+      SKU,
+      Price,
+      StockQuantity = 0,
+      Weight = 0,
+      IsActive = 1,
+      attributeValueIds = [],
+      images = [],
+    } = req.body;
+
+    // ⚙️ Lấy đúng VariantID từ object trả về
+    const { VariantID: variantId } = await createVariant({
       ProductID,
       SKU,
       Price,
       StockQuantity,
       Weight,
       IsActive,
-      attributeValueIds, // 🆕 lưu thuộc tính
+      attributeValueIds,
     });
 
-    res.status(201).json({ message: "Tạo biến thể thành công", VariantID });
+    // Upload ảnh cho biến thể
+    if (images?.length) {
+      for (const img of images) {
+        if (typeof img === "string" && img.startsWith("data:image")) {
+          const result = await cloudinary.uploader.upload(img, {
+            folder: "shopthucong/public",
+            use_filename: true,
+            unique_filename: true,
+          });
+          await addVariantImage({
+            VariantID: variantId,
+            ImageURL: result.secure_url,
+            PublicID: result.public_id,
+            DisplayOrder: 1,
+          });
+        }
+      }
+    }
+
+    res.status(201).json({ message: "Tạo biến thể thành công", VariantID: variantId });
   } catch (e) {
     console.error("createVariant error:", e);
-    res.status(500).json({ message: "Lỗi máy chủ" });
+    res.status(500).json({ message: "Lỗi máy chủ", error: e.message });
   }
 };
 
+/* ==================== UPDATE VARIANT ==================== */
 export const updateVariantController = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
       return res.status(403).json({ message: "Chỉ admin mới được sửa biến thể" });
 
-    const affected = await updateVariantModel(Number(req.params.variantId), req.body);
-    if (!affected) return res.status(404).json({ message: "Không tìm thấy biến thể" });
+    const variantId = Number(req.params.variantId);
+    const { images, ...data } = req.body;
+
+    const ok = await updateVariantModel(variantId, data);
+    if (!ok) return res.status(404).json({ message: "Không tìm thấy biến thể" });
+
+    if (images?.length) {
+      for (const img of images) {
+        if (typeof img === "string" && img.startsWith("data:image")) {
+          const result = await cloudinary.uploader.upload(img, {
+            folder: "shopthucong/public",
+            use_filename: true,
+            unique_filename: true,
+          });
+          await addVariantImage({
+            VariantID: variantId,
+            ImageURL: result.secure_url,
+            PublicID: result.public_id,
+            DisplayOrder: 1,
+          });
+        }
+      }
+    }
+
     res.json({ message: "Cập nhật biến thể thành công" });
   } catch (e) {
     console.error("updateVariant error:", e);
-    res.status(500).json({ message: "Lỗi máy chủ" });
+    res.status(500).json({ message: "Lỗi máy chủ", error: e.message });
   }
 };
 
+/* ==================== DELETE VARIANT ==================== */
 export const deleteVariantController = async (req, res) => {
   try {
     if ((req.user?.role || req.user?.Role) !== "admin")
       return res.status(403).json({ message: "Chỉ admin mới được xoá biến thể" });
 
-    const affected = await deleteVariantModel(Number(req.params.variantId));
-    if (!affected) return res.status(404).json({ message: "Không tìm thấy biến thể" });
+    const variantId = Number(req.params.variantId);
+    const ok = await deleteVariantModel(variantId);
+
+    if (!ok) return res.status(404).json({ message: "Không tìm thấy biến thể" });
     res.json({ message: "Xoá biến thể thành công" });
   } catch (e) {
     console.error("deleteVariant error:", e);
-    res.status(500).json({ message: "Lỗi máy chủ" });
+    res.status(500).json({ message: "Lỗi máy chủ", error: e.message });
+  }
+};
+
+/* ==================== SET VARIANT ATTRIBUTES ==================== */
+export const setVariantAttributesController = async (req, res) => {
+  try {
+    if ((req.user?.role || req.user?.Role) !== "admin")
+      return res.status(403).json({ message: "Chỉ admin mới được cập nhật thuộc tính" });
+
+    const VariantID = Number(req.params.variantId);
+    const { attributeValueIds = [] } = req.body;
+    await setVariantAttributes(VariantID, attributeValueIds);
+
+    res.json({ message: "Cập nhật thuộc tính cho biến thể thành công" });
+  } catch (e) {
+    console.error("setVariantAttributes error:", e);
+    res.status(500).json({ message: "Lỗi máy chủ", error: e.message });
   }
 };
 
@@ -192,7 +282,7 @@ export const uploadVariantImage = async (req, res) => {
     });
   } catch (err) {
     console.error("Upload Cloudinary lỗi:", err);
-    res.status(500).json({ message: "Lỗi server khi upload ảnh" });
+    res.status(500).json({ message: "Lỗi server khi upload ảnh", error: err.message });
   }
 };
 
@@ -216,22 +306,5 @@ export const deleteImageController = async (req, res) => {
   } catch (err) {
     console.error("deleteImage error:", err);
     res.status(500).json({ message: "Lỗi server khi xoá ảnh" });
-  }
-};
-
-/* ==================== ATTRIBUTES ==================== */
-export const setVariantAttributesController = async (req, res) => {
-  try {
-    if ((req.user?.role || req.user?.Role) !== "admin")
-      return res.status(403).json({ message: "Chỉ admin mới được cập nhật thuộc tính" });
-
-    const VariantID = Number(req.params.variantId);
-    const { attributeValueIds = [] } = req.body;
-
-    await setVariantAttributes(VariantID, attributeValueIds);
-    res.json({ message: "Cập nhật thuộc tính cho biến thể thành công" });
-  } catch (e) {
-    console.error("setVariantAttributes error:", e);
-    res.status(500).json({ message: "Lỗi máy chủ" });
   }
 };

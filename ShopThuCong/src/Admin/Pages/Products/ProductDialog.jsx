@@ -1,6 +1,6 @@
 // ================== ProductDialog.jsx ==================
 import React, { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, Info } from "lucide-react";
 
 export default function ProductDialog({
   isOpen,
@@ -11,6 +11,7 @@ export default function ProductDialog({
   initialData = null,
   onDeleteImage,
 }) {
+  const [isSaving, setIsSaving] = useState(false);
   const isEdit = !!initialData;
   const [product, setProduct] = useState(
     initialData || {
@@ -20,7 +21,7 @@ export default function ProductDialog({
       ShortDescription: "",
       Material: "",
       Description: "",
-      IsActive: 1, // ✅ Mặc định Đang bán
+      IsActive: 1,
       variants: [
         {
           SKU: "",
@@ -34,7 +35,7 @@ export default function ProductDialog({
     }
   );
 
-  // ✅ Khi sửa sản phẩm, map lại dữ liệu attributeValueIds
+  // Khi sửa sản phẩm → ánh xạ lại attributeValueIds
   useEffect(() => {
     if (initialData) {
       const updatedVariants = (initialData.variants || []).map((v) => {
@@ -54,15 +55,10 @@ export default function ProductDialog({
         }
         return { ...v, attributeValueIds: attrValueIds };
       });
-
-      setProduct({
-        ...initialData,
-        variants: updatedVariants,
-      });
+      setProduct({ ...initialData, variants: updatedVariants });
     }
   }, [initialData, attributes]);
 
-  // ================== Handler ==================
   const handleVariantChange = (i, key, value) => {
     const updated = [...product.variants];
     updated[i][key] = value;
@@ -107,7 +103,6 @@ export default function ProductDialog({
     const updated = [...product.variants];
     const currentIds = updated[variantIndex].attributeValueIds || [];
 
-    // 🔹 Xóa hết giá trị của cùng attribute trước khi thêm
     const filteredIds = currentIds.filter(
       (id) => !attr.values.some((v) => v.AttributeValueID === id)
     );
@@ -117,18 +112,44 @@ export default function ProductDialog({
     setProduct({ ...product, variants: updated });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const cleanVariants = product.variants.map((v) => ({
-      ...v,
-      attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
-    }));
-    onSubmit({ ...product, variants: cleanVariants });
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (isSaving) return; // ⛔ Ngăn click 2 lần
+  setIsSaving(true);
+
+  const cleanVariants = product.variants.map((v) => ({
+    ...v,
+    attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
+  }));
+
+  await onSubmit({ ...product, variants: cleanVariants });
+  resetForm();
+  setIsSaving(false);
+};
+const resetForm = () => {
+  setProduct({
+    CategoryID: "",
+    SKU: "",
+    ProductName: "",
+    ShortDescription: "",
+    Material: "",
+    Description: "",
+    IsActive: 1,
+    variants: [
+      {
+        SKU: "",
+        Price: 0,
+        StockQuantity: 0,
+        IsActive: 1,
+        images: [],
+        attributeValueIds: [],
+      },
+    ],
+  });
+};
 
   if (!isOpen) return null;
 
-  // ================== UI ==================
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-2xl w-[720px] max-h-[90vh] overflow-y-auto p-6 relative">
@@ -174,10 +195,13 @@ export default function ProductDialog({
 
           <input
             className="w-full border rounded-lg px-3 py-2"
-            placeholder="Mã SKU"
+            placeholder="Mã SKU sản phẩm"
             value={product.SKU}
             onChange={(e) => setProduct({ ...product, SKU: e.target.value })}
           />
+          <p className="text-xs text-gray-500 italic -mt-2">
+            SKU sản phẩm phải duy nhất trong toàn hệ thống.
+          </p>
 
           <textarea
             className="w-full border rounded-lg px-3 py-2"
@@ -204,7 +228,7 @@ export default function ProductDialog({
             }
           />
 
-          {/* ===== Tình trạng sản phẩm ===== */}
+          {/* ===== Tình trạng ===== */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tình trạng
@@ -235,22 +259,23 @@ export default function ProductDialog({
             </div>
 
             {product.variants.map((v, i) => (
-              <div
-                key={i}
-                className="bg-gray-50 border rounded-xl p-3 mb-3 space-y-3"
-              >
-                <div className="grid grid-cols-12 gap-3">
-                  <div className="col-span-6">
-                    <input
-                      className="w-full border rounded px-3 py-2"
-                      placeholder="SKU biến thể"
-                      value={v.SKU}
-                      onChange={(e) =>
-                        handleVariantChange(i, "SKU", e.target.value)
-                      }
+              <div key={i} className="bg-gray-50 border rounded-xl p-3 mb-3 space-y-3">
+                {/* SKU chỉ hiển thị khi đang sửa */}
+                {isEdit && v.SKU && (
+                  <p className="text-sm text-teal-700 font-semibold">
+                    SKU: <span className="text-gray-700">{v.SKU}</span>
+                    <Info
+                      size={14}
+                      className="inline ml-1 text-gray-400"
+                      title="SKU tự động được sinh bởi hệ thống"
                     />
-                  </div>
-                  <div className="col-span-6 flex items-center gap-2">
+                  </p>
+                )}
+
+                {/* Giá & Tồn kho */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm text-gray-600">Giá</label>
                     <input
                       type="number"
                       min="0"
@@ -261,14 +286,14 @@ export default function ProductDialog({
                         handleVariantChange(i, "Price", Number(e.target.value))
                       }
                     />
-                    <span className="text-gray-500">₫</span>
                   </div>
-                  <div className="col-span-6 flex items-center gap-2">
+                  <div>
+                    <label className="text-sm text-gray-600">Tồn kho</label>
                     <input
                       type="number"
                       min="0"
                       className="w-full border rounded px-3 py-2 text-right"
-                      placeholder="Tồn kho"
+                      placeholder="Số lượng"
                       value={v.StockQuantity}
                       onChange={(e) =>
                         handleVariantChange(
@@ -278,19 +303,19 @@ export default function ProductDialog({
                         )
                       }
                     />
-                    <span className="text-gray-500">SP</span>
                   </div>
                 </div>
 
-                {/* ===== Dropdown chọn thuộc tính ===== */}
+                {/* Thuộc tính */}
                 <div className="pt-2">
                   <h4 className="text-sm font-semibold mb-1 text-gray-700">
                     Thuộc tính
                   </h4>
                   {attributes.map((attr) => {
-                    const currentValue = attr.values?.find((val) =>
-                      v.attributeValueIds?.includes(val.AttributeValueID)
-                    )?.AttributeValueID || "";
+                    const currentValue =
+                      attr.values?.find((val) =>
+                        v.attributeValueIds?.includes(val.AttributeValueID)
+                      )?.AttributeValueID || "";
 
                     return (
                       <div key={attr.AttributeID} className="mb-3">
@@ -323,11 +348,9 @@ export default function ProductDialog({
                   })}
                 </div>
 
-                {/* ===== Ảnh biến thể ===== */}
+                {/* Ảnh biến thể */}
                 <div className="pt-2">
-                  <h4 className="text-sm font-semibold mb-1">
-                    Ảnh biến thể
-                  </h4>
+                  <h4 className="text-sm font-semibold mb-1">Ảnh biến thể</h4>
                   <div className="flex flex-wrap gap-3">
                     {v.images?.map((img, idx) => (
                       <div
@@ -384,9 +407,14 @@ export default function ProductDialog({
 
           <button
             type="submit"
-            className="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700"
+            disabled={isSaving}
+            className={`w-full py-2 rounded-lg text-white transition ${
+              isSaving
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-teal-600 hover:bg-teal-700"
+            }`}
           >
-            {isEdit ? "Lưu thay đổi" : "Lưu sản phẩm"}
+            {isSaving ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Lưu sản phẩm"}
           </button>
         </form>
       </div>
