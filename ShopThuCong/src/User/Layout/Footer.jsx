@@ -82,28 +82,28 @@ const Footer = () => {
             <p className="font-semibold text-gray-800 mb-2">Follow Us:</p>
             <div className="flex justify-center md:justify-start gap-4">
               <a
-                href="https://www.facebook.com/thanh.san.1422"
+                href="#"
                 aria-label="Facebook"
                 className="hover:scale-110 transition-transform"
               >
                 <img src="/fb_icon.png" alt="Facebook" className="w-7 h-7" />
               </a>
               <a
-                href="https://www.tiktok.com/@thanhsannn"
+                href="#"
                 aria-label="TikTok"
                 className="hover:scale-110 transition-transform"
               >
                 <img src="/tiktok_icon.png" alt="tiktok" className="w-7 h-7" />
               </a>
               <a
-                href="https://www.tiktok.com/@thanhsannn"
+                href="#"
                 aria-label="instagram"
                 className="hover:scale-110 transition-transform"
               >
                 <img src="/instagram.png" alt="instagram" className="w-7 h-7" />
               </a>
               <a
-                href="https://www.facebook.com/thanh.san.1422"
+                href="#"
                 aria-label="twitter"
                 className="hover:scale-110 transition-transform"
               >
