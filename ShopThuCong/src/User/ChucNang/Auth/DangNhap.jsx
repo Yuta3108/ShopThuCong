@@ -16,7 +16,7 @@ function DangNhap() {
     setError("");
 
     try {
-      const response = await fetch(`http://localhost:5000/api/dangnhap`, {
+      const response = await fetch(`https://backend-eta-ivory-29.vercel.app/api/dangnhap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, matKhau: password }),
