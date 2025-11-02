@@ -5,6 +5,7 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
+    extend: {
       colors: {
         mint: {
           50: "#F2FBF9",
@@ -19,7 +20,6 @@ export default {
           900: "#093F37",
         },
       },
-    extend: {
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },
