@@ -45,7 +45,7 @@ export default function AdminUserPage() {
     const fetchUsers = async () => {
       try {
         const res = await fetch(
-          "https://backend-eta-ivory-29.vercel.app/api/users/all",
+          "http://localhost:5000/api/users/all",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
