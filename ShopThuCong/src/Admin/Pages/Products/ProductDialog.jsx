@@ -1,4 +1,3 @@
-// ================== ProductDialog.jsx ==================
 import React, { useEffect, useState } from "react";
 import { X, Info } from "lucide-react";
 
@@ -35,7 +34,7 @@ export default function ProductDialog({
     }
   );
 
-  // Sửa Sản phẩm - Cập nhật biến thể với attributeValueIds
+  // Cập nhật variant khi edit
   useEffect(() => {
     if (initialData) {
       const updatedVariants = (initialData.variants || []).map((v) => {
@@ -102,57 +101,55 @@ export default function ProductDialog({
   const handleSelectDropdown = (variantIndex, attr, selectedId) => {
     const updated = [...product.variants];
     const currentIds = updated[variantIndex].attributeValueIds || [];
-
     const filteredIds = currentIds.filter(
       (id) => !attr.values.some((v) => v.AttributeValueID === id)
     );
     if (selectedId) filteredIds.push(Number(selectedId));
-
     updated[variantIndex].attributeValueIds = filteredIds;
     setProduct({ ...product, variants: updated });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (isSaving) return;
-  setIsSaving(true);
+    e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    const cleanVariants = product.variants.map((v) => ({
+      ...v,
+      attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
+    }));
+    await onSubmit({ ...product, variants: cleanVariants });
+    resetForm();
+    setIsSaving(false);
+  };
 
-  const cleanVariants = product.variants.map((v) => ({
-    ...v,
-    attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
-  }));
-
-  await onSubmit({ ...product, variants: cleanVariants });
-  resetForm();
-  setIsSaving(false);
-};
-const resetForm = () => {
-  setProduct({
-    CategoryID: "",
-    SKU: "",
-    ProductName: "",
-    ShortDescription: "",
-    Material: "",
-    Description: "",
-    IsActive: 1,
-    variants: [
-      {
-        SKU: "",
-        Price: 0,
-        StockQuantity: 0,
-        IsActive: 1,
-        images: [],
-        attributeValueIds: [],
-      },
-    ],
-  });
-};
+  const resetForm = () => {
+    setProduct({
+      CategoryID: "",
+      SKU: "",
+      ProductName: "",
+      ShortDescription: "",
+      Material: "",
+      Description: "",
+      IsActive: 1,
+      variants: [
+        {
+          SKU: "",
+          Price: 0,
+          StockQuantity: 0,
+          IsActive: 1,
+          images: [],
+          attributeValueIds: [],
+        },
+      ],
+    });
+  };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-2xl w-[720px] max-h-[90vh] overflow-y-auto p-6 relative">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-2 sm:px-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[720px] max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
+        {/* Nút đóng */}
         <button
           onClick={onClose}
           className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
@@ -160,14 +157,15 @@ const resetForm = () => {
           <X size={22} />
         </button>
 
-        <h2 className="text-xl font-bold text-teal-600 mb-4">
+        {/* Tiêu đề */}
+        <h2 className="text-lg sm:text-xl font-bold text-teal-600 mb-4 mt-1 text-center sm:text-left">
           {isEdit ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* ===== Thông tin sản phẩm ===== */}
           <input
-            className="w-full border rounded-lg px-3 py-2"
+            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
             placeholder="Tên sản phẩm"
             value={product.ProductName}
             onChange={(e) =>
@@ -176,7 +174,7 @@ const resetForm = () => {
           />
 
           <select
-            className="w-full border rounded-lg px-3 py-2 bg-white"
+            className="w-full border rounded-lg px-3 py-2 bg-white text-sm sm:text-base"
             value={product.CategoryID || ""}
             onChange={(e) =>
               setProduct({
@@ -194,7 +192,7 @@ const resetForm = () => {
           </select>
 
           <input
-            className="w-full border rounded-lg px-3 py-2"
+            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
             placeholder="Mã SKU sản phẩm"
             value={product.SKU}
             onChange={(e) => setProduct({ ...product, SKU: e.target.value })}
@@ -204,8 +202,9 @@ const resetForm = () => {
           </p>
 
           <textarea
-            className="w-full border rounded-lg px-3 py-2"
+            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
             placeholder="Mô tả ngắn"
+            rows={2}
             value={product.ShortDescription}
             onChange={(e) =>
               setProduct({ ...product, ShortDescription: e.target.value })
@@ -213,15 +212,16 @@ const resetForm = () => {
           />
 
           <input
-            className="w-full border rounded-lg px-3 py-2"
+            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
             placeholder="Chất liệu"
             value={product.Material}
             onChange={(e) => setProduct({ ...product, Material: e.target.value })}
           />
 
           <textarea
-            className="w-full border rounded-lg px-3 py-2"
+            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
             placeholder="Mô tả chi tiết"
+            rows={3}
             value={product.Description}
             onChange={(e) =>
               setProduct({ ...product, Description: e.target.value })
@@ -234,7 +234,7 @@ const resetForm = () => {
               Tình trạng
             </label>
             <select
-              className="w-full border rounded-lg px-3 py-2 bg-white"
+              className="w-full border rounded-lg px-3 py-2 bg-white text-sm sm:text-base"
               value={product.IsActive}
               onChange={(e) =>
                 setProduct({ ...product, IsActive: parseInt(e.target.value) })
@@ -247,20 +247,24 @@ const resetForm = () => {
 
           {/* ===== Biến thể sản phẩm ===== */}
           <div className="pt-4 border-t">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Biến thể sản phẩm</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+              <h3 className="text-base sm:text-lg font-semibold">
+                Biến thể sản phẩm
+              </h3>
               <button
                 type="button"
                 onClick={addVariant}
-                className="text-teal-600 font-medium hover:underline"
+                className="text-teal-600 font-medium hover:underline text-sm sm:text-base"
               >
                 + Thêm biến thể
               </button>
             </div>
 
             {product.variants.map((v, i) => (
-              <div key={i} className="bg-gray-50 border rounded-xl p-3 mb-3 space-y-3">
-                {/* SKU chỉ hiển thị khi đang sửa */}
+              <div
+                key={i}
+                className="bg-gray-50 border rounded-xl p-3 sm:p-4 mb-3 space-y-3"
+              >
                 {isEdit && v.SKU && (
                   <p className="text-sm text-teal-700 font-semibold">
                     SKU: <span className="text-gray-700">{v.SKU}</span>
@@ -273,13 +277,13 @@ const resetForm = () => {
                 )}
 
                 {/* Giá & Tồn kho */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-sm text-gray-600">Giá</label>
                     <input
                       type="number"
                       min="0"
-                      className="w-full border rounded px-3 py-2 text-right"
+                      className="w-full border rounded px-3 py-2 text-right text-sm sm:text-base"
                       placeholder="Giá"
                       value={v.Price}
                       onChange={(e) =>
@@ -292,7 +296,7 @@ const resetForm = () => {
                     <input
                       type="number"
                       min="0"
-                      className="w-full border rounded px-3 py-2 text-right"
+                      className="w-full border rounded px-3 py-2 text-right text-sm sm:text-base"
                       placeholder="Số lượng"
                       value={v.StockQuantity}
                       onChange={(e) =>
@@ -323,7 +327,7 @@ const resetForm = () => {
                           {attr.AttributeName}
                         </label>
                         <select
-                          className="w-full border rounded-lg px-3 py-2 bg-white"
+                          className="w-full border rounded-lg px-3 py-2 bg-white text-sm sm:text-base"
                           value={currentValue}
                           onChange={(e) =>
                             handleSelectDropdown(
@@ -333,7 +337,9 @@ const resetForm = () => {
                             )
                           }
                         >
-                          <option value="">-- Chọn {attr.AttributeName} --</option>
+                          <option value="">
+                            -- Chọn {attr.AttributeName} --
+                          </option>
                           {attr.values?.map((val) => (
                             <option
                               key={val.AttributeValueID}
@@ -351,11 +357,11 @@ const resetForm = () => {
                 {/* Ảnh biến thể */}
                 <div className="pt-2">
                   <h4 className="text-sm font-semibold mb-1">Ảnh biến thể</h4>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
                     {v.images?.map((img, idx) => (
                       <div
                         key={idx}
-                        className="relative w-24 h-24 border rounded-lg overflow-hidden"
+                        className="relative w-20 h-20 sm:w-24 sm:h-24 border rounded-lg overflow-hidden"
                       >
                         <img
                           src={typeof img === "string" ? img : img.ImageURL}
@@ -380,8 +386,8 @@ const resetForm = () => {
                         </button>
                       </div>
                     ))}
-                    <label className="w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
-                      <span className="text-3xl">＋</span>
+                    <label className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
+                      <span className="text-2xl sm:text-3xl">＋</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -397,7 +403,7 @@ const resetForm = () => {
                 <button
                   type="button"
                   onClick={() => removeVariant(i)}
-                  className="px-4 py-2 rounded-lg bg-red-50 hover:bg-red-200 text-red-600 font-medium"
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-50 hover:bg-red-200 text-red-600 font-medium text-sm sm:text-base"
                 >
                   Xoá biến thể
                 </button>
@@ -408,7 +414,7 @@ const resetForm = () => {
           <button
             type="submit"
             disabled={isSaving}
-            className={`w-full py-2 rounded-lg text-white transition ${
+            className={`w-full py-2 rounded-lg text-white transition text-sm sm:text-base ${
               isSaving
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-teal-600 hover:bg-teal-700"

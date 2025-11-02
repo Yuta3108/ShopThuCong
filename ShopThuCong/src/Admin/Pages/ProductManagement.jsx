@@ -1,4 +1,3 @@
-// ================== ProductManagement.jsx ==================
 import React, { useEffect, useState } from "react";
 import { Plus, Search, Settings, Pencil, Trash2 } from "lucide-react";
 import Sidebar from "../Layout/Sidebar";
@@ -18,23 +17,19 @@ export default function ProductManagement() {
   const [isAttrDialogOpen, setAttrDialogOpen] = useState(false);
   const [editingAttr, setEditingAttr] = useState(null);
   const [newAttrName, setNewAttrName] = useState("");
-
-  /* ================= AUTH HEADER ================= */
   const getAuthHeaders = () => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) return {};
     try {
       const user = JSON.parse(storedUser);
-      if (user?.token) {
-        return { Authorization: `Bearer ${user.token}` };
-      }
+      if (user?.token) return { Authorization: `Bearer ${user.token}` };
     } catch {
       return {};
     }
     return {};
   };
 
-  /* ================= FETCH DATA ================= */
+  // ================= FETCH DATA =================
   const fetchCategories = async () => {
     try {
       const res = await fetch(`${API}/categories`);
@@ -89,89 +84,53 @@ export default function ProductManagement() {
     fetchAttributes();
   }, []);
 
-  /* ================= CRUD: PRODUCT ================= */
-const handleAddOrEdit = async (prod) => {
-  if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
-  const isEdit = !!selectedProduct;
-  let ProductID = prod.ProductID;
+  // ================= CRUD PRODUCT =================
+  const handleAddOrEdit = async (prod) => {
+    if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
+    const isEdit = !!selectedProduct;
+    let ProductID = prod.ProductID;
 
-  try {
-    if (!isEdit) {
-      // TẠO MỚI SẢN PHẨM
-      const res = await fetch(`${API}/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify(prod), // gửi luôn variants cho BE
-      });
-      const data = await res.json();
-      ProductID = Number(data.ProductID);
+    try {
+      if (!isEdit) {
+        const res = await fetch(`${API}/products`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify(prod),
+        });
+        const data = await res.json();
+        ProductID = Number(data.ProductID);
+        if (isNaN(ProductID)) return alert("Không thể tạo sản phẩm mới.");
+      } else {
+        await fetch(`${API}/products/${ProductID}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify(prod),
+        });
 
-      if (isNaN(ProductID)) {
-        console.error("ProductID không hợp lệ:", data);
-        alert("Không thể xác định mã sản phẩm mới được tạo.");
-        return;
-      }
-    } else {
-      // CẬP NHẬT SẢN PHẨM
-      await fetch(`${API}/products/${ProductID}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify(prod),
-      });
+        // Xóa biến thể không còn
+        const exist = await fetch(`${API}/products/${ProductID}`).then((r) =>
+          r.json()
+        );
+        const existingVariants = exist.variants || [];
+        const currentVariantIds = prod.variants
+          .map((v) => v.VariantID)
+          .filter(Boolean);
 
-      // LẤY DANH SÁCH BIẾN THỂ HIỆN CÓ TRONG DB
-      const resExist = await fetch(`${API}/products/${ProductID}`);
-      const productData = await resExist.json();
-      const existingVariants = productData.variants || [];
-
-      // LỌC RA CÁC ID BIẾN THỂ CÒN GIỮ LẠI TRONG UI
-      const currentVariantIds = prod.variants
-        .map((v) => v.VariantID)
-        .filter(Boolean);
-
-      //  XOÁ NHỮNG BIẾN THỂ KHÔNG CÒN Ở UI
-      for (const variant of existingVariants) {
-        if (!currentVariantIds.includes(variant.VariantID)) {
-          await fetch(`${API}/products/variants/${variant.VariantID}`, {
-            method: "DELETE",
-            headers: getAuthHeaders(),
-          });
+        for (const variant of existingVariants) {
+          if (!currentVariantIds.includes(variant.VariantID)) {
+            await fetch(`${API}/products/variants/${variant.VariantID}`, {
+              method: "DELETE",
+              headers: getAuthHeaders(),
+            });
+          }
         }
-      }
 
-      //  CẬP NHẬT / THÊM MỚI BIẾN THỂ CÒN LẠI
-      for (const v of prod.variants) {
-        let variantId = v.VariantID;
-
-        if (variantId) {
-          //  UPDATE BIẾN THỂ
-          await fetch(`${API}/products/variants/${variantId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              ...getAuthHeaders(),
-            },
-            body: JSON.stringify({
-              SKU: v.SKU,
-              Price: v.Price,
-              StockQuantity: v.StockQuantity,
-              Weight: v.Weight || 0,
-              IsActive: v.IsActive,
-              attributeValueIds: v.attributeValueIds || [],
-            }),
-          });
-        } else {
-          //  THÊM BIẾN THỂ MỚI
-          const resVar = await fetch(
-            `${API}/products/${ProductID}/variants`,
-            {
-              method: "POST",
+        // Update/Thêm mới biến thể
+        for (const v of prod.variants) {
+          let variantId = v.VariantID;
+          if (variantId) {
+            await fetch(`${API}/products/variants/${variantId}`, {
+              method: "PUT",
               headers: {
                 "Content-Type": "application/json",
                 ...getAuthHeaders(),
@@ -184,40 +143,58 @@ const handleAddOrEdit = async (prod) => {
                 IsActive: v.IsActive,
                 attributeValueIds: v.attributeValueIds || [],
               }),
-            }
-          );
-          const varData = await resVar.json();
-          variantId = Number(varData.VariantID);
-        }
+            });
+          } else {
+            const resVar = await fetch(
+              `${API}/products/${ProductID}/variants`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...getAuthHeaders(),
+                },
+                body: JSON.stringify({
+                  SKU: v.SKU,
+                  Price: v.Price,
+                  StockQuantity: v.StockQuantity,
+                  Weight: v.Weight || 0,
+                  IsActive: v.IsActive,
+                  attributeValueIds: v.attributeValueIds || [],
+                }),
+              }
+            );
+            const varData = await resVar.json();
+            variantId = Number(varData.VariantID);
+          }
 
-        //  UPLOAD ẢNH CHO BIẾN THỂ
-        if (v.images?.length && variantId) {
-          for (const img of v.images) {
-            if (typeof img === "string" && img.startsWith("data:image")) {
-              await fetch(
-                `${API}/products/variants/${variantId}/images`,
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    ...getAuthHeaders(),
-                  },
-                  body: JSON.stringify({ image: img }),
-                }
-              );
+          // Upload ảnh
+          if (v.images?.length && variantId) {
+            for (const img of v.images) {
+              if (typeof img === "string" && img.startsWith("data:image")) {
+                await fetch(
+                  `${API}/products/variants/${variantId}/images`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      ...getAuthHeaders(),
+                    },
+                    body: JSON.stringify({ image: img }),
+                  }
+                );
+              }
             }
           }
         }
       }
+      setDialogOpen(false);
+      setSelectedProduct(null);
+      fetchProducts();
+    } catch (err) {
+      console.error("handleAddOrEdit error:", err);
+      alert("Có lỗi xảy ra khi lưu sản phẩm");
     }
-    setDialogOpen(false);
-    setSelectedProduct(null);
-    fetchProducts();
-  } catch (err) {
-    console.error("handleAddOrEdit error:", err);
-    alert("Có lỗi xảy ra khi lưu sản phẩm");
-  }
-};
+  };
 
   const handleEdit = async (id) => {
     const res = await fetch(`${API}/products/${id}`);
@@ -235,7 +212,7 @@ const handleAddOrEdit = async (prod) => {
     setProducts(products.filter((p) => p.ProductID !== id));
   };
 
-  /* ================= CRUD: ATTRIBUTE MANAGER ================= */
+  // ================= CRUD ATTRIBUTE =================
   const handleAddAttribute = async () => {
     if (!newAttrName.trim()) return;
     await fetch(`${API}/attributes`, {
@@ -282,24 +259,27 @@ const handleAddOrEdit = async (prod) => {
     });
     fetchAttributes();
   };
-  // ================= Tìm Sản Phẩm =================
-const filteredProducts = products.filter((p) => {
-  const keyword = search.toLowerCase().trim();
+
+  // ================= SEARCH =================
+  const filteredProducts = products.filter((p) => {
+    const keyword = search.toLowerCase().trim();
+    return (
+      p.ProductName?.toLowerCase().includes(keyword) ||
+      p.SKU?.toLowerCase().includes(keyword) ||
+      p.CategoryName?.toLowerCase().includes(keyword)
+    );
+  });
   return (
-    p.ProductName?.toLowerCase().includes(keyword) ||
-    p.SKU?.toLowerCase().includes(keyword) ||
-    p.CategoryName?.toLowerCase().includes(keyword)
-  );
-});
-  return (
-    <div className="flex min-h-screen bg-[#EDEDED]">
+    <div className="flex min-h-screen bg-[#EDEDED]  ">
       <Sidebar />
-      <div className="flex-1 p-6">
-        {/* Header */}
+      <div className="flex-1  sm:p-6 lg:p-8  p-6 min-w-0">
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-          <h1 className="text-2xl font-bold text-teal-700">Quản lý sản phẩm</h1>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <h1 className="text-xl sm:text-2xl font-bold text-teal-700 text-center md:text-left">
+            Quản lý sản phẩm
+          </h1>
+
+          <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 sm:gap-3">
+            <div className="relative w-full sm:w-72">
               <Search
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -308,36 +288,38 @@ const filteredProducts = products.filter((p) => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm theo tên, SKU hoặc danh mục…"
-                className="w-72 pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white"
+                className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
               />
             </div>
+
             <button
               onClick={() => {
                 setSelectedProduct(null);
                 setDialogOpen(true);
               }}
-              className="flex items-center bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 shadow-md"
+              className="flex items-center bg-teal-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-teal-700 shadow-md text-sm sm:text-base"
             >
               <Plus size={18} className="mr-2" /> Thêm sản phẩm
             </button>
 
             <button
               onClick={() => setAttrDialogOpen(true)}
-              className="flex items-center bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md"
+              className="flex items-center bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md text-sm sm:text-base"
             >
-              <Settings size={18} className="mr-2" /> Quản lý thuộc tính
+              <Settings size={18} className="mr-2" /> Thuộc tính
             </button>
           </div>
         </header>
 
         {/* Table */}
+        <div className="overflow-x-auto min-w-0">
         <ProductTable
           products={filteredProducts}
           loading={loading}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-
+        </div>
         {/* Dialog sản phẩm */}
         <ProductDialog
           isOpen={isDialogOpen}
@@ -351,29 +333,31 @@ const filteredProducts = products.filter((p) => {
           initialData={selectedProduct}
         />
 
+        {/* Dialog thuộc tính */}
         {isAttrDialogOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-            <div className="bg-white rounded-2xl shadow-2xl w-[700px] max-h-[85vh] overflow-y-auto p-6 relative">
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-2 sm:px-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[700px] max-h-[85vh] overflow-y-auto p-4 sm:p-6 relative">
               <button
                 onClick={() => setAttrDialogOpen(false)}
                 className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
               >
                 ✕
               </button>
-              <h2 className="text-xl font-bold text-indigo-600 mb-4">
+
+              <h2 className="text-lg sm:text-xl font-bold text-indigo-600 mb-4 text-center sm:text-left">
                 Quản lý thuộc tính
               </h2>
 
-              <div className="flex gap-2 mb-4">
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
                 <input
-                  className="flex-1 border rounded-lg px-3 py-2"
+                  className="flex-1 border rounded-lg px-3 py-2 text-sm sm:text-base"
                   placeholder="Nhập tên thuộc tính mới"
                   value={newAttrName}
                   onChange={(e) => setNewAttrName(e.target.value)}
                 />
                 <button
                   onClick={handleAddAttribute}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm sm:text-base"
                 >
                   + Thêm
                 </button>
@@ -387,7 +371,7 @@ const filteredProducts = products.filter((p) => {
                   <div className="flex justify-between items-center mb-2">
                     {editingAttr === a.AttributeID ? (
                       <input
-                        className="border px-2 py-1 rounded-md flex-1"
+                        className="border px-2 py-1 rounded-md flex-1 text-sm sm:text-base"
                         defaultValue={a.AttributeName}
                         onBlur={(e) =>
                           handleUpdateAttr(a.AttributeID, e.target.value)
@@ -395,7 +379,7 @@ const filteredProducts = products.filter((p) => {
                         autoFocus
                       />
                     ) : (
-                      <h3 className="font-semibold text-gray-800">
+                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">
                         {a.AttributeName}
                       </h3>
                     )}
@@ -416,21 +400,24 @@ const filteredProducts = products.filter((p) => {
                     </div>
                   </div>
 
-                  <div className="ml-4 space-y-1">
+                  <div className="ml-2 sm:ml-4 space-y-1">
                     {a.values?.map((v) => (
                       <div
                         key={v.AttributeValueID}
-                        className="flex justify-between bg-gray-50 px-3 py-1 rounded-md"
+                        className="flex justify-between bg-gray-50 px-3 py-1 rounded-md text-sm sm:text-base"
                       >
                         <span>{v.Value}</span>
                         <button
-                          onClick={() => handleDeleteValue(v.AttributeValueID)}
+                          onClick={() =>
+                            handleDeleteValue(v.AttributeValueID)
+                          }
                           className="text-red-500 hover:text-red-700"
                         >
                           ✕
                         </button>
                       </div>
                     ))}
+
                     <div className="flex gap-2 mt-2">
                       <input
                         ref={(el) => (a.inputRef = el)}
@@ -464,7 +451,7 @@ const filteredProducts = products.filter((p) => {
 
               <button
                 onClick={() => setAttrDialogOpen(false)}
-                className="w-full mt-4 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+                className="w-full mt-4 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 text-sm sm:text-base"
               >
                 Đóng
               </button>

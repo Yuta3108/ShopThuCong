@@ -34,8 +34,6 @@ function DangNhap() {
         setPassword("");
         return;
       }
-
-      // ✅ Thành công
       if (data && data.email) {
         localStorage.setItem("user", JSON.stringify(data));
         localStorage.setItem("email", data.email);
@@ -54,7 +52,7 @@ function DangNhap() {
           } else {
             navigate("/");
           }
-        }, 1500);
+        }, 500);
       } else {
         Swal.fire({
           icon: "warning",

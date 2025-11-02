@@ -167,8 +167,8 @@ function DangKy() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold 
-              rounded-lg hover:opacity-90 transition duration-200 shadow-md hover:shadow-lg"
+              className="w-full py-3 bg-gradient-to-t from-purple-800 via-purple-500 to-purple-400 
+                         text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow-md hover:shadow-lg"
             >
               Đăng Ký
             </button>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Banner from "./banner";
+
 const categories = [
   { name: "Dụng Cụ Đan Móc", link: "/san-pham/dung-cu-dan-moc", image: "https://picsum.photos/200/200?10" },
   { name: "Phụ Kiện Túi Xách", link: "/san-pham/phu-kien-tui-xach", image: "https://picsum.photos/200/200?13" },
@@ -33,23 +34,22 @@ export default function HomePage() {
   const renderProductCard = (p) => (
     <div
       key={p.id}
-      className="group bg-white text-gray-900 rounded-md overflow-hidden border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.03]"
+      className="group bg-white text-gray-900 rounded-md overflow-hidden border border-gray-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
     >
       <div className="overflow-hidden">
         <img
           src={p.image}
           alt={p.name}
-          className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-52 sm:h-64 object-cover group-hover:scale-105 transition-transform duration-300"
         />
       </div>
-      <div className="p-4 flex flex-col justify-between">
-        <h4 className="text-base font-medium uppercase text-gray-800 line-clamp-2">
+      <div className="p-3 sm:p-4 flex flex-col justify-between">
+        <h4 className="text-sm sm:text-base font-medium uppercase text-gray-800 line-clamp-2">
           {p.name}
         </h4>
         <p className="text-[#d81b60] font-semibold mt-1">{p.price}</p>
 
-        {/* Bộ chỉnh số lượng */}
-        <div className="flex items-center justify-center mt-3 gap-3">
+        <div className="flex items-center justify-center mt-2 gap-3">
           <button
             onClick={() => handleQuantityChange(p.id, -1)}
             className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-400 hover:bg-gray-100"
@@ -65,7 +65,7 @@ export default function HomePage() {
           </button>
         </div>
 
-        <button className="mt-3 bg-[#d81b60] hover:bg-[#ff3366] text-white py-2 rounded-full transition active:scale-95">
+        <button className="mt-3 bg-[#d81b60] hover:bg-[#ff3366] text-white py-2 rounded-full transition active:scale-95 text-sm sm:text-base">
           Thêm vào giỏ
         </button>
       </div>
@@ -77,47 +77,49 @@ export default function HomePage() {
       {/* BANNER */}
       <Banner />
 
-      <main className="flex-grow container mx-auto px-6 py-12">
+      <main className="flex-grow container mx-auto px-3 sm:px-6 py-8 sm:py-12">
         {/* DANH MỤC NGẮN */}
-        <section className="mb-16">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6">
+        <section className="mb-10 sm:mb-16">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 sm:gap-6">
             {categories.map((cat) => (
               <Link
                 to={cat.link}
                 key={cat.name}
                 className="flex flex-col items-center text-center transition-transform duration-300 hover:scale-105"
               >
-                <div className="w-20 h-20 md:w-24 md:h-24 mb-2">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-2">
                   <img
                     src={cat.image}
                     alt={cat.name}
                     className="w-full h-full object-cover rounded-full border border-gray-300 shadow-sm"
                   />
                 </div>
-                <span className="text-sm md:text-base text-gray-700">{cat.name}</span>
+                <span className="text-xs sm:text-sm md:text-base text-gray-700 line-clamp-2">
+                  {cat.name}
+                </span>
               </Link>
             ))}
           </div>
         </section>
 
         {/* SẢN PHẨM NỔI BẬT */}
-        <section className="mb-20">
-          <h2 className="text-2xl md:text-3xl font-semibold text-[#d81b60] mb-8">
+        <section className="mb-16 sm:mb-20">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-[#d81b60] mb-6 sm:mb-8">
             Sản phẩm nổi bật
           </h2>
 
-          <div className="flex flex-col md:flex-row gap-8">
+          <div className="flex flex-col md:flex-row gap-6 sm:gap-8">
             {/* Cột banner trái */}
-            <div className="md:w-1/4 relative overflow-hidden rounded-md transform transition-transform duration-500 hover:scale-[1.05]">
+            <div className="w-full md:w-1/4 relative overflow-hidden rounded-md transform transition-transform duration-500 hover:scale-[1.03]">
               <img
                 src="https://picsum.photos/400/600?grayscale"
                 alt="New Arrivals"
-                className="w-full h-full object-cover"
+                className="w-full h-56 sm:h-full object-cover"
               />
               <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col justify-center items-center text-center">
                 <Link
                   to="/sanpham"
-                  className="bg-[#d81b60] hover:bg-[#ff3366] px-5 py-2 rounded-full text-white font-medium transition"
+                  className="bg-[#d81b60] hover:bg-[#ff3366] px-4 py-2 rounded-full text-white font-medium text-sm sm:text-base transition"
                 >
                   SHOP NOW
                 </Link>
@@ -125,13 +127,13 @@ export default function HomePage() {
             </div>
 
             {/* Grid sản phẩm */}
-            <div className="md:w-3/4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="w-full md:w-3/4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
               {products.map(renderProductCard)}
             </div>
           </div>
 
-          <div className="flex justify-center mt-10">
-            <button className="px-6 py-2 border border-[#d81b60] text-[#d81b60] rounded-full hover:bg-[#d81b60] hover:text-white transition">
+          <div className="flex justify-center mt-8 sm:mt-10">
+            <button className="px-4 sm:px-6 py-2 border border-[#d81b60] text-[#d81b60] rounded-full hover:bg-[#d81b60] hover:text-white transition text-sm sm:text-base">
               Xem tất cả Sản phẩm mới
             </button>
           </div>
@@ -142,14 +144,19 @@ export default function HomePage() {
           const filtered = products.filter((p) => p.category === cat.name);
           if (filtered.length === 0) return null;
           return (
-            <section key={cat.name} className="mb-16">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl md:text-2xl font-medium text-gray-800">{cat.name}</h3>
-                <Link to={cat.link} className="text-[#d81b60] hover:text-[#ff3366]">
+            <section key={cat.name} className="mb-10 sm:mb-16">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-medium text-gray-800">
+                  {cat.name}
+                </h3>
+                <Link
+                  to={cat.link}
+                  className="text-[#d81b60] hover:text-[#ff3366] text-sm sm:text-base"
+                >
                   Xem tất cả →
                 </Link>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
                 {filtered.map(renderProductCard)}
               </div>
             </section>
