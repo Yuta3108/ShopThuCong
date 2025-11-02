@@ -3,9 +3,11 @@ import DangNhap from './User/ChucNang/Auth/DangNhap';
 import { Routes, Route } from "react-router-dom";
 import DangKy from './User/ChucNang/Auth/DangKy';
 import LienHe from './User/Layout/Lienhe';
+import QuenMatKhau from './User/ChucNang/Auth/QuenMK';
+import DatLaiMatKhau from './User/ChucNang/Auth/ResetPass';
+import UserProfile from './User/ChucNang/Auth/ProfileUser';
 import DashBoard from './Admin/Layout/DashBoard';
 import AdminUserPage from './Admin/Pages/AdminUser';
-import UserProfile from './User/ChucNang/Auth/ProfileUser';
 import ProductManagement from './Admin/Pages/ProductManagement';
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
       <Route path="/register" element={<DangKy />} />
       <Route path="/Lien-he" element={<LienHe />} />
       <Route path='/User' element={<UserProfile/>} />
+      <Route path="/forgot-password" element={<QuenMatKhau />} />
+      <Route path="/reset-password/:token" element={<DatLaiMatKhau />} />
       //== Admin Routes ==// 
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />

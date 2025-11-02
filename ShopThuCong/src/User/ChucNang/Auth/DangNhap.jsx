@@ -16,7 +16,7 @@ function DangNhap() {
     setError("");
 
     try {
-      const response = await fetch(`https://backend-eta-ivory-29.vercel.app/api/khachhang/dangnhap`, {
+      const response = await fetch(`http://localhost:5000/api/dangnhap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, matKhau: password }),
@@ -121,6 +121,7 @@ function DangNhap() {
             <div className="flex justify-between items-center mb-6">
               <button
                 type="button"
+                onClick={() => navigate("/forgot-password")}
                 className="text-blue-800 font-semibold hover:opacity-90 transition-all"
               >
                 Quên mật khẩu?
