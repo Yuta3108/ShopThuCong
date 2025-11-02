@@ -17,8 +17,20 @@ export const findProducts = async (filters = {}) => {
   const order = sort ? `ORDER BY ${sort}` : "ORDER BY p.CreatedAt DESC";
 
   const [rows] = await db.query(`
-    SELECT p.*, c.CategoryName,
-      MIN(v.Price) AS minPrice, MAX(v.Price) AS maxPrice
+    SELECT 
+      p.ProductID, p.SKU, p.ProductName, p.ShortDescription,
+      p.Material, p.Description, p.IsActive, p.CategoryID,
+      c.CategoryName,
+      MIN(v.Price) AS minPrice,
+      MAX(v.Price) AS maxPrice,
+      (
+        SELECT i.ImageURL 
+        FROM images i 
+        JOIN product_variants vv ON vv.VariantID = i.VariantID
+        WHERE vv.ProductID = p.ProductID
+        ORDER BY i.DisplayOrder ASC, i.ImageID ASC
+        LIMIT 1
+      ) AS cover
     FROM products p
     LEFT JOIN categories c ON c.CategoryID = p.CategoryID
     LEFT JOIN product_variants v ON v.ProductID = p.ProductID
@@ -27,8 +39,10 @@ export const findProducts = async (filters = {}) => {
     ${order}
     LIMIT ? OFFSET ?`, [...params, Number(pageSize), Number(offset)]
   );
+
   return rows;
 };
+
 
 export const findProductById = async (id) => {
   const [[product]] = await db.query(`

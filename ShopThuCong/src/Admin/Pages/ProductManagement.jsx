@@ -4,7 +4,7 @@ import Sidebar from "../Layout/Sidebar";
 import ProductTable from "../Pages/Products/ProductTable";
 import ProductDialog from "../Pages/Products/ProductDialog";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
@@ -40,33 +40,16 @@ export default function ProductManagement() {
     }
   };
 
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch(`${API}/products`);
-      const data = await res.json();
-      const unique = (data.data || data).filter(
-        (obj, index, self) =>
-          index === self.findIndex((t) => t.ProductID === obj.ProductID)
-      );
-      const withCover = await Promise.all(
-        unique.map(async (p) => {
-          try {
-            const d = await fetch(`${API}/products/${p.ProductID}`).then((r) =>
-              r.json()
-            );
-            const firstVariant = d.variants?.[0];
-            return { ...p, cover: firstVariant?.images?.[0]?.ImageURL || null };
-          } catch {
-            return { ...p, cover: null };
-          }
-        })
-      );
-      setProducts(withCover);
-      setLoading(false);
-    } catch (err) {
-      console.error("Fetch products error:", err);
-    }
-  };
+ const fetchProducts = async () => {
+  try {
+    const res = await fetch(`${API}/products`);
+    const data = await res.json();
+    setProducts(data.data || data);
+    setLoading(false);
+  } catch (err) {
+    console.error("Fetch products error:", err);
+  }
+};
 
   const fetchAttributes = async () => {
     try {
