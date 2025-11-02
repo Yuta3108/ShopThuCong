@@ -2,9 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Nếu bạn muốn custom thêm */
-.btn-primary {
-  @apply bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg transition;
+@layer components {
+  .btn-primary {
+    @apply bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-4 py-2 rounded-lg transition;
+  }
 }
 @keyframes fadeIn {
   from {
