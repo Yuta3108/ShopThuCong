@@ -20,10 +20,6 @@ export default {
         },
       },
     extend: {
-       mint: {
-        50: "#e7fdf7",
-        100: "#c4f5e8",
-      },
       keyframes: {
         fadeIn: {
           "0%": { opacity: "0" },
