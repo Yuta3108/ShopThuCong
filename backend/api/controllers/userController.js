@@ -80,36 +80,32 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
     if (!email)
       return res.status(400).json({ message: "Vui lòng nhập email." });
 
-    res.json({
-      message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi.",
-    });
-
-    // Kiểm tra xem user có tồn tại không
+    // 1️⃣ Tìm user
     const [rows] = await db.query("SELECT * FROM users WHERE Email = ?", [email]);
-    if (rows.length === 0) return; // không gửi mail nếu không có user
+    if (rows.length === 0)
+      return res.json({ message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi." });
 
     const user = rows[0];
 
-    // Xóa token cũ 
+    // 2️⃣ Xóa token cũ
     await db.query(
       "UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE Email = ?",
       [email]
     );
 
-    // Tạo token mới
+    // 3️⃣ Tạo token mới
     const token = crypto.randomBytes(20).toString("hex");
-    const expireTime = new Date(Date.now() + 5 * 60 * 1000); 
+    const expireTime = new Date(Date.now() + 5 * 60 * 1000);
 
     await db.query(
       "UPDATE users SET resetToken = ?, resetExpires = ? WHERE Email = ?",
       [token, expireTime, email]
     );
 
-    const resetLink = `${
-      process.env.FRONTEND_URL || "http://localhost:5173"
-    }/reset-password/${token}`;
+    // 4️⃣ Tạo link đặt lại mật khẩu
+    const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${token}`;
 
-    // === Gửi email ===
+    // 5️⃣ Gửi mail
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -125,19 +121,20 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       html: `
         <h2>Xin chào ${user.FullName || "bạn"}!</h2>
         <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản tại <b>Then Fong Store</b>.</p>
-        <p>Nhấn vào liên kết bên dưới để tạo mật khẩu mới:</p>
         <a href="${resetLink}" target="_blank" 
-           style="display:inline-block;padding:10px 18px;background-color:#14b8a6;
-           color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
+           style="display:inline-block;padding:10px 18px;background-color:#14b8a6;color:#fff;
+           border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
            Đặt lại mật khẩu
         </a>
-        <p><i>Liên kết này có hiệu lực trong 5 phút. Sau đó bạn có thể yêu cầu lại.</i></p>
+        <p><i>Liên kết này có hiệu lực trong 5 phút.</i></p>
       `,
     });
 
-    console.log("📧 Link đặt lại mật khẩu:", resetLink);
+    // 6️⃣ Sau khi tất cả xong rồi mới trả response
+    res.json({ message: "Liên kết đặt lại mật khẩu đã được gửi nếu email hợp lệ!" });
   } catch (err) {
     console.error("🔥 Lỗi yêu cầu đặt lại mật khẩu:", err);
+    res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
 
