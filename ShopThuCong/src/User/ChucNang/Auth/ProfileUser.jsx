@@ -83,7 +83,7 @@ export default function UserProfile() {
   // ✅ Cập nhật thông tin user
   const handleUpdate = async () => {
     if (!user) return;
-    if (!validateForm()) return; // ⛔ Chặn nếu không hợp lệ
+    if (!validateForm()) return; 
 
     try {
       const res = await fetch(`https://backend-eta-ivory-29.vercel.app/api/users/${user.UserID}`, {
@@ -154,7 +154,7 @@ export default function UserProfile() {
 
   try {
     const res = await fetch(
-      `https://backend-eta-ivory-29.vercel.app/api/users/${user.UserID}/password`,
+      `http://localhost:5000/api/${user.UserID}/password`,
       {
         method: "PUT",
         headers: {

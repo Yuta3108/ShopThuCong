@@ -4,6 +4,8 @@ import {
   updateUserInfo,
   deleteUserById,
   updateUserStatus,
+  updateUserPassword,
+  findUserById
 } from "../models/userModel.js";
 
 // ===== Xem tất cả user (Admin) =====
@@ -83,35 +85,5 @@ export const updateUserStatusController = async (req, res) => {
   } catch (err) {
     console.error("Lỗi updateUserStatus:", err);
     res.status(500).json({ message: "Lỗi máy chủ" });
-  }
-};
-export const doiMatKhau = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const { oldPassword, newPassword } = req.body;
-
-    if (!oldPassword || !newPassword)
-      return res.status(400).json({ message: "Vui lòng nhập đủ mật khẩu cũ và mới." });
-
-    // Tìm user trong DB
-    const [rows] = await db.query("SELECT * FROM users WHERE UserID = ?", [userId]);
-    if (rows.length === 0) return res.status(404).json({ message: "Không tìm thấy người dùng." });
-    const user = rows[0];
-
-    // So sánh mật khẩu cũ
-    const match = await bcrypt.compare(oldPassword, user.Password);
-    if (!match)
-      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng." });
-
-    // Hash mật khẩu mới
-    const hashed = await bcrypt.hash(newPassword, 10);
-
-    // Cập nhật mật khẩu
-    await db.query("UPDATE users SET Password = ? WHERE UserID = ?", [hashed, userId]);
-
-    res.json({ message: "Đổi mật khẩu thành công!" });
-  } catch (err) {
-    console.error("Lỗi đổi mật khẩu:", err);
-    res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };

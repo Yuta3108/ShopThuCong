@@ -8,6 +8,10 @@ export const findUserByEmail = async (email) => {
   );
   return rows[0];
 };
+export const findUserById = async (id) => {
+  const [rows] = await db.query("SELECT * FROM users WHERE UserID = ?", [id]);
+  return rows[0];
+};
 
 export const createUser = async ({ email, password, fullName, phone, address, role }) => {
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -67,4 +71,9 @@ export const verifyUserCredentials = async (email, password) => {
 
   const { Password, ...safeUser } = user;
   return safeUser;
+};
+
+export const updateUserPassword = async (id, hashedPassword) => {
+  await db.query("UPDATE users SET Password = ? WHERE UserID = ?", [hashedPassword, id]);
+  return true;
 };

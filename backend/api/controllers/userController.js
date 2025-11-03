@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import db from "../config/db.js";
 import nodemailer from "nodemailer";
-import { findUserByEmail, createUser } from "../models/userModel.js";
+import { findUserByEmail, createUser,findUserById,updateUserPassword } from "../models/userModel.js";
 
 // ===== JWT =====
 const generateToken = (user) => {
@@ -80,7 +80,6 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
     if (!email)
       return res.status(400).json({ message: "Vui lòng nhập email." });
 
-    // Luôn trả về message chung (tránh lộ thông tin)
     res.json({
       message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi.",
     });
@@ -91,7 +90,7 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
 
     const user = rows[0];
 
-    // Xóa token cũ (dù còn hạn hay hết hạn)
+    // Xóa token cũ 
     await db.query(
       "UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE Email = ?",
       [email]
@@ -99,7 +98,7 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
 
     // Tạo token mới
     const token = crypto.randomBytes(20).toString("hex");
-    const expireTime = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
+    const expireTime = new Date(Date.now() + 5 * 60 * 1000); 
 
     await db.query(
       "UPDATE users SET resetToken = ?, resetExpires = ? WHERE Email = ?",
@@ -155,7 +154,7 @@ export const datLaiMatKhau = async (req, res) => {
     );
 
     if (rows.length === 0)
-      return res.status(400).json({ message: "Token không hợp lệ hoặc đã hết hạn." });
+      return res.status(400).json({ message: "Mã Của bạn đã hết hạn." });
 
     const user = rows[0];
     const hashed = await bcrypt.hash(newPassword, 10);
@@ -171,7 +170,34 @@ export const datLaiMatKhau = async (req, res) => {
     res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
+// ===== Đổi mật khẩu =====
+export const doiMatKhau = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { oldPassword, newPassword } = req.body;
 
+    if (!oldPassword || !newPassword)
+      return res
+        .status(400)
+        .json({ message: "Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới." });
+
+    const user = await findUserById(userId);
+    if (!user)
+      return res.status(404).json({ message: "Không tìm thấy người dùng." });
+
+    const match = await bcrypt.compare(oldPassword, user.Password);
+    if (!match)
+      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng." });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await updateUserPassword(userId, hashed);
+
+    res.json({ message: "Đổi mật khẩu thành công!" });
+  } catch (err) {
+    console.error("🔥 Lỗi đổi mật khẩu:", err);
+    res.status(500).json({ message: "Lỗi máy chủ.", error: err.message });
+  }
+};
 setInterval(async () => {
   try {
     await db.query("UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE resetExpires < NOW()");
