@@ -116,7 +116,7 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
     // === Gửi email bằng Resend ===
     try {
       await resend.emails.send({
-        from: "Then Fong Store <ThenFong.Storeg@resend.dev>",
+        from: "Then Fong Store <onboarding@resend.dev>",
         to: email,
         subject: "Đặt lại mật khẩu - Then Fong Store",
         html: `
