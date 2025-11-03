@@ -133,6 +133,8 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
           </div>
         `,
       });
+      console.log("🔑 RESEND_API_KEY:", process.env.RESEND_API_KEY ? "Đã nạp" : "MẤT!");
+
     } catch (mailError) {
       console.error("❌ Lỗi khi gửi email qua Resend:", mailError);
     }
