@@ -3,9 +3,8 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import db from "../config/db.js";
 import nodemailer from "nodemailer";
-import { Resend } from "resend";
 import { findUserByEmail, createUser,findUserById,updateUserPassword } from "../models/userModel.js";
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 // ===== JWT =====
 const generateToken = (user) => {
   return jwt.sign(
@@ -81,28 +80,25 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
     if (!email)
       return res.status(400).json({ message: "Vui lòng nhập email." });
 
-    // Luôn trả phản hồi để tránh lộ email hợp lệ
     res.json({
       message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi.",
     });
 
-    // Kiểm tra người dùng
-    const [rows] = await db.query("SELECT * FROM users WHERE Email = ?", [
-      email,
-    ]);
-    if (rows.length === 0) return;
+    // Kiểm tra xem user có tồn tại không
+    const [rows] = await db.query("SELECT * FROM users WHERE Email = ?", [email]);
+    if (rows.length === 0) return; // không gửi mail nếu không có user
 
     const user = rows[0];
 
-    // Xóa token cũ nếu có
+    // Xóa token cũ 
     await db.query(
       "UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE Email = ?",
       [email]
     );
 
-    // Tạo token mới (hết hạn sau 5 phút)
+    // Tạo token mới
     const token = crypto.randomBytes(20).toString("hex");
-    const expireTime = new Date(Date.now() + 5 * 60 * 1000);
+    const expireTime = new Date(Date.now() + 5 * 60 * 1000); 
 
     await db.query(
       "UPDATE users SET resetToken = ?, resetExpires = ? WHERE Email = ?",
@@ -113,31 +109,33 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       process.env.FRONTEND_URL || "http://localhost:5173"
     }/reset-password/${token}`;
 
-    // === Gửi email bằng Resend ===
-    try {
-      await resend.emails.send({
-        from: "Then Fong Store <onboarding@resend.dev>",
-        to: email,
-        subject: "Đặt lại mật khẩu - Then Fong Store",
-        html: `
-          <div style="font-family:Arial,sans-serif;line-height:1.5;">
-            <h2>Xin chào ${user.FullName || "bạn"}!</h2>
-            <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản tại <b>Then Fong Store</b>.</p>
-            <p>Nhấn vào nút bên dưới để tạo mật khẩu mới:</p>
-            <a href="${resetLink}" 
-               style="display:inline-block;padding:10px 18px;background-color:#14b8a6;
-               color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;margin:10px 0;">
-               Đặt lại mật khẩu
-            </a>
-            <p><i>Liên kết này có hiệu lực trong 5 phút. Sau đó bạn có thể yêu cầu lại.</i></p>
-          </div>
-        `,
-      });
-      console.log("🔑 RESEND_API_KEY:", process.env.RESEND_API_KEY ? "Đã nạp" : "MẤT!");
+    // === Gửi email ===
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-    } catch (mailError) {
-      console.error("❌ Lỗi khi gửi email qua Resend:", mailError);
-    }
+    await transporter.sendMail({
+      from: `"Then Fong Store" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Đặt lại mật khẩu - Then Fong Store",
+      html: `
+        <h2>Xin chào ${user.FullName || "bạn"}!</h2>
+        <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản tại <b>Then Fong Store</b>.</p>
+        <p>Nhấn vào liên kết bên dưới để tạo mật khẩu mới:</p>
+        <a href="${resetLink}" target="_blank" 
+           style="display:inline-block;padding:10px 18px;background-color:#14b8a6;
+           color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
+           Đặt lại mật khẩu
+        </a>
+        <p><i>Liên kết này có hiệu lực trong 5 phút. Sau đó bạn có thể yêu cầu lại.</i></p>
+      `,
+    });
+
+    console.log("📧 Link đặt lại mật khẩu:", resetLink);
   } catch (err) {
     console.error("🔥 Lỗi yêu cầu đặt lại mật khẩu:", err);
   }
