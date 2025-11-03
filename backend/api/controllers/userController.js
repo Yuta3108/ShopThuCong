@@ -80,19 +80,24 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
     if (!email)
       return res.status(400).json({ message: "Vui lòng nhập email." });
 
-    const [rows] = await db.query("SELECT * FROM users WHERE Email = ?", [email]);
-    const user = rows[0];
-
-    // Luôn trả response chung -> tránh lộ email có hay không
+    // Luôn trả về message chung (tránh lộ thông tin)
     res.json({
       message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi.",
     });
 
-    if (!user) return; // không gửi mail nếu không tồn tại
+    // Kiểm tra xem user có tồn tại không
+    const [rows] = await db.query("SELECT * FROM users WHERE Email = ?", [email]);
+    if (rows.length === 0) return; // không gửi mail nếu không có user
 
-    // Xoá token cũ (nếu có)
-    await db.query("UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE Email = ?", [email]);
+    const user = rows[0];
 
+    // Xóa token cũ (dù còn hạn hay hết hạn)
+    await db.query(
+      "UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE Email = ?",
+      [email]
+    );
+
+    // Tạo token mới
     const token = crypto.randomBytes(20).toString("hex");
     const expireTime = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
 
@@ -101,7 +106,9 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       [token, expireTime, email]
     );
 
-    const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${token}`;
+    const resetLink = `${
+      process.env.FRONTEND_URL || "http://localhost:5173"
+    }/reset-password/${token}`;
 
     // === Gửi email ===
     const transporter = nodemailer.createTransport({
@@ -118,15 +125,20 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       subject: "Đặt lại mật khẩu - Then Fong Store",
       html: `
         <h2>Xin chào ${user.FullName || "bạn"}!</h2>
-        <p>Nhấn vào liên kết bên dưới để đặt lại mật khẩu:</p>
-        <a href="${resetLink}" target="_blank">${resetLink}</a>
-        <p><i>Liên kết này sẽ hết hạn sau 5 phút.</i></p>
+        <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản tại <b>Then Fong Store</b>.</p>
+        <p>Nhấn vào liên kết bên dưới để tạo mật khẩu mới:</p>
+        <a href="${resetLink}" target="_blank" 
+           style="display:inline-block;padding:10px 18px;background-color:#14b8a6;
+           color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
+           Đặt lại mật khẩu
+        </a>
+        <p><i>Liên kết này có hiệu lực trong 5 phút. Sau đó bạn có thể yêu cầu lại.</i></p>
       `,
     });
 
     console.log("📧 Link đặt lại mật khẩu:", resetLink);
   } catch (err) {
-    console.error("Lỗi yêu cầu đặt lại mật khẩu:", err);
+    console.error("🔥 Lỗi yêu cầu đặt lại mật khẩu:", err);
   }
 };
 
@@ -166,4 +178,4 @@ setInterval(async () => {
   } catch (err) {
     console.error("⚠️ Dọn token lỗi:", err);
   }
-}, 5 * 60 * 1000);
+}, 6 * 60 * 1000);

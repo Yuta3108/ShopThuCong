@@ -128,59 +128,69 @@ export default function UserProfile() {
 
   // ✅ Đặt lại mật khẩu
   const handleResetPassword = async () => {
-    const newPass = await Swal.fire({
-      title: "Đặt lại mật khẩu",
-      input: "password",
-      inputLabel: "Nhập mật khẩu mới",
-      inputPlaceholder: "Mật khẩu mới của bạn...",
-      confirmButtonText: "Xác nhận",
-      cancelButtonText: "Hủy",
-      showCancelButton: true,
-      inputAttributes: {
-        maxlength: 30,
-        autocapitalize: "off",
-        autocorrect: "off",
-      },
-    });
-
-    if (!newPass.value) return;
-
-    try {
-      const res = await fetch(
-        `https://backend-eta-ivory-29.vercel.app/api/users/${user.UserID}/password`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ newPassword: newPass.value }),
-        }
-      );
-
-      const data = await res.json();
-      if (res.ok) {
-        Swal.fire({
-          icon: "success",
-          title: "Đổi mật khẩu thành công!",
-          showConfirmButton: false,
-          timer: 1500,
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Đổi mật khẩu thất bại",
-          text: data.message || "Không thể đổi mật khẩu.",
-        });
+  const { value: passwords } = await Swal.fire({
+    title: "Đổi mật khẩu",
+    html: `
+      <input id="oldPass" type="password" placeholder="Mật khẩu hiện tại" class="swal2-input" />
+      <input id="newPass" type="password" placeholder="Mật khẩu mới" class="swal2-input" />
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "Xác nhận",
+    preConfirm: () => {
+      const oldPass = document.getElementById("oldPass").value;
+      const newPass = document.getElementById("newPass").value;
+      if (!oldPass || !newPass) {
+        Swal.showValidationMessage("Vui lòng nhập đủ 2 mật khẩu");
+        return false;
       }
-    } catch (err) {
+      if (newPass.length < 6)
+        Swal.showValidationMessage("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return { oldPass, newPass };
+    },
+  });
+
+  if (!passwords) return;
+
+  try {
+    const res = await fetch(
+      `https://backend-eta-ivory-29.vercel.app/api/users/${user.UserID}/password`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          oldPassword: passwords.oldPass,
+          newPassword: passwords.newPass,
+        }),
+      }
+    );
+
+    const data = await res.json();
+    if (res.ok) {
+      Swal.fire({
+        icon: "success",
+        title: "Đổi mật khẩu thành công!",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
       Swal.fire({
         icon: "error",
-        title: "Lỗi kết nối máy chủ",
-        text: "Vui lòng thử lại sau.",
+        title: "Đổi mật khẩu thất bại",
+        text: data.message || "Vui lòng kiểm tra lại mật khẩu hiện tại.",
       });
     }
-  };
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Lỗi kết nối máy chủ",
+      text: "Vui lòng thử lại sau.",
+    });
+  }
+};
 
   if (!user)
     return (
