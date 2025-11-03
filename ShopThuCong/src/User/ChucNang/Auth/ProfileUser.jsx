@@ -154,7 +154,7 @@ export default function UserProfile() {
 
   try {
     const res = await fetch(
-      `http://localhost:5000/api/${user.UserID}/password`,
+      `https://backend-eta-ivory-29.vercel.app/api/${user.UserID}/password`,
       {
         method: "PUT",
         headers: {
