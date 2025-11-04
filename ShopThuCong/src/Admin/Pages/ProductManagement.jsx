@@ -148,8 +148,7 @@ export default function ProductManagement() {
             );
             const varData = await resVar.json();
             variantId = Number(varData.VariantID);
-          }
-
+          }      
           // Upload ảnh
           if (v.images?.length && variantId) {
             for (const img of v.images) {
@@ -242,7 +241,20 @@ export default function ProductManagement() {
     });
     fetchAttributes();
   };
-
+  const handleDeleteImage = async (variantId, imageId) => {
+  if (!window.confirm("Xoá ảnh này?")) return;
+  try {
+    await fetch(`${API}/products/images/${imageId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    alert("Đã xoá ảnh thành công!");
+    fetchProducts(); // refresh lại danh sách sản phẩm
+  } catch (err) {
+    console.error("Lỗi xoá ảnh:", err);
+    alert("Không xoá được ảnh này.");
+  }
+};
   // ================= SEARCH =================
   const filteredProducts = products.filter((p) => {
     const keyword = search.toLowerCase().trim();
@@ -314,6 +326,7 @@ export default function ProductManagement() {
           categories={categories}
           attributes={attributes}
           initialData={selectedProduct}
+          onDeleteImage={handleDeleteImage}
         />
 
         {/* Dialog thuộc tính */}

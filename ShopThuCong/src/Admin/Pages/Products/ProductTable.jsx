@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 
-export default function ProductTable({ products, loading, onEdit, onDelete }) {
+export default function ProductTable({ products, loading, onEdit, onDelete, }) {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 10;
 
