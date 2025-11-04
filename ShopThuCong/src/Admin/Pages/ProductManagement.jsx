@@ -40,16 +40,16 @@ export default function ProductManagement() {
     }
   };
 
- const fetchProducts = async () => {
-  try {
-    const res = await fetch(`${API}/products`);
-    const data = await res.json();
-    setProducts(data.data || data);
-    setLoading(false);
-  } catch (err) {
-    console.error("Fetch products error:", err);
-  }
-};
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API}/products`);
+      const data = await res.json();
+      setProducts(data.data || data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Fetch products error:", err);
+    }
+  };
 
   const fetchAttributes = async () => {
     try {
@@ -148,7 +148,7 @@ export default function ProductManagement() {
             );
             const varData = await resVar.json();
             variantId = Number(varData.VariantID);
-          }      
+          }
           // Upload ảnh
           if (v.images?.length && variantId) {
             for (const img of v.images) {
@@ -242,19 +242,15 @@ export default function ProductManagement() {
     fetchAttributes();
   };
   const handleDeleteImage = async (variantId, imageId) => {
-  if (!window.confirm("Xoá ảnh này?")) return;
-  try {
-    await fetch(`${API}/products/images/${imageId}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    alert("Đã xoá ảnh thành công!");
-    fetchProducts(); // refresh lại danh sách sản phẩm
-  } catch (err) {
-    console.error("Lỗi xoá ảnh:", err);
-    alert("Không xoá được ảnh này.");
-  }
-};
+    try {
+      await fetch(`${API}/products/images/${imageId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+    } catch (err) {
+      console.error("Lỗi xoá ảnh:", err);
+    }
+  };
   // ================= SEARCH =================
   const filteredProducts = products.filter((p) => {
     const keyword = search.toLowerCase().trim();
@@ -308,12 +304,12 @@ export default function ProductManagement() {
 
         {/* Table */}
         <div className="overflow-x-auto min-w-0">
-        <ProductTable
-          products={filteredProducts}
-          loading={loading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+          <ProductTable
+            products={filteredProducts}
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
         </div>
         {/* Dialog sản phẩm */}
         <ProductDialog

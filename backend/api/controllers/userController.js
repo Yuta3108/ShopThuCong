@@ -80,20 +80,20 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
     if (!email)
       return res.status(400).json({ message: "Vui lòng nhập email." });
 
-    // 1️⃣ Tìm user
+    // Tìm user
     const [rows] = await db.query("SELECT * FROM users WHERE Email = ?", [email]);
     if (rows.length === 0)
       return res.json({ message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi." });
 
     const user = rows[0];
 
-    // 2️⃣ Xóa token cũ
+    // Xóa token cũ
     await db.query(
       "UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE Email = ?",
       [email]
     );
 
-    // 3️⃣ Tạo token mới
+    //  Tạo token mới
     const token = crypto.randomBytes(20).toString("hex");
     const expireTime = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -102,10 +102,10 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       [token, expireTime, email]
     );
 
-    // 4️⃣ Tạo link đặt lại mật khẩu
+    // Tạo link đặt lại mật khẩu
     const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${token}`;
 
-    // 5️⃣ Gửi mail
+    //  Gửi mail
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -130,7 +130,7 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       `,
     });
 
-    // 6️⃣ Sau khi tất cả xong rồi mới trả response
+    // 6Sau khi tất cả xong rồi mới trả response
     res.json({ message: "Liên kết đặt lại mật khẩu đã được gửi nếu email hợp lệ!" });
   } catch (err) {
     console.error("🔥 Lỗi yêu cầu đặt lại mật khẩu:", err);

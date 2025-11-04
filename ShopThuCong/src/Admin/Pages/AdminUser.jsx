@@ -11,7 +11,7 @@ export default function AdminUserPage() {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // ✅ Toggle trạng thái user
+  // Chuyển trạng thái user
   const handleToggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus ? 0 : 1;
     try {

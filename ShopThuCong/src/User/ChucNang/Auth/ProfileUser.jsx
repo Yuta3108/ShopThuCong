@@ -17,12 +17,12 @@ export default function UserProfile() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userId = storedUser?.UserID || storedUser?.id;
 
-  // ✅ Fetch thông tin user
+
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId || !token) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        const res = await fetch(`https://backend-eta-ivory-29.vercel.app/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

@@ -373,7 +373,13 @@ export default function ProductDialog({
                           onClick={() => {
                             const isDB =
                               typeof img !== "string" && img.ImageID;
-                            if (isDB) onDeleteImage?.(v.VariantID, img.ImageID);
+                            if (isDB) {
+                              onDeleteImage?.(v.VariantID, img.ImageID).then(() => {
+                                const arr = [...product.variants];
+                                arr[i].images = arr[i].images.filter((im, k) => k !== idx);
+                                setProduct({ ...product, variants: arr });
+                              });
+                            }
                             else {
                               const arr = [...product.variants];
                               arr[i].images.splice(idx, 1);
