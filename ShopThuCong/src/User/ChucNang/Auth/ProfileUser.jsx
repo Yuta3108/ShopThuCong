@@ -140,12 +140,16 @@ export default function UserProfile() {
     preConfirm: () => {
       const oldPass = document.getElementById("oldPass").value;
       const newPass = document.getElementById("newPass").value;
+      
       if (!oldPass || !newPass) {
         Swal.showValidationMessage("Vui lòng nhập đủ 2 mật khẩu");
         return false;
       }
-      if (newPass.length < 6)
-        Swal.showValidationMessage("Mật khẩu mới phải có ít nhất 6 ký tự");
+      if (!/[a-zA-Z]/.test(newPass) || newPass.length < 8)
+         {
+            Swal.showValidationMessage("🔒 Mật khẩu phải có ít nhất 8 ký tự và chứa ít nhất một chữ cái");
+            return false;
+          }
       return { oldPass, newPass };
     },
   });
