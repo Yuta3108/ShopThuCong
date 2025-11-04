@@ -45,7 +45,7 @@ export default function AdminUserPage() {
     const fetchUsers = async () => {
       try {
         const res = await fetch(
-          "http://localhost:5000/api/users/all",
+          "https://backend-eta-ivory-29.vercel.app/api/users/all",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -63,7 +63,7 @@ export default function AdminUserPage() {
     fetchUsers();
   }, [token]);
 
-  // ✅ Xóa user (với animation)
+
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa user này?")) return;
     setRemoving(id);
@@ -83,10 +83,9 @@ export default function AdminUserPage() {
       } finally {
         setRemoving(null);
       }
-    }, 300);
+    }, 200);
   };
 
-  // ✅ Lọc user theo từ khóa
   const filtered = users.filter(
     (u) =>
       u.FullName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -206,11 +205,6 @@ export default function AdminUserPage() {
                 </tbody>
               </table>
             </div>
-
-            {/* 📱 Gợi ý cuộn trên mobile */}
-            <p className="text-xs text-gray-500 mt-2 text-center sm:hidden">
-              ⬅️ Vuốt ngang để xem thêm thông tin
-            </p>
           </>
         )}
       </div>
