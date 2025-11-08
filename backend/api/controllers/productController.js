@@ -3,7 +3,8 @@ import {
   findProductById,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  findProductDetailById
 } from "../models/productsModel.js";
 import cloudinary from "../config/cloudinary.js";
 
@@ -19,7 +20,7 @@ export const getProducts = async (req, res) => {
 
 export const getProductDetail = async (req, res) => {
   try {
-    const product = await findProductById(Number(req.params.id));
+    const product = await findProductDetailById(Number(req.params.id));
     if (!product) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
     res.json(product);
   } catch (err) {

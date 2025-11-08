@@ -52,7 +52,11 @@ export default function ProductDialog({
             }
           }
         }
-        return { ...v, attributeValueIds: attrValueIds };
+        return { 
+        ...v, 
+        images: v.images || [], 
+        attributeValueIds: attrValueIds 
+      };
       });
       setProduct({ ...initialData, variants: updatedVariants });
     }

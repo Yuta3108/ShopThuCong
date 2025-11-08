@@ -38,6 +38,45 @@ export const findProductById = async (id) => {
   );
   return product || null;
 };
+export const findProductDetailById = async (productId) => {
+  try {
+    // 🟢 Lấy sản phẩm
+    const [[product]] = await db.query(
+      `SELECT p.*, c.CategoryName,
+              MIN(v.Price) AS minPrice,
+              MAX(v.Price) AS maxPrice
+       FROM products p
+       LEFT JOIN categories c ON p.CategoryID = c.CategoryID
+       LEFT JOIN product_variants v ON v.ProductID = p.ProductID
+       WHERE p.ProductID = ?
+       GROUP BY p.ProductID`,
+      [productId]
+    );
+
+    if (!product) return null;
+
+    // 🟢 Lấy danh sách biến thể
+    const [variants] = await db.query(
+      `SELECT * FROM product_variants WHERE ProductID = ?`,
+      [productId]
+    );
+
+    // 🟢 Gắn thêm ảnh cho từng biến thể
+    for (const v of variants) {
+      const [images] = await db.query(
+        `SELECT ImageID, ImageURL FROM images WHERE VariantID = ?`,
+        [v.VariantID]
+      );
+      v.images = images;
+    }
+
+    product.variants = variants;
+    return product;
+  } catch (err) {
+    console.error("findProductDetailById error:", err);
+    throw err;
+  }
+};
 
 export const createProduct = async (data) => {
   const { CategoryID, SKU, ProductName, ShortDescription, Material, Description, ImageURL, IsActive } = data;
