@@ -58,9 +58,9 @@ export default function ProductTable({ products, loading, onEdit, onDelete, }) {
               {/* Ảnh */}
               <td className="px-3 sm:px-4 py-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden border bg-gray-100">
-                  {p.cover ? (
+                  {p.ImageURL ? (
                     <img
-                      src={p.cover}
+                      src={p.ImageURL}
                       alt="cover"
                       className="w-full h-full object-cover"
                     />

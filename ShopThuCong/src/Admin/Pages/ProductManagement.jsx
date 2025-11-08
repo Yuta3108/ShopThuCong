@@ -3,6 +3,18 @@ import { Plus, Search, Settings, Pencil, Trash2 } from "lucide-react";
 import Sidebar from "../Layout/Sidebar";
 import ProductTable from "../Pages/Products/ProductTable";
 import ProductDialog from "../Pages/Products/ProductDialog";
+import {
+  saveProduct,
+  saveVariant,
+  deleteVariant,
+  uploadVariantImage,
+  deleteImage,
+  createAttribute,
+  updateAttribute,
+  deleteAttribute,
+  createAttributeValue,
+  deleteAttributeValue,
+} from "../Pages/Products/productService";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
@@ -17,19 +29,8 @@ export default function ProductManagement() {
   const [isAttrDialogOpen, setAttrDialogOpen] = useState(false);
   const [editingAttr, setEditingAttr] = useState(null);
   const [newAttrName, setNewAttrName] = useState("");
-  const getAuthHeaders = () => {
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) return {};
-    try {
-      const user = JSON.parse(storedUser);
-      if (user?.token) return { Authorization: `Bearer ${user.token}` };
-    } catch {
-      return {};
-    }
-    return {};
-  };
 
-  // ================= FETCH DATA =================
+  /** ============ FETCH API ============ */
   const fetchCategories = async () => {
     try {
       const res = await fetch(`${API}/categories`);
@@ -67,191 +68,100 @@ export default function ProductManagement() {
     fetchAttributes();
   }, []);
 
-  // ================= CRUD PRODUCT =================
+  /** ============ CRUD PRODUCT ============ */
   const handleAddOrEdit = async (prod) => {
     if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
     const isEdit = !!selectedProduct;
-    let ProductID = prod.ProductID;
-
     try {
-      if (!isEdit) {
-        const res = await fetch(`${API}/products`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify(prod),
-        });
-        const data = await res.json();
-        ProductID = Number(data.ProductID);
-        if (isNaN(ProductID)) return alert("Không thể tạo sản phẩm mới.");
-      } else {
-        await fetch(`${API}/products/${ProductID}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-          body: JSON.stringify(prod),
-        });
+      //  Lưu sản phẩm chính
+      const data = await saveProduct(prod, isEdit);
+      const ProductID = data.ProductID || prod.ProductID;
 
-        // Xóa biến thể không còn
-        const exist = await fetch(`${API}/products/${ProductID}`).then((r) =>
-          r.json()
-        );
-        const existingVariants = exist.variants || [];
-        const currentVariantIds = prod.variants
-          .map((v) => v.VariantID)
-          .filter(Boolean);
+      //  Lưu / cập nhật biến thể
+      for (const v of prod.variants || []) {
+        const isVarEdit = !!v.VariantID;
+        const varData = await saveVariant(ProductID, v, isVarEdit);
+        const variantId = varData.VariantID || v.VariantID;
 
-        for (const variant of existingVariants) {
-          if (!currentVariantIds.includes(variant.VariantID)) {
-            await fetch(`${API}/products/variants/${variant.VariantID}`, {
-              method: "DELETE",
-              headers: getAuthHeaders(),
-            });
-          }
-        }
-
-        // Update/Thêm mới biến thể
-        for (const v of prod.variants) {
-          let variantId = v.VariantID;
-          if (variantId) {
-            await fetch(`${API}/products/variants/${variantId}`, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-                ...getAuthHeaders(),
-              },
-              body: JSON.stringify({
-                SKU: v.SKU,
-                Price: v.Price,
-                StockQuantity: v.StockQuantity,
-                Weight: v.Weight || 0,
-                IsActive: v.IsActive,
-                attributeValueIds: v.attributeValueIds || [],
-              }),
-            });
-          } else {
-            const resVar = await fetch(
-              `${API}/products/${ProductID}/variants`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  ...getAuthHeaders(),
-                },
-                body: JSON.stringify({
-                  SKU: v.SKU,
-                  Price: v.Price,
-                  StockQuantity: v.StockQuantity,
-                  Weight: v.Weight || 0,
-                  IsActive: v.IsActive,
-                  attributeValueIds: v.attributeValueIds || [],
-                }),
-              }
-            );
-            const varData = await resVar.json();
-            variantId = Number(varData.VariantID);
-          }
-          // Upload ảnh
-          if (v.images?.length && variantId) {
-            for (const img of v.images) {
-              if (typeof img === "string" && img.startsWith("data:image")) {
-                await fetch(
-                  `${API}/products/variants/${variantId}/images`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      ...getAuthHeaders(),
-                    },
-                    body: JSON.stringify({ image: img }),
-                  }
-                );
-              }
+        // Upload ảnh biến thể (nếu có)
+        if (v.images?.length && variantId) {
+          for (const img of v.images) {
+            if (typeof img === "string" && img.startsWith("data:image")) {
+              await uploadVariantImage(variantId, img);
             }
           }
         }
       }
+
       setDialogOpen(false);
       setSelectedProduct(null);
       fetchProducts();
     } catch (err) {
       console.error("handleAddOrEdit error:", err);
-      alert("Có lỗi xảy ra khi lưu sản phẩm");
+      alert("Lỗi khi lưu sản phẩm: " + err.message);
     }
   };
 
   const handleEdit = async (id) => {
-    const res = await fetch(`${API}/products/${id}`);
-    const data = await res.json();
-    setSelectedProduct(data);
-    setDialogOpen(true);
+    try {
+      const res = await fetch(`${API}/products/${id}`);
+      const data = await res.json();
+      setSelectedProduct(data);
+      setDialogOpen(true);
+    } catch (err) {
+      console.error("Fetch product detail error:", err);
+    }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Xoá sản phẩm này?")) return;
-    await fetch(`${API}/products/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    setProducts(products.filter((p) => p.ProductID !== id));
+    try {
+      await fetch(`${API}/products/${id}`, { method: "DELETE" });
+      setProducts(products.filter((p) => p.ProductID !== id));
+    } catch (err) {
+      console.error("Delete product error:", err);
+    }
   };
 
-  // ================= CRUD ATTRIBUTE =================
+  /** ============ CRUD ATTRIBUTE ============ */
   const handleAddAttribute = async () => {
     if (!newAttrName.trim()) return;
-    await fetch(`${API}/attributes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify({ AttributeName: newAttrName }),
-    });
+    await createAttribute(newAttrName);
     setNewAttrName("");
     fetchAttributes();
   };
 
   const handleDeleteAttr = async (id) => {
     if (!window.confirm("Xoá thuộc tính này và toàn bộ giá trị con?")) return;
-    await fetch(`${API}/attributes/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    await deleteAttribute(id);
     fetchAttributes();
   };
 
   const handleUpdateAttr = async (id, name) => {
-    await fetch(`${API}/attributes/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify({ AttributeName: name }),
-    });
+    await updateAttribute(id, name);
     setEditingAttr(null);
     fetchAttributes();
   };
 
   const handleAddValue = async (AttributeID, Value) => {
-    await fetch(`${API}/attribute-values`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify({ AttributeID, Value }),
-    });
+    await createAttributeValue(AttributeID, Value);
     fetchAttributes();
   };
 
   const handleDeleteValue = async (id) => {
-    await fetch(`${API}/attribute-values/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    await deleteAttributeValue(id);
     fetchAttributes();
   };
+
   const handleDeleteImage = async (variantId, imageId) => {
     try {
-      await fetch(`${API}/products/images/${imageId}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      });
+      await deleteImage(imageId);
     } catch (err) {
       console.error("Lỗi xoá ảnh:", err);
     }
   };
-  // ================= SEARCH =================
+
+  /** ============ SEARCH ============ */
   const filteredProducts = products.filter((p) => {
     const keyword = search.toLowerCase().trim();
     return (
@@ -260,16 +170,19 @@ export default function ProductManagement() {
       p.CategoryName?.toLowerCase().includes(keyword)
     );
   });
+
   return (
-    <div className="flex min-h-screen bg-[#EDEDED]  ">
+    <div className="flex min-h-screen bg-[#EDEDED]">
       <Sidebar />
-      <div className="flex-1  sm:p-6 lg:p-8  p-6 min-w-0">
+      <div className="flex-1 sm:p-6 lg:p-8 p-6 min-w-0">
+        {/* HEADER */}
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-teal-700 text-center md:text-left">
             Quản lý sản phẩm
           </h1>
 
           <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 sm:gap-3">
+            {/* Search */}
             <div className="relative w-full sm:w-72">
               <Search
                 size={18}
@@ -283,6 +196,7 @@ export default function ProductManagement() {
               />
             </div>
 
+            {/* Add Product */}
             <button
               onClick={() => {
                 setSelectedProduct(null);
@@ -293,6 +207,7 @@ export default function ProductManagement() {
               <Plus size={18} className="mr-2" /> Thêm sản phẩm
             </button>
 
+            {/* Attribute Settings */}
             <button
               onClick={() => setAttrDialogOpen(true)}
               className="flex items-center bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md text-sm sm:text-base"
@@ -302,7 +217,7 @@ export default function ProductManagement() {
           </div>
         </header>
 
-        {/* Table */}
+        {/* TABLE */}
         <div className="overflow-x-auto min-w-0">
           <ProductTable
             products={filteredProducts}
@@ -311,7 +226,8 @@ export default function ProductManagement() {
             onDelete={handleDelete}
           />
         </div>
-        {/* Dialog sản phẩm */}
+
+        {/* PRODUCT DIALOG */}
         <ProductDialog
           isOpen={isDialogOpen}
           onClose={() => {
@@ -325,7 +241,7 @@ export default function ProductManagement() {
           onDeleteImage={handleDeleteImage}
         />
 
-        {/* Dialog thuộc tính */}
+        {/* ATTRIBUTE DIALOG */}
         {isAttrDialogOpen && (
           <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-2 sm:px-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[700px] max-h-[85vh] overflow-y-auto p-4 sm:p-6 relative">
@@ -340,6 +256,7 @@ export default function ProductManagement() {
                 Quản lý thuộc tính
               </h2>
 
+              {/* Add Attribute */}
               <div className="flex flex-col sm:flex-row gap-2 mb-4">
                 <input
                   className="flex-1 border rounded-lg px-3 py-2 text-sm sm:text-base"
@@ -355,6 +272,7 @@ export default function ProductManagement() {
                 </button>
               </div>
 
+              {/* Attribute List */}
               {attributes.map((a) => (
                 <div
                   key={a.AttributeID}
@@ -392,6 +310,7 @@ export default function ProductManagement() {
                     </div>
                   </div>
 
+                  {/* Attribute Values */}
                   <div className="ml-2 sm:ml-4 space-y-1">
                     {a.values?.map((v) => (
                       <div

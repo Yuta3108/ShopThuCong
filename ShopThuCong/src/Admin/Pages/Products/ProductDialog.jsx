@@ -200,7 +200,46 @@ export default function ProductDialog({
           <p className="text-xs text-gray-500 italic -mt-2">
             SKU sản phẩm phải duy nhất trong toàn hệ thống.
           </p>
-
+            {/* ===== Ảnh đại diện sản phẩm ===== */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ảnh đại diện
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              {product.ImageURL && (
+                <div className="relative w-24 h-24 border rounded-lg overflow-hidden">
+                  <img
+                    src={product.ImageURL}
+                    alt="Ảnh đại diện"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setProduct({ ...product, ImageURL: "" })}
+                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              <label className="w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
+                <span className="text-2xl">＋</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () =>
+                      setProduct({ ...product, ImageURL: reader.result });
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
           <textarea
             className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
             placeholder="Mô tả ngắn"
