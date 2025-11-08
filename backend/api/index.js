@@ -8,7 +8,7 @@ import productRoutes from "./routes/productsRoute.js";
 import attributesRoute from "./routes/attributesRoute.js";
 import attributeValuesRoute from "./routes/attributeValuesRoute.js";
 import variantAttributesRoute from "./routes/variantAttributesRoute.js";
-import variantRoutes from "./routes/variantRoute.js";
+import variantRoutes from "./routes/variantsRoute.js";
 dotenv.config();
 const app = express();
 app.use(cors());
