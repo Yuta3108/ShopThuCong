@@ -17,7 +17,7 @@ function DangKy() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Kiểm tra ràng buộc dữ liệu
+    // Kiểm tra ràng buộc dữ liệu
     if (!/[a-zA-Z]/.test(matKhau) || matKhau.length < 8) {
       Swal.fire({
         icon: "warning",

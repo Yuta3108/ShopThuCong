@@ -1,114 +1,102 @@
-
+import axios from "axios";
 import Swal from "sweetalert2";
-const API = "https://backend-eta-ivory-29.vercel.app/api";
 
-const getAuthHeaders = () => {
+const API = "http://localhost:5000/api";
+
+const axiosClient = axios.create({
+  baseURL: API,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+//  Gắn token tự động nếu có
+axiosClient.interceptors.request.use((config) => {
   try {
     const user = JSON.parse(localStorage.getItem("user"));
-    if (user?.token) return { Authorization: `Bearer ${user.token}` };
-  } catch {}
-  return {};
-};
+    const token = user?.token || localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  } catch (err) {
+    console.error("Không lấy được token:", err);
+  }
+  return config;
+});
 
-/** ================= PRODUCTS ================= */
+//  Xử lý lỗi chung
+axiosClient.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    const message =
+      err.response?.data?.message ||
+      err.message ||
+      "Lỗi không xác định khi gọi API";
+
+    Swal.fire({
+      icon: "error",
+      title: "Lỗi API",
+      text: message,
+    });
+    if (err.response?.status === 401) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.location.href = "/";
+    }
+
+    return Promise.reject(err);
+  }
+);
+
+// =================  PRODUCTS =================
 export const saveProduct = async (prod, isEdit = false) => {
-  const url = isEdit ? `${API}/products/${prod.ProductID}` : `${API}/products`;
-  const method = isEdit ? "PUT" : "POST";
-
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    body: JSON.stringify(prod),
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi API sản phẩm");
+  const url = isEdit ? `/products/${prod.ProductID}` : `/products`;
+  const method = isEdit ? "put" : "post";
+  const { data } = await axiosClient[method](url, prod);
   return data;
 };
 
 export const deleteProduct = async (id) => {
-  const res = await fetch(`${API}/products/${id}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error("Không thể xoá sản phẩm");
+  await axiosClient.delete(`/products/${id}`);
 };
 
-/** ================= VARIANTS ================= */
+// =================  VARIANTS =================
 export const saveVariant = async (ProductID, variant, isEdit = false) => {
   const url = isEdit
-    ? `${API}/variants/${variant.VariantID}`
-    : `${API}/variants/${ProductID}`;
-  const method = isEdit ? "PUT" : "POST";
-
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    body: JSON.stringify(variant),
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Lỗi API biến thể");
+    ? `/variants/${variant.VariantID}`
+    : `/variants/${ProductID}`;
+  const method = isEdit ? "put" : "post";
+  const { data } = await axiosClient[method](url, variant);
   return data;
 };
 
 export const deleteVariant = async (variantId) => {
-  await fetch(`${API}/variants/${variantId}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
+  await axiosClient.delete(`/variants/${variantId}`);
 };
 
 export const uploadVariantImage = async (variantId, imgBase64) => {
-  await fetch(`${API}/variants/${variantId}/images`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    body: JSON.stringify({ image: imgBase64 }),
-  });
+  await axiosClient.post(`/variants/${variantId}/images`, { image: imgBase64 });
 };
 
 export const deleteImage = async (imageId) => {
-  await fetch(`${API}/variants/images/${imageId}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
+  await axiosClient.delete(`/variants/images/${imageId}`);
 };
 
-/** ================= ATTRIBUTES ================= */
+// =================  ATTRIBUTES =================
 export const createAttribute = async (AttributeName) => {
-  await fetch(`${API}/attributes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    body: JSON.stringify({ AttributeName }),
-  });
+  await axiosClient.post(`/attributes`, { AttributeName });
 };
 
 export const updateAttribute = async (id, name) => {
-  await fetch(`${API}/attributes/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    body: JSON.stringify({ AttributeName: name }),
-  });
+  await axiosClient.put(`/attributes/${id}`, { AttributeName: name });
 };
 
 export const deleteAttribute = async (id) => {
-  await fetch(`${API}/attributes/${id}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
+  await axiosClient.delete(`/attributes/${id}`);
 };
 
 export const createAttributeValue = async (AttributeID, Value) => {
-  await fetch(`${API}/attribute-values`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    body: JSON.stringify({ AttributeID, Value }),
-  });
+  await axiosClient.post(`/attribute-values`, { AttributeID, Value });
 };
 
 export const deleteAttributeValue = async (id) => {
-  await fetch(`${API}/attribute-values/${id}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  });
+  await axiosClient.delete(`/attribute-values/${id}`);
 };

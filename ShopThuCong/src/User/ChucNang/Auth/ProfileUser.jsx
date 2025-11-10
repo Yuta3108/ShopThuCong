@@ -53,7 +53,7 @@ export default function UserProfile() {
     fetchUser();
   }, [userId, token]);
 
-  // ✅ Validate dữ liệu
+  // Validate dữ liệu
   const validateForm = () => {
     if (!form.FullName.trim() || !form.Phone.trim() || !form.Address.trim()) {
       Swal.fire({
@@ -80,7 +80,7 @@ export default function UserProfile() {
     return true;
   };
 
-  // ✅ Cập nhật thông tin user
+  // Cập nhật thông tin user
   const handleUpdate = async () => {
     if (!user) return;
     if (!validateForm()) return; 
@@ -126,7 +126,7 @@ export default function UserProfile() {
     }
   };
 
-  // ✅ Đặt lại mật khẩu
+  //  Đặt lại mật khẩu
   const handleResetPassword = async () => {
   const { value: passwords } = await Swal.fire({
     title: "Đổi mật khẩu",

@@ -9,6 +9,7 @@ export default function ProductDialog({
   attributes = [],
   initialData = null,
   onDeleteImage,
+  onDeleteVariant,
 }) {
   const [isSaving, setIsSaving] = useState(false);
   const isEdit = !!initialData;
@@ -451,7 +452,9 @@ export default function ProductDialog({
 
                 <button
                   type="button"
-                  onClick={() => removeVariant(i)}
+                  onClick={() => v.VariantID
+                     ? onDeleteVariant(v.VariantID, i, product, setProduct)
+                    : removeVariant(i)}
                   className="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-50 hover:bg-red-200 text-red-600 font-medium text-sm sm:text-base"
                 >
                   Xoá biến thể

@@ -5,6 +5,7 @@ import ProductTable from "../Pages/Products/ProductTable";
 import ProductDialog from "../Pages/Products/ProductDialog";
 import {
   saveProduct,
+  deleteProduct,
   saveVariant,
   deleteVariant,
   uploadVariantImage,
@@ -15,8 +16,9 @@ import {
   createAttributeValue,
   deleteAttributeValue,
 } from "../Pages/Products/productService";
+import axios from "axios";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
@@ -32,95 +34,66 @@ export default function ProductManagement() {
 
   /** ============ FETCH API ============ */
   const fetchCategories = async () => {
-    try {
-      const res = await fetch(`${API}/categories`);
-      const data = await res.json();
-      setCategories(data.data || data);
-    } catch (err) {
-      console.error("Fetch categories error:", err);
-    }
+    const { data } = await axios.get(`${API}/categories`);
+    setCategories(data.data || data);
   };
 
   const fetchProducts = async () => {
-    try {
-      const res = await fetch(`${API}/products`);
-      const data = await res.json();
-      setProducts(data.data || data);
-      setLoading(false);
-    } catch (err) {
-      console.error("Fetch products error:", err);
-    }
+    const { data } = await axios.get(`${API}/products`);
+    setProducts(data.data || data);
+    setLoading(false);
   };
 
   const fetchAttributes = async () => {
-    try {
-      const res = await fetch(`${API}/attributes`);
-      const data = await res.json();
-      setAttributes(data);
-    } catch (err) {
-      console.error("Fetch attributes error:", err);
-    }
+    const { data } = await axios.get(`${API}/attributes`);
+    setAttributes(data);
   };
 
   useEffect(() => {
-    fetchCategories();
-    fetchProducts();
-    fetchAttributes();
+    Promise.all([fetchCategories(), fetchProducts(), fetchAttributes()]);
   }, []);
 
   /** ============ CRUD PRODUCT ============ */
   const handleAddOrEdit = async (prod) => {
     if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
     const isEdit = !!selectedProduct;
-    try {
-      //  Lưu sản phẩm chính
-      const data = await saveProduct(prod, isEdit);
-      const ProductID = data.ProductID || prod.ProductID;
+    const data = await saveProduct(prod, isEdit);
+    const ProductID = data.ProductID || prod.ProductID;
 
-      //  Lưu / cập nhật biến thể
-      for (const v of prod.variants || []) {
-        const isVarEdit = !!v.VariantID;
-        const varData = await saveVariant(ProductID, v, isVarEdit);
-        const variantId = varData.VariantID || v.VariantID;
-
-        // Upload ảnh biến thể (nếu có)
-        if (v.images?.length && variantId) {
-          for (const img of v.images) {
-            if (typeof img === "string" && img.startsWith("data:image")) {
-              await uploadVariantImage(variantId, img);
-            }
+    for (const v of prod.variants || []) {
+      const isVarEdit = !!v.VariantID;
+      const varData = await saveVariant(ProductID, v, isVarEdit);
+      const variantId = varData.VariantID || v.VariantID;
+      if (v.images?.length && variantId) {
+        for (const img of v.images) {
+          if (typeof img === "string" && img.startsWith("data:image")) {
+            await uploadVariantImage(variantId, img);
           }
         }
       }
-
-      setDialogOpen(false);
-      setSelectedProduct(null);
-      fetchProducts();
-    } catch (err) {
-      console.error("handleAddOrEdit error:", err);
-      alert("Lỗi khi lưu sản phẩm: " + err.message);
     }
+
+    setDialogOpen(false);
+    setSelectedProduct(null);
+    fetchProducts();
   };
 
   const handleEdit = async (id) => {
-    try {
-      const res = await fetch(`${API}/products/${id}`);
-      const data = await res.json();
-      setSelectedProduct(data);
-      setDialogOpen(true);
-    } catch (err) {
-      console.error("Fetch product detail error:", err);
-    }
+    const { data } = await axios.get(`${API}/products/${id}`);
+    setSelectedProduct(data);
+    setDialogOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Xoá sản phẩm này?")) return;
-    try {
-      await fetch(`${API}/products/${id}`, { method: "DELETE" });
-      setProducts(products.filter((p) => p.ProductID !== id));
-    } catch (err) {
-      console.error("Delete product error:", err);
-    }
+    await deleteProduct(id);
+    setProducts((prev) => prev.filter((p) => p.ProductID !== id));
+  };
+
+  const handleDeleteVariant = async (variantId, index, product, setProduct) => {
+    if (variantId) await deleteVariant(variantId);
+    const updated = [...product.variants];
+    updated.splice(index, 1);
+    setProduct({ ...product, variants: updated });
   };
 
   /** ============ CRUD ATTRIBUTE ============ */
@@ -132,7 +105,6 @@ export default function ProductManagement() {
   };
 
   const handleDeleteAttr = async (id) => {
-    if (!window.confirm("Xoá thuộc tính này và toàn bộ giá trị con?")) return;
     await deleteAttribute(id);
     fetchAttributes();
   };
@@ -154,11 +126,7 @@ export default function ProductManagement() {
   };
 
   const handleDeleteImage = async (variantId, imageId) => {
-    try {
-      await deleteImage(imageId);
-    } catch (err) {
-      console.error("Lỗi xoá ảnh:", err);
-    }
+    await deleteImage(imageId);
   };
 
   /** ============ SEARCH ============ */
@@ -182,7 +150,6 @@ export default function ProductManagement() {
           </h1>
 
           <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 sm:gap-3">
-            {/* Search */}
             <div className="relative w-full sm:w-72">
               <Search
                 size={18}
@@ -196,7 +163,6 @@ export default function ProductManagement() {
               />
             </div>
 
-            {/* Add Product */}
             <button
               onClick={() => {
                 setSelectedProduct(null);
@@ -207,7 +173,6 @@ export default function ProductManagement() {
               <Plus size={18} className="mr-2" /> Thêm sản phẩm
             </button>
 
-            {/* Attribute Settings */}
             <button
               onClick={() => setAttrDialogOpen(true)}
               className="flex items-center bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md text-sm sm:text-base"
@@ -217,7 +182,6 @@ export default function ProductManagement() {
           </div>
         </header>
 
-        {/* TABLE */}
         <div className="overflow-x-auto min-w-0">
           <ProductTable
             products={filteredProducts}
@@ -227,7 +191,6 @@ export default function ProductManagement() {
           />
         </div>
 
-        {/* PRODUCT DIALOG */}
         <ProductDialog
           isOpen={isDialogOpen}
           onClose={() => {
@@ -239,6 +202,7 @@ export default function ProductManagement() {
           attributes={attributes}
           initialData={selectedProduct}
           onDeleteImage={handleDeleteImage}
+          onDeleteVariant={handleDeleteVariant}
         />
 
         {/* ATTRIBUTE DIALOG */}
@@ -256,7 +220,6 @@ export default function ProductManagement() {
                 Quản lý thuộc tính
               </h2>
 
-              {/* Add Attribute */}
               <div className="flex flex-col sm:flex-row gap-2 mb-4">
                 <input
                   className="flex-1 border rounded-lg px-3 py-2 text-sm sm:text-base"
@@ -272,7 +235,6 @@ export default function ProductManagement() {
                 </button>
               </div>
 
-              {/* Attribute List */}
               {attributes.map((a) => (
                 <div
                   key={a.AttributeID}
@@ -310,7 +272,6 @@ export default function ProductManagement() {
                     </div>
                   </div>
 
-                  {/* Attribute Values */}
                   <div className="ml-2 sm:ml-4 space-y-1">
                     {a.values?.map((v) => (
                       <div
@@ -319,9 +280,7 @@ export default function ProductManagement() {
                       >
                         <span>{v.Value}</span>
                         <button
-                          onClick={() =>
-                            handleDeleteValue(v.AttributeValueID)
-                          }
+                          onClick={() => handleDeleteValue(v.AttributeValueID)}
                           className="text-red-500 hover:text-red-700"
                         >
                           ✕

@@ -40,20 +40,45 @@ export const createVariant = async ({ ProductID, SKU, Price, StockQuantity = 0, 
 };
 
 export const updateVariant = async (id, data) => {
-  const { Price, StockQuantity, IsActive, attributeValueIds = [] } = data;
-  const [res] = await db.query(`
-    UPDATE product_variants SET Price=?, StockQuantity=?, IsActive=?, UpdatedAt=NOW() WHERE VariantID=?`,
-    [Price, StockQuantity, IsActive, id]
-  );
+  try {
+    const {
+      Price,
+      StockQuantity,
+      IsActive,
+      attributeValueIds = []
+    } = data; // ✅ chỉ lấy đúng field cần update
 
-  await db.query(`DELETE FROM variant_attribute_values WHERE VariantID = ?`, [id]);
-  if (attributeValueIds?.length) {
-    const vals = [...new Set(attributeValueIds)].map(v => [id, v]);
-    await db.query(`INSERT IGNORE INTO variant_attribute_values (VariantID, AttributeValueID) VALUES ?`, [vals]);
+    // ép kiểu an toàn
+    const priceNum = parseFloat(Price) || 0;
+    const stockNum = parseInt(StockQuantity) || 0;
+
+    await db.query(
+      `UPDATE product_variants
+       SET Price=?, StockQuantity=?, IsActive=?, UpdatedAt=NOW()
+       WHERE VariantID=?`,
+      [priceNum, stockNum, IsActive, id]
+    );
+
+    // Xóa và ghi lại variant_attribute_values
+    await db.query(
+      `DELETE FROM variant_attribute_values WHERE VariantID = ?`,
+      [id]
+    );
+
+    if (attributeValueIds?.length > 0) {
+      const values = attributeValueIds.map((valId) => [id, valId]);
+      await db.query(
+        `INSERT INTO variant_attribute_values (VariantID, AttributeValueID) VALUES ?`,
+        [values]
+      );
+    }
+
+    return { message: "Cập nhật biến thể thành công" };
+  } catch (err) {
+    console.error("updateVariant error:", err);
+    throw err;
   }
-  return res.affectedRows > 0;
 };
-
 export const deleteVariant = async (id) => {
   const [res] = await db.query(`DELETE FROM product_variants WHERE VariantID = ?`, [id]);
   return res.affectedRows > 0;

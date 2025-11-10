@@ -39,43 +39,47 @@ export const findProductById = async (id) => {
   return product || null;
 };
 export const findProductDetailById = async (productId) => {
-  try {
-    // 🟢 Lấy sản phẩm
-    const [[product]] = await db.query(
-      `SELECT p.*, c.CategoryName,
-              MIN(v.Price) AS minPrice,
-              MAX(v.Price) AS maxPrice
-       FROM products p
-       LEFT JOIN categories c ON p.CategoryID = c.CategoryID
-       LEFT JOIN product_variants v ON v.ProductID = p.ProductID
-       WHERE p.ProductID = ?
-       GROUP BY p.ProductID`,
-      [productId]
+  // Lấy sản phẩm chính
+  const [[product]] = await db.query(`
+    SELECT p.*, c.CategoryName,
+           MIN(v.Price) AS minPrice, MAX(v.Price) AS maxPrice
+    FROM products p
+    LEFT JOIN categories c ON p.CategoryID = c.CategoryID
+    LEFT JOIN product_variants v ON v.ProductID = p.ProductID
+    WHERE p.ProductID = ?
+    GROUP BY p.ProductID
+  `, [productId]);
+
+  if (!product) return null;
+
+  // Lấy danh sách biến thể
+  const [variants] = await db.query(
+    `SELECT * FROM product_variants WHERE ProductID = ?`,
+    [productId]
+  );
+
+  // Với mỗi biến thể: lấy ảnh + thuộc tính
+  for (const v of variants) {
+    const [images] = await db.query(
+      `SELECT ImageID, ImageURL FROM images WHERE VariantID = ?`,
+      [v.VariantID]
     );
 
-    if (!product) return null;
+    // Lấy thuộc tính & giá trị (JOIN 3 bảng)
+    const [attributes] = await db.query(`
+      SELECT a.AttributeID, a.AttributeName, av.AttributeValueID, av.Value
+      FROM variant_attribute_values vav
+      JOIN attribute_values av ON vav.AttributeValueID = av.AttributeValueID
+      JOIN attributes a ON av.AttributeID = a.AttributeID
+      WHERE vav.VariantID = ?
+    `, [v.VariantID]);
 
-    // 🟢 Lấy danh sách biến thể
-    const [variants] = await db.query(
-      `SELECT * FROM product_variants WHERE ProductID = ?`,
-      [productId]
-    );
-
-    // 🟢 Gắn thêm ảnh cho từng biến thể
-    for (const v of variants) {
-      const [images] = await db.query(
-        `SELECT ImageID, ImageURL FROM images WHERE VariantID = ?`,
-        [v.VariantID]
-      );
-      v.images = images;
-    }
-
-    product.variants = variants;
-    return product;
-  } catch (err) {
-    console.error("findProductDetailById error:", err);
-    throw err;
+    v.images = images;
+    v.attributes = attributes; // thêm thuộc tính vào biến thể
   }
+
+  product.variants = variants;
+  return product;
 };
 
 export const createProduct = async (data) => {
