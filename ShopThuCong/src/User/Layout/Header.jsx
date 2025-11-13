@@ -173,7 +173,7 @@ export default function Header() {
                   {categories.map((cat) => (
                     <Link
                       key={cat.CategoryID}
-                      to={cat.Slug}
+                      to={`/san-pham/${cat.Slug}`}
                       className="block px-6 py-2 hover:bg-gray-100 hover:text-teal-600 transition"
                       onClick={() => setIsMenuOpen(false)}
                     >
