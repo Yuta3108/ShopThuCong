@@ -91,7 +91,7 @@ export default function AdminUserPage() {
       <Sidebar />
       <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
         <h1 className="text-xl sm:text-2xl font-bold text-teal-700 mb-6 text-center sm:text-left">
-          👥 Quản Lý Người Dùng
+          Quản Lý Người Dùng
         </h1>
 
         {error && <p className="text-red-600">{error}</p>}
