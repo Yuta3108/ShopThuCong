@@ -1,28 +1,33 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import axios from "axios";
 
 export default function Header() {
   const [user, setUser] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
-  const categories = [
-    { name: "Dụng Cụ Đan Móc", link: "/san-pham/dung-cu-dan-moc" },
-    { name: "Phụ Kiện Làm Túi Xách", link: "/san-pham/phu-kien-tui-xach" },
-    { name: "Phụ Liệu Trang Trí", link: "/san-pham/phu-lieu-trang-tri" },
-    { name: "Phụ Liệu Làm Thú Bông", link: "/san-pham/phu-lieu-thu-bong" },
-    { name: "Combo Tiết Kiệm", link: "/san-pham/combo" },
-  ];
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get("https://backend-eta-ivory-29.vercel.app/api/categories");
+        setCategories(res.data);
+      } catch (err) {
+        console.error("Lỗi load categories:", err);
+      }
+    };
 
-  // ✅ Load user từ localStorage
+    fetchCategories();
+  }, []);
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
 
-  // ✅ Đăng xuất
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -38,7 +43,8 @@ export default function Header() {
   return (
     <header className="bg-white shadow-md sticky top-0 z-50 border-b border-gray-200">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-4 py-3 relative">
-        {/* Logo */}
+
+        {/* LOGO */}
         <Link
           to="/"
           className="text-xl md:text-2xl font-extrabold tracking-wider text-teal-600 whitespace-nowrap"
@@ -46,14 +52,27 @@ export default function Header() {
           Then Fong Store
         </Link>
 
-        {/* Menu desktop */}
+        {/* MENU DESKTOP */}
         <nav className="hidden md:flex space-x-8 items-center text-base font-medium text-gray-700">
           <Link to="/" className="hover:text-teal-600 transition">
             Trang chủ
           </Link>
-          <Link to="/sanpham" className="hover:text-teal-600 transition">
-            Sản phẩm
-          </Link>
+          <div className="relative group cursor-pointer">
+            <Link to="/san-pham" className="hover:text-teal-600 transition">Sản phẩm</Link>
+
+            <div className="absolute left-0 top-full mt-2 bg-white shadow-lg rounded-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 min-w-[240px] py-2 z-50">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.CategoryID}
+                  to={`/san-pham/${cat.Slug}`}
+                  className="block px-4 py-2 text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition"
+                >
+                  {cat.CategoryName}
+                </Link>
+              ))}
+            </div>
+          </div>
+
           <Link to="/lien-he" className="hover:text-teal-600 transition">
             Liên hệ
           </Link>
@@ -62,13 +81,14 @@ export default function Header() {
           </Link>
         </nav>
 
-        {/* Search + User desktop */}
+        {/* SEARCH + USER (DESKTOP) */}
         <div className="hidden md:flex items-center gap-4">
           <input
             type="text"
             placeholder="Tìm sản phẩm..."
             className="border border-gray-300 rounded-full px-4 py-2 text-sm w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-teal-400 transition"
           />
+
           <button className="text-gray-700 hover:text-teal-600 text-xl transition">
             🛒
           </button>
@@ -88,6 +108,7 @@ export default function Header() {
                   {user.email}
                 </span>
               </button>
+
               <button
                 onClick={handleLogout}
                 className="text-red-500 hover:text-red-700 font-medium text-sm"
@@ -113,7 +134,7 @@ export default function Header() {
           )}
         </div>
 
-        {/* Nút 3 gạch mobile */}
+        {/* NÚT MOBILE */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="md:hidden text-gray-700"
@@ -121,10 +142,8 @@ export default function Header() {
           {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
       </div>
-
-      {/* Menu xổ xuống mobile */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white shadow-md border-t border-gray-200 animate-slideDown">
+        <div className="md:hidden bg-white shadow-md border-t border-gray-200 animate-slideDown z-40">
           <nav className="flex flex-col text-gray-700 font-medium">
             <Link
               to="/"
@@ -134,7 +153,7 @@ export default function Header() {
               Trang chủ
             </Link>
 
-            {/* ✅ Dropdown sản phẩm mobile */}
+            {/* DROPDOWN MOBILE */}
             <div className="border-b border-gray-100">
               <button
                 onClick={() => setIsProductOpen(!isProductOpen)}
@@ -142,9 +161,8 @@ export default function Header() {
               >
                 <span>Sản phẩm</span>
                 <span
-                  className={`transform transition-transform ${
-                    isProductOpen ? "rotate-180" : ""
-                  }`}
+                  className={`transform transition-transform ${isProductOpen ? "rotate-180" : ""
+                    }`}
                 >
                   ▾
                 </span>
@@ -152,14 +170,14 @@ export default function Header() {
 
               {isProductOpen && (
                 <div className="bg-gray-50 text-sm">
-                  {categories.map((item, i) => (
+                  {categories.map((cat) => (
                     <Link
-                      key={i}
-                      to={item.link}
-                      className="block px-6 py-2 text-gray-700 hover:bg-gray-100 hover:text-teal-600 transition"
+                      key={cat.CategoryID}
+                      to={cat.Slug}
+                      className="block px-6 py-2 hover:bg-gray-100 hover:text-teal-600 transition"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      {item.name}
+                      {cat.CategoryName}
                     </Link>
                   ))}
                 </div>
@@ -182,7 +200,7 @@ export default function Header() {
               Giới thiệu
             </Link>
 
-            {/* Khu user mobile */}
+            {/* USER MOBILE */}
             <div className="px-4 py-4 flex flex-col items-center gap-3 border-t border-gray-100 bg-gray-50">
               {user ? (
                 <>
@@ -202,6 +220,7 @@ export default function Header() {
                       {user.email}
                     </span>
                   </div>
+
                   <button
                     onClick={() => {
                       handleLogout();
@@ -221,6 +240,7 @@ export default function Header() {
                   >
                     Đăng nhập
                   </Link>
+
                   <Link
                     to="/register"
                     onClick={() => setIsMenuOpen(false)}

@@ -1,7 +1,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 const axiosClient = axios.create({
   baseURL: API,
@@ -10,7 +10,7 @@ const axiosClient = axios.create({
   },
 });
 
-//  Gắn token tự động nếu có
+// Auto gắn token
 axiosClient.interceptors.request.use((config) => {
   try {
     const user = JSON.parse(localStorage.getItem("user"));

@@ -21,7 +21,6 @@ app.use("/api/users", userManageRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/variants", variantRoutes);
-app.use("/api/products", productRoutes);
 app.use("/api/attributes", attributesRoute);
 app.use("/api/attribute-values", attributeValuesRoute);
 app.use("/api/variant-attributes", variantAttributesRoute);

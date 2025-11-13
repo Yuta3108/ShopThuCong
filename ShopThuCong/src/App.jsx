@@ -9,6 +9,8 @@ import UserProfile from './User/ChucNang/Auth/ProfileUser';
 import DashBoard from './Admin/Layout/DashBoard';
 import AdminUserPage from './Admin/Pages/AdminUser';
 import ProductManagement from './Admin/Pages/ProductManagement';
+import ProductCategoryPage from './User/ChucNang/Products/ProductCategoryPage';
+import ProductAllPage from './User/ChucNang/Products/ProductAllPage';
 function App() {
   return (
     
@@ -21,6 +23,8 @@ function App() {
       <Route path='/User' element={<UserProfile/>} />
       <Route path="/forgot-password" element={<QuenMatKhau />} />
       <Route path="/reset-password/:token" element={<DatLaiMatKhau />} />
+      <Route path="/san-pham" element={<ProductAllPage />} />
+      <Route path="/san-pham/:slug" element={<ProductCategoryPage />} />
       //== Admin Routes ==// 
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />

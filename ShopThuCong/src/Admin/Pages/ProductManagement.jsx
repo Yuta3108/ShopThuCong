@@ -18,7 +18,7 @@ import {
 } from "../Pages/Products/productService";
 import axios from "axios";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
@@ -31,7 +31,26 @@ export default function ProductManagement() {
   const [isAttrDialogOpen, setAttrDialogOpen] = useState(false);
   const [editingAttr, setEditingAttr] = useState(null);
   const [newAttrName, setNewAttrName] = useState("");
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
 
+  const axiosClient = axios.create({
+    baseURL: API,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  // Auto gắn token
+  axiosClient.interceptors.request.use((config) => {
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-600 font-semibold text-center p-6">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
+  }
   /** ============ FETCH API ============ */
   const fetchCategories = async () => {
     const { data } = await axios.get(`${API}/categories`);

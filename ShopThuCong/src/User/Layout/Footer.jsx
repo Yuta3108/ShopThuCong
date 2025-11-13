@@ -116,7 +116,7 @@ const Footer = () => {
 
       {/* Dòng cuối */}
       <div className="border-t border-gray-200 mt-6 py-4 text-center text-sm text-gray-500">
-        © 2025 <span className="text-amber-700 font-semibold">ThenFong Store</span>. 
+        © 2025 <span className="text-amber-700 font-semibold">ThenFong Store</span>.
         Tất cả quyền được bảo lưu.
       </div>
     </footer>

@@ -8,3 +8,14 @@ export const getAllCategories = async () => {
   );
   return rows;
 };
+export const getCategoryBySlug = async (slug) => {
+  const [rows] = await db.query(
+    `SELECT CategoryID, CategoryName, Slug, Description
+     FROM categories
+     WHERE Slug = ?
+     LIMIT 1`,
+    [slug]
+  );
+
+  return rows[0] || null;
+};
