@@ -47,7 +47,6 @@ export default function ProductAllPage() {
         .filter((p) => {
             if (!filterPrice) return true;
             const min = Number(p.minPrice);
-
             if (filterPrice === "under100") return min < 100000;
             if (filterPrice === "100-200") return min >= 100000 && min <= 200000;
             if (filterPrice === "200-500") return min >= 200000 && min <= 500000;

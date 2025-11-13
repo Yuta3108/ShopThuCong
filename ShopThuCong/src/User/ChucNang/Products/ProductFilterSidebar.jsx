@@ -73,7 +73,7 @@ export default function ProductFilterSidebar({
 
                 {openPriceBox && (
                     <ul className="mt-4 space-y-3 text-sm text-gray-700 animate-fadeIn">
-
+                        
                         <li>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
