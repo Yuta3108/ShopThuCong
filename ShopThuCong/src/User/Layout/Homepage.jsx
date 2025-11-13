@@ -121,7 +121,7 @@ export default function HomePage() {
 
             {/* Grid sản phẩm 5 cột */}
             <div className="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-              {featured.slice(0, 15).map((p) => (
+              {featured.slice(0, 10).map((p) => (
                 <ProductCard key={p.ProductID} p={p} addToCart={addToCart} />
               ))}
             </div>
