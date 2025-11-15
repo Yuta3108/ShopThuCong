@@ -49,7 +49,7 @@ export default function Topbar({ onToggleSidebar }) {
         {user && (
           <div className="flex items-center gap-3 sm:gap-4 bg-gray-50 px-3 sm:px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:shadow-md transition-all mt-3 sm:mt-0">
             {/* Avatar + Info */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ">
               <img
                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
                   user.hoTen || user.name || "User"

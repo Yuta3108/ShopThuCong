@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { X, Info } from "lucide-react";
 
 export default function ProductDialog({
@@ -34,6 +34,11 @@ export default function ProductDialog({
       ],
     }
   );
+  useEffect(() => {
+    if (!initialData) {
+      resetForm();
+    }
+  }, [initialData,isOpen]);
 
   // Cập nhật variant khi edit
   useEffect(() => {
@@ -61,6 +66,7 @@ export default function ProductDialog({
       });
       setProduct({ ...initialData, variants: updatedVariants });
     }
+    
   }, [initialData, attributes]);
 
   const handleVariantChange = (i, key, value) => {

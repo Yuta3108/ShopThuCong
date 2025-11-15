@@ -77,7 +77,7 @@ export default function ProductManagement() {
     if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
     const isEdit = !!selectedProduct;
     const data = await saveProduct(prod, isEdit);
-    const ProductID = data.ProductID || prod.ProductID;
+    const ProductID = data.ProductID;
 
     for (const v of prod.variants || []) {
       const isVarEdit = !!v.VariantID;
@@ -91,7 +91,6 @@ export default function ProductManagement() {
         }
       }
     }
-
     setDialogOpen(false);
     setSelectedProduct(null);
     fetchProducts();
@@ -181,7 +180,12 @@ export default function ProductManagement() {
                 className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
               />
             </div>
-
+            <button
+              onClick={() => setAttrDialogOpen(true)}
+              className="flex items-center bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md text-sm sm:text-base"
+            >
+              <Settings size={18} className="mr-2" /> Thuộc tính
+            </button>
             <button
               onClick={() => {
                 setSelectedProduct(null);
@@ -192,12 +196,7 @@ export default function ProductManagement() {
               <Plus size={18} className="mr-2" /> Thêm sản phẩm
             </button>
 
-            <button
-              onClick={() => setAttrDialogOpen(true)}
-              className="flex items-center bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md text-sm sm:text-base"
-            >
-              <Settings size={18} className="mr-2" /> Thuộc tính
-            </button>
+
           </div>
         </header>
 

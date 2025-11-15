@@ -99,6 +99,7 @@ function LienHe() {
                 placeholder="Email"
                 value={formData.email}
                 onChange={handleChange}
+                
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-400 outline-none"
                 required
               />
@@ -112,6 +113,7 @@ function LienHe() {
                 className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-400 outline-none"
                 required
               />
+                
 
               <textarea
                 name="noiDung"

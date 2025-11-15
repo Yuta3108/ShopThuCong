@@ -65,7 +65,6 @@ export default function UserProfile() {
       return false;
     }
 
-    // Chỉ cho phép số và độ dài 10-11
     const phoneRegex = /^[0-9]{10,11}$/;
     if (!phoneRegex.test(form.Phone)) {
       Swal.fire({

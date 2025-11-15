@@ -33,7 +33,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, }) {
         <thead className="sticky top-0">
           <tr className="bg-gradient-to-r from-teal-400 to-teal-300 text-white text-sm sm:text-base">
             <th className="px-3 sm:px-4 py-3 text-left">Ảnh</th>
-            <th className="px-3 sm:px-4 py-3 text-left">#</th>
+            <th className="px-3 sm:px-4 py-3 text-left">Id</th>
             <th className="px-3 sm:px-4 py-3 text-left">SKU</th>
             <th className="px-3 sm:px-4 py-3 text-left">Tên sản phẩm</th>
             <th className="px-3 sm:px-4 py-3 text-left hidden md:table-cell">
