@@ -9,6 +9,7 @@ import attributesRoute from "./routes/attributesRoute.js";
 import attributeValuesRoute from "./routes/attributeValuesRoute.js";
 import variantAttributesRoute from "./routes/variantAttributesRoute.js";
 import variantRoutes from "./routes/variantsRoute.js";
+import voucherRoute from "./routes/voucherRoute.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -24,6 +25,7 @@ app.use("/api/variants", variantRoutes);
 app.use("/api/attributes", attributesRoute);
 app.use("/api/attribute-values", attributeValuesRoute);
 app.use("/api/variant-attributes", variantAttributesRoute);
+app.use("/api/vouchers", voucherRoute);
 app.get("/", (req, res) => {
   res.send("Backend API đang chạy trên Vercel");
 });

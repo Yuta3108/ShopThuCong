@@ -18,13 +18,20 @@ export default function AdminUserPage() {
     baseURL: API,
     headers: { "Content-Type": "application/json" },
   });
+  
 
-  // Auto gắn token
+ // Auto gắn token
   axiosClient.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   });
-
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-600 font-semibold text-center p-6">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
+  }
   // Chuyển trạng thái user
   const handleToggleStatus = async (id, currentStatus) => {
     const newStatus = currentStatus ? 0 : 1;
