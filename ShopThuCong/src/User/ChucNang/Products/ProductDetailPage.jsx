@@ -18,41 +18,41 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState([]);
 
   // Lấy slug category
- useEffect(() => {
-  const loadProduct = async () => {
-    try {
-      const { data } = await axios.get(`${API}/products/${id}`);
-      setProduct(data);
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        const { data } = await axios.get(`${API}/products/${id}`);
+        setProduct(data);
 
-      // Ảnh chính
-      const firstVariant = data?.variants?.[0];
-      const firstImage = firstVariant?.images?.[0]?.ImageURL;
-      setMainImage(firstImage || data.ImageURL);
+        // Ảnh chính
+        const firstVariant = data?.variants?.[0];
+        const firstImage = firstVariant?.images?.[0]?.ImageURL;
+        setMainImage(firstImage || data.ImageURL);
 
-      setSelectedVariant(firstVariant || null);
-      setLoading(false);
+        setSelectedVariant(firstVariant || null);
+        setLoading(false);
 
-      // Lấy slug danh mục
-      const catRes = await axios.get(`${API}/categories`);
-      const cat = catRes.data.find(c => c.CategoryID === data.CategoryID);
-      setCategorySlug(cat?.Slug || "");
+        // Lấy slug danh mục
+        const catRes = await axios.get(`${API}/categories`);
+        const cat = catRes.data.find(c => c.CategoryID === data.CategoryID);
+        setCategorySlug(cat?.Slug || "");
 
-      // Lấy SP liên quan
-      const relatedRes = await axios.get(
-        `${API}/products?categoryId=${data.CategoryID}`
-      );
-      const filtered = relatedRes.data.filter(
-        (item) => item.ProductID !== data.ProductID
-      );
-      setRelatedProducts(filtered.slice(0, 10));
+        // Lấy SP liên quan
+        const relatedRes = await axios.get(
+          `${API}/products?categoryId=${data.CategoryID}`
+        );
+        const filtered = relatedRes.data.filter(
+          (item) => item.ProductID !== data.ProductID
+        );
+        setRelatedProducts(filtered.slice(0, 10));
 
-    } catch (err) {
-      console.log(err);
-    }
-  };
+      } catch (err) {
+        console.log(err);
+      }
+    };
 
-  loadProduct();
-}, [id]);
+    loadProduct();
+  }, [id]);
   if (loading) return <p className="text-center py-10">Đang tải…</p>;
   if (!product) return <p>Không tìm thấy sản phẩm.</p>;
 
@@ -109,26 +109,30 @@ export default function ProductDetailPage() {
       <div className="container mx-auto px-4 pb-16 grid grid-cols-1 md:grid-cols-2 gap-10">
 
         {/* LEFT – IMAGES */}
-        <div className="flex gap-4">
-          <div className="flex flex-col gap-3 w-20">
+        <div>
+          {/* MAIN IMAGE */}
+          <div className="w-full mb-4">
+            <img
+              src={mainImage}
+              className="w-full h-[450px] object-cover rounded-xl shadow-lg"
+            />
+          </div>
+
+          {/* THUMBNAILS UNDER MAIN IMAGE */}
+          <div className="flex gap-3 overflow-x-auto py-2 justify-center">
             {thumbnails.map((img, i) => (
               <img
                 key={i}
                 src={img.ImageURL}
                 onClick={() => setMainImage(img.ImageURL)}
-                className={`w-full h-20 object-cover rounded-lg cursor-pointer border transition-all ${mainImage === img.ImageURL
-                  ? "border-[#0A7EA4] scale-105"
-                  : "border-gray-300 hover:border-[#0A7EA4]"
-                  }`}
+                className={`w-20 h-20 object-cover rounded-lg cursor-pointer border transition-all 
+          ${mainImage === img.ImageURL
+                    ? "border-[#C2185B] scale-105 shadow-md"
+                    : "border-gray-300 hover:border-[#C2185B]"
+                  }
+        `}
               />
             ))}
-          </div>
-
-          <div className="flex-1">
-            <img
-              src={mainImage}
-              className="w-full rounded-xl shadow-lg object-cover"
-            />
           </div>
         </div>
 
@@ -152,7 +156,7 @@ export default function ProductDetailPage() {
 
           {/* PRICE */}
           <div className="bg-white border rounded-xl p-5 mt-5 shadow-sm">
-            <p className="text-4xl font-extrabold text-red-400 drop-shadow-sm">
+            <p className="text-4xl font-extrabold text-red-500 drop-shadow-sm">
               {finalPrice.toLocaleString()}₫
             </p>
           </div>
@@ -177,8 +181,8 @@ export default function ProductDetailPage() {
                     className={`
                       px-5 py-2 text-sm rounded-full border transition-all
                       ${selectedVariant?.VariantID === v.VariantID
-                        ? "bg-[#C2185B] text-white border-[#C2185B] shadow-md scale-[1.03]"
-  : "bg-white text-gray-700 border-gray-300 hover:border-[#C2185B] hover:text-[#C2185B]"
+                        ? "bg-[#d12d6f] text-white border-[#C2185B] shadow-md scale-[1.03]"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-[#cc1d63] hover:text-[#C2185B]"
                       }
                     `}
                   >
@@ -213,20 +217,19 @@ export default function ProductDetailPage() {
           </div>
 
           {/* ADD TO CART */}
- <button
-  disabled={p.IsActive === 0}
-  onClick={addToCart}
-  className={`
+          <button
+            disabled={p.IsActive === 0}
+            onClick={addToCart}
+            className={`
     w-full mt-8 py-3 rounded-xl font-semibold text-lg transition-all
-    ${
-      p.IsActive === 1
-        ? "bg-white text-gray-800 border border-gray-300 shadow-sm hover:bg-gray-50 hover:shadow-md hover:scale-[1.02]"
-        : "bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300"
-    }
+    ${p.IsActive === 1
+                ? "bg-white text-gray-800 border border-gray-300 shadow-sm hover:bg-gray-50 hover:shadow-md hover:scale-[1.02]"
+                : "bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300"
+              }
   `}
->
-  {p.IsActive === 1 ? "Thêm vào giỏ hàng" : "Hết hàng"}
-</button>
+          >
+            {p.IsActive === 1 ? "Thêm vào giỏ hàng" : "Hết hàng"}
+          </button>
 
           {/* DESCRIPTION MOVED UP HERE */}
           <div className="mt-10">
@@ -254,12 +257,6 @@ export default function ProductDetailPage() {
                 <span className="font-semibold">SKU:</span>
                 <span>{p.SKU}</span>
               </div>
-
-              <div className="mt-6 flex justify-center">
-                <button className="px-6 py-2 border rounded-lg text-[#0A7EA4] font-semibold hover:bg-gray-100">
-                  + Xem thêm nội dung
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -285,7 +282,7 @@ export default function ProductDetailPage() {
                     {rp.ProductName}
                   </p>
 
-                  <p className="text-[#0A7EA4] font-bold mt-2 text-lg">
+                  <p className="text-red-500 font-bold mt-2 text-lg">
                     {Number(rp.minPrice).toLocaleString()}₫
                   </p>
                 </Link>
