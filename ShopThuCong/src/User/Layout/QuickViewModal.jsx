@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { X, Minus, Plus } from "lucide-react";
 import axios from "axios";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 export default function QuickViewModal({ product, onClose }) {
   const [variants, setVariants] = useState([]);

@@ -5,19 +5,19 @@ export const CartItem = {
   // Lấy toàn bộ item trong cart
   getCartItems: (cartId) => {
     return db.query(
-      `SELECT ci.*, v.Price AS VariantPrice 
+      `SELECT ci.*, pv.Price AS VariantPrice
        FROM cart_items ci
-       JOIN variants v ON ci.VariantID = v.VariantID
+       JOIN product_variants pv ON ci.VariantID = pv.VariantID
        WHERE ci.CartID = ?`,
       [cartId]
     );
   },
 
-  // Insert item mới
+  // Insert item mới (LẤY GIÁ TỪ product_variants)
   addItem: (cartId, variantId, quantity) => {
     return db.query(
       `INSERT INTO cart_items (CartID, VariantID, Quantity, UnitPrice)
-       VALUES (?, ?, ?, (SELECT Price FROM variants WHERE VariantID = ?))`,
+       VALUES (?, ?, ?, (SELECT Price FROM product_variants WHERE VariantID = ?))`,
       [cartId, variantId, quantity, variantId]
     );
   },
