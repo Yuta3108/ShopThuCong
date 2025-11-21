@@ -12,6 +12,7 @@ import ProductManagement from './Admin/Pages/ProductManagement';
 import ProductCategoryPage from './User/ChucNang/Products/ProductCategoryPage';
 import ProductAllPage from './User/ChucNang/Products/ProductAllPage';
 import ProductDetailPage from './User/ChucNang/Products/ProductDetailPage';
+import AdminVoucherPage from './Admin/Pages/AdminVoucher';
 function App() {
   return (
     
@@ -31,6 +32,7 @@ function App() {
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />
       <Route path ="/admin/Products" element={<ProductManagement />} />
+      <Route path="/admin/Voucher" element={<AdminVoucherPage />} />
     </Routes>
   );
 }

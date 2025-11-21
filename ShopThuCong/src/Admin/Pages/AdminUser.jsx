@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Search} from "lucide-react";
 import Sidebar from "../Layout/Sidebar";
 import axios from "axios";
 
@@ -107,13 +108,16 @@ export default function AdminUserPage() {
         ) : (
           <>
             {/* Tìm kiếm */}
-            <div className="flex justify-center sm:justify-start mb-4">
+            <div className="relative w-full sm:w-72 flex justify-center sm:justify-start mb-4">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
-                type="text"
-                placeholder="🔍 Tìm kiếm theo tên hoặc email..."
-                className="border border-teal-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 p-2 rounded-lg w-full sm:w-80 md:w-96 outline-none text-sm sm:text-base"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                placeholder="Tìm theo tên, SKU hoặc danh mục…"
+                className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
               />
             </div>
 

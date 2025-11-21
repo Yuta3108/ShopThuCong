@@ -164,28 +164,39 @@ export default function ProductManagement() {
         {/* HEADER */}
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <h1 className="text-xl sm:text-2xl font-bold text-teal-700 text-center md:text-left">
-            Quản lý sản phẩm
+            Quản Lý Sản Phẩm
           </h1>
 
-          <div className="flex flex-wrap justify-center md:justify-end items-center gap-2 sm:gap-3">
-            <div className="relative w-full sm:w-72">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm theo tên, SKU hoặc danh mục…"
-                className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
-              />
-            </div>
+
+
+
+
+        </header>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+
+          {/* SEARCH LEFT */}
+          <div className="relative w-full sm:w-80">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm theo tên, SKU hoặc danh mục…"
+              className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
+            />
+          </div>
+
+          {/* BUTTONS RIGHT */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setAttrDialogOpen(true)}
               className="flex items-center bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md text-sm sm:text-base"
             >
               <Settings size={18} className="mr-2" /> Thuộc tính
             </button>
+
             <button
               onClick={() => {
                 setSelectedProduct(null);
@@ -195,10 +206,9 @@ export default function ProductManagement() {
             >
               <Plus size={18} className="mr-2" /> Thêm sản phẩm
             </button>
-
-
           </div>
-        </header>
+
+        </div>
 
         <div className="overflow-x-auto min-w-0">
           <ProductTable
