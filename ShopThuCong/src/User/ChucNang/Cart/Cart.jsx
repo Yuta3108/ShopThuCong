@@ -8,52 +8,58 @@ const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
+  const isDB =
+  localStorage.getItem("cartMode") === "db" &&
+  !!localStorage.getItem("token");
 
-  // ========================
-  // LOAD CART (LOCAL or DB)
-  // ========================
   useEffect(() => {
-    const isDB = localStorage.getItem("cartMode") === "db";
+  const isDB =
+  localStorage.getItem("cartMode") === "db" &&
+  !!localStorage.getItem("token");
 
-    if (!isDB) {
-      // LOCAL MODE
-      const saved = JSON.parse(localStorage.getItem("cart")) || [];
+  if (!isDB) {
+    // LOCAL MODE
+    const saved = JSON.parse(localStorage.getItem("cart")) || [];
+    const normalized = saved.map((item) => ({
+      ...item,
+      key: item.key ?? item.VariantID ?? item.ProductID,
+      quantity: Number(item.quantity ?? 1),
+      price: Number(item.price ?? 0),
+    }));
+    setCart(normalized);
+    return;
+  }
 
-      // Chuẩn hoá local cart
-      const normalized = saved.map((item) => ({
-        ...item,
-        key: item.key ?? item.VariantID ?? item.ProductID,
-      }));
+  // DB MODE
+  const loadDBCart = async () => {
+    const res = await fetch(`${API}/cart`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
 
-      setCart(normalized);
+    if (!res.ok) {
+      setCart([]); 
       return;
     }
 
-    // DB MODE
-    const loadDBCart = async () => {
-      const res = await fetch(`${API}/cart`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+    const data = await res.json();
+    const items = Array.isArray(data.items) ? data.items : [];
 
-      const data = await res.json();
+    const normalized = items.map((item) => ({
+      ...item,
+      key: item.CartItemID,
+      quantity: Number(item.Quantity ?? 1),
+      price: Number(item.UnitPrice ?? 0),
+      ProductName: item.ProductName,
+      ImageURL: item.ImageURL,
+    }));
 
-      // Chuẩn hoá key
-      const normalized = data.items.map((item) => ({
-        ...item,
-        key: item.CartItemID,
-        quantity: Number(item.Quantity),
-        price: Number(item.UnitPrice),
-        ImageURL: item.ImageURL,
-        ProductName: item.ProductName,
-      }));
+    setCart(normalized);
+  };
 
-      setCart(normalized);
-    };
-
-    loadDBCart();
-  }, []);
+  loadDBCart();
+}, []);
 
   // ========================
   // LOCAL MODE SAVE
@@ -62,8 +68,6 @@ export default function CartPage() {
     setCart(newCart);
     localStorage.setItem("cart", JSON.stringify(newCart));
   };
-
-  const isDB = localStorage.getItem("cartMode") === "db";
 
   // ========================
   // INCREASE QUANTITY
@@ -88,7 +92,11 @@ export default function CartPage() {
       });
 
       // reload
-      window.location.reload();
+      setCart((prev) =>
+          prev.map((i) =>
+            i.key === item.key ? { ...i, quantity: i.quantity + 1 } : i
+          )
+        );
     }
   };
 
@@ -114,7 +122,11 @@ export default function CartPage() {
         body: JSON.stringify({ quantity: item.quantity - 1 }),
       });
 
-      window.location.reload();
+      setCart((prev) =>
+          prev.map((i) =>
+            i.key === item.key ? { ...i, quantity: i.quantity - 1 } : i
+          )
+        );
     }
   };
 

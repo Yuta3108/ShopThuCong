@@ -1,34 +1,34 @@
 import { Cart } from "../models/CartModel.js";
 import { CartItem } from "../models/CartItemModel.js";
+import db from "../config/db.js";
 
-
-// LẤY GIỎ HÀNG
-
+// ================================
+//  LẤY GIỎ HÀNG USER
+// ================================
 export const getCart = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    let [cart] = await Cart.getCartByUserId(userId);
+    let [cartRows] = await Cart.getCartByUserId(userId);
 
-    // Tạo cart nếu chưa tồn tại
-    if (!cart.length) {
-      await Cart.createCart(userId);
-      [cart] = await Cart.getCartByUserId(userId);
+    if (!cartRows.length) {
+      return res.json({ items: [] });
     }
 
-    const cartId = cart[0].CartID;
+    const cartId = cartRows[0].CartID;
 
-    const [items] = await CartItem.getItems(cartId);
+    const [items] = await CartItem.getCartItems(cartId);
 
-    res.json({ cartId, items });
+    res.json({ items });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Lỗi server" });
+    console.log("GET CART ERROR:", err);
+    res.status(500).json({ message: "Lỗi server khi lấy giỏ hàng." });
   }
 };
 
-// THÊM SẢN PHẨM
-
+// ================================
+//  THÊM VÀO GIỎ HÀNG
+// ================================
 export const addToCart = async (req, res) => {
   try {
     const { variantId, quantity = 1 } = req.body;
@@ -37,18 +37,20 @@ export const addToCart = async (req, res) => {
     if (!variantId)
       return res.status(400).json({ message: "Thiếu VariantID" });
 
-    // lấy cart user
-    let [[cart]] = await Cart.getCartByUserId(userId);
+    // Lấy cart theo user
+    let [cartRows] = await Cart.getCartByUserId(userId);
 
-    if (!cart) {
+    // Nếu chưa có → tạo mới
+    if (!cartRows.length) {
       await Cart.createCart(userId);
-      [[cart]] = await Cart.getCartByUserId(userId);
+      [cartRows] = await Cart.getCartByUserId(userId);
     }
 
-    const cartId = cart.CartID;
+    const cartId = cartRows[0].CartID;
 
-    // kiểm tra tồn tại item
-    const [[exist]] = await CartItem.findItem(cartId, variantId);
+    // Kiểm tra item tồn tại chưa
+    const [existArr] = await CartItem.findItem(cartId, variantId);
+    const exist = existArr[0];
 
     if (exist) {
       await CartItem.updateQuantity(
@@ -59,62 +61,70 @@ export const addToCart = async (req, res) => {
       await CartItem.addItem(cartId, variantId, quantity);
     }
 
-    res.json({ message: "Đã thêm vào giỏ hàng" });
+    res.json({ message: "Đã thêm vào giỏ hàng!" });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Lỗi server" });
+    console.log("ADD CART ERROR:", err);
+    res.status(500).json({ message: "Lỗi server khi thêm giỏ hàng." });
   }
 };
 
-// UPDATE QUANTITY
-export const updateCart = async (req, res) => {
-  try {
-    const { quantity } = req.body;
-    const cartItemId = req.params.id;
-
-    if (!quantity || quantity < 1)
-      return res.status(400).json({ message: "Số lượng không hợp lệ" });
-
-    await CartItem.updateQuantity(cartItemId, quantity);
-
-    res.json({ message: "Cập nhật thành công" });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Lỗi server" });
-  }
-};
-
-
-// XÓA ITEM
+// ================================
+//  XOÁ ITEM
+// ================================
 export const removeCartItem = async (req, res) => {
   try {
-    await CartItem.removeItem(req.params.id);
-    res.json({ message: "Đã xóa sản phẩm" });
+    const itemId = req.params.id;
+
+    await CartItem.deleteItem(itemId);
+
+    res.json({ message: "Đã xoá item khỏi giỏ hàng" });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Lỗi server" });
+    console.error("REMOVE CART ITEM ERROR:", err);
+    res.status(500).json({ message: "Lỗi server khi xoá item." });
   }
 };
 
-// MERGE LOCAL → DATABASE
+// ================================
+//  CẬP NHẬT SỐ LƯỢNG
+// ================================
+export const updateQuantity = async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    const { quantity } = req.body;
+
+    await CartItem.updateQuantity(itemId, quantity);
+
+    res.json({ message: "Đã cập nhật" });
+  } catch (err) {
+    console.log("UPDATE CART ERROR:", err);
+    res.status(500).json({ message: "Lỗi server khi cập nhật số lượng." });
+  }
+};
+
+// ================================
+//  MERGE LOCAL CART → SERVER CART
+// ================================
 export const mergeCart = async (req, res) => {
   try {
-    const items = req.body.items || [];
+    const { items } = req.body;
     const userId = req.user.id;
 
-    let [[cart]] = await Cart.getCartByUserId(userId);
-
-    if (!cart) {
-      await Cart.createCart(userId);
-      [[cart]] = await Cart.getCartByUserId(userId);
+    if (!items || !Array.isArray(items)) {
+      return res.status(400).json({ message: "Thiếu items." });
     }
 
-    const cartId = cart.CartID;
+    let [cartRows] = await Cart.getCartByUserId(userId);
+
+    if (!cartRows.length) {
+      await Cart.createCart(userId);
+      [cartRows] = await Cart.getCartByUserId(userId);
+    }
+
+    const cartId = cartRows[0].CartID;
 
     for (const item of items) {
-      if (!item.VariantID) continue;
-
-      const [[exist]] = await CartItem.findItem(cartId, item.VariantID);
+      const [existArr] = await CartItem.findItem(cartId, item.VariantID);
+      const exist = existArr[0];
 
       if (exist) {
         await CartItem.updateQuantity(
@@ -122,18 +132,13 @@ export const mergeCart = async (req, res) => {
           exist.Quantity + item.quantity
         );
       } else {
-        await CartItem.addItem(
-          cartId,
-          item.VariantID,
-          item.quantity,
-          item.price
-        );
+        await CartItem.addItem(cartId, item.VariantID, item.quantity);
       }
     }
 
-    res.json({ message: "Merge thành công" });
+    res.json({ message: "Merge giỏ hàng thành công!" });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Lỗi server" });
+    console.log("MERGE CART ERROR:", err);
+    res.status(500).json({ message: "Merge giỏ hàng thất bại." });
   }
 };

@@ -66,21 +66,28 @@ export default function ProductDetailPage() {
 
   const addToCart = async () => {
   const isDB = localStorage.getItem("cartMode") === "db";
+  const token = localStorage.getItem("token");
+
+  if (!selectedVariant) {
+    alert("Vui lòng chọn biến thể!");
+    return;
+  }
 
   if (!isDB) {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    
-    const existing = cart.find(
-      (item) => item.VariantID === selectedVariant?.VariantID
-    );
+    // LOCAL
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const key = selectedVariant.VariantID;
 
-    if (existing) existing.quantity += quantity;
-    else {
+    const existing = cart.find((i) => i.key === key);
+
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
       cart.push({
-        key: selectedVariant.VariantID,
-        ProductID: p.ProductID,
+        key,
+        ProductID: product.ProductID,
         VariantID: selectedVariant.VariantID,
-        ProductName: p.ProductName,
+        ProductName: product.ProductName,
         ImageURL: mainImage,
         quantity,
         price: finalPrice,
@@ -89,24 +96,25 @@ export default function ProductDetailPage() {
 
     localStorage.setItem("cart", JSON.stringify(cart));
     alert("Đã thêm vào giỏ hàng!");
+    return;
   }
 
-  else {
-    await fetch(`${API}/cart/add`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      },
-      body: JSON.stringify({
-        variantId: selectedVariant.VariantID,
-        quantity
-      })
-    });
+  // DB MODE
+  await fetch("https://backend-eta-ivory-29.vercel.app/api/cart/add", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      variantId: selectedVariant.VariantID,
+      quantity,
+    }),
+  });
 
-    alert("Đã thêm vào giỏ hàng!");
-  }
+  alert("Đã thêm vào giỏ hàng!");
 };
+
 
 
   return (

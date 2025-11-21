@@ -1,9 +1,9 @@
-"use client";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Banner from "./banner";
 import axios from "axios";
 import ProductCard from "../ChucNang/Products/ProductCard";
+import QuickViewModal from "./QuickViewModal";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
@@ -12,6 +12,9 @@ export default function HomePage() {
   const [featured, setFeatured] = useState([]);
   const [productsByCat, setProductsByCat] = useState({});
   const [loading, setLoading] = useState(true);
+
+  //  Popup state
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   useEffect(() => {
     const fetchInit = async () => {
@@ -28,7 +31,9 @@ export default function HomePage() {
 
         const productMap = {};
         for (const cat of cats) {
-          const res = await axios.get(`${API}/products?categoryId=${cat.CategoryID}`);
+          const res = await axios.get(
+            `${API}/products?categoryId=${cat.CategoryID}`
+          );
           productMap[cat.CategoryID] = res.data.slice(0, 10);
         }
         setProductsByCat(productMap);
@@ -41,30 +46,6 @@ export default function HomePage() {
     fetchInit();
   }, []);
 
-  const addToCart = (product) => {
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-  const key = product.ProductID;
-
-  const existing = cart.find((item) => item.key === key);
-
-  if (existing) {
-    existing.quantity += 1;
-  } else {
-    cart.push({
-      key,                     
-      ProductID: product.ProductID,
-      VariantID: null,         
-      ProductName: product.ProductName,
-      ImageURL: product.ImageURL,
-      price: Number(product.minPrice),
-      quantity: 1,
-    });
-  }
-
-  localStorage.setItem("cart", JSON.stringify(cart));
-  alert("Đã thêm vào giỏ hàng!");
-};
   if (loading)
     return (
       <div className="flex justify-center items-center h-screen">
@@ -74,12 +55,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5] text-gray-900">
-
-      {/* Banner đầu trang */}
+      {/* Banner */}
       <Banner />
 
       <main className="flex-grow container mx-auto px-4 sm:px-6 py-10">
-
         {/* ===================== DANH MỤC ===================== */}
         <section className="mb-16">
           <h2 className="text-xl font-semibold mb-5 text-gray-800">
@@ -96,7 +75,9 @@ export default function HomePage() {
                 <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-2">
                   <img
                     src={`/category/${cat.CategoryID}.jpg`}
-                    onError={(e) => (e.target.src = "https://placehold.co/200")}
+                    onError={(e) =>
+                      (e.target.src = "https://placehold.co/200")
+                    }
                     alt={cat.CategoryName}
                     className="w-full h-full object-cover rounded-full shadow-md border"
                   />
@@ -124,10 +105,14 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Grid sản phẩm 5 cột */}
+            {/* Grid sản phẩm */}
             <div className="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
               {featured.slice(0, 10).map((p) => (
-                <ProductCard key={p.ProductID} p={p} addToCart={addToCart} />
+                <ProductCard
+                  key={p.ProductID}
+                  p={p}
+                  onQuickView={setQuickViewProduct}
+                />
               ))}
             </div>
           </div>
@@ -154,12 +139,24 @@ export default function HomePage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
                 {prods.map((p) => (
-                  <ProductCard key={p.ProductID} p={p} addToCart={addToCart} />
+                  <ProductCard
+                    key={p.ProductID}
+                    p={p}
+                    onQuickView={setQuickViewProduct}
+                  />
                 ))}
               </div>
             </section>
           );
         })}
+
+        {/* ===================== POPUP QUICK VIEW ===================== */}
+        {quickViewProduct && (
+          <QuickViewModal
+            product={quickViewProduct}
+            onClose={() => setQuickViewProduct(null)}
+          />
+        )}
       </main>
     </div>
   );

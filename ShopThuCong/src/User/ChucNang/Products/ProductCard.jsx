@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-export default function ProductCard({ p, addToCart }) {
+export default function ProductCard({ p, onQuickView }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-xl transition relative flex flex-col p-3">
 
@@ -36,10 +36,10 @@ export default function ProductCard({ p, addToCart }) {
         )}
       </p>
 
-      {/* NÚT GIỎ HÀNG — ĐẶT DƯỚI CÙNG */}
+      {/* NÚT → MỞ POPUP */}
       {p.IsActive === 1 ? (
         <button
-          onClick={() => addToCart(p)}
+          onClick={() => onQuickView(p)}
           className="mt-auto w-full py-2.5 
              bg-white 
              border border-gray-300 

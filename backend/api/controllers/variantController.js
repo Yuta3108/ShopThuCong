@@ -66,7 +66,7 @@ export const updateVariantController = async (req, res) => {
     const result = await updateVariant(id, req.body);
     res.json(result);
   } catch (err) {
-    console.error("❌ updateVariantController error:", err);
+    console.error("updateVariantController error:", err);
     res
       .status(500)
       .json({ message: "Lỗi khi cập nhật biến thể", error: err.message });
@@ -80,7 +80,7 @@ export const deleteVariantController = async (req, res) => {
     const result = await deleteVariant(id);
     res.json({ message: "Xoá biến thể thành công", result });
   } catch (err) {
-    console.error("❌ deleteVariantController error:", err);
+    console.error("deleteVariantController error:", err);
     res
       .status(500)
       .json({ message: "Lỗi khi xoá biến thể", error: err.message });
@@ -93,7 +93,7 @@ export const setVariantAttributesController = async (req, res) => {
     await setVariantAttributes(VariantID, req.body.attributeValueIds || []);
     res.json({ message: "Cập nhật thuộc tính thành công" });
   } catch (err) {
-    console.error("❌ setVariantAttributesController error:", err);
+    console.error("setVariantAttributesController error:", err);
     res
       .status(500)
       .json({ message: "Lỗi khi cập nhật thuộc tính", error: err.message });
@@ -119,7 +119,7 @@ export const uploadVariantImage = async (req, res) => {
         ImageURL: result.secure_url,
       });
   } catch (err) {
-    console.error("❌ uploadVariantImage error:", err);
+    console.error("uploadVariantImage error:", err);
     res
       .status(500)
       .json({ message: "Lỗi upload ảnh", error: err.message });
@@ -133,7 +133,7 @@ export const deleteImageController = async (req, res) => {
     if (publicId) await cloudinary.uploader.destroy(publicId);
     res.json({ message: "Xoá ảnh thành công" });
   } catch (err) {
-    console.error("❌ deleteImageController error:", err);
+    console.error("deleteImageController error:", err);
     res
       .status(500)
       .json({ message: "Lỗi khi xoá ảnh", error: err.message });

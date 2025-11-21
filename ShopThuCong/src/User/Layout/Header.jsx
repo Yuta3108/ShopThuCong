@@ -31,6 +31,7 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("cartMode")
     setUser(null);
     navigate("/auth");
   };
