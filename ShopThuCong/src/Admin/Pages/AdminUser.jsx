@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Search} from "lucide-react";
+import { Search } from "lucide-react";
 import Sidebar from "../Layout/Sidebar";
 import axios from "axios";
 
@@ -19,9 +19,9 @@ export default function AdminUserPage() {
     baseURL: API,
     headers: { "Content-Type": "application/json" },
   });
-  
 
- // Auto gắn token
+
+  // Auto gắn token
   axiosClient.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
@@ -101,25 +101,24 @@ export default function AdminUserPage() {
         <h1 className="text-xl sm:text-2xl font-bold text-teal-700 mb-6 text-center sm:text-left">
           Quản Lý Người Dùng
         </h1>
-
+        <div className="relative w-full sm:w-72 flex justify-center sm:justify-start mb-4">
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo tên, SKU hoặc danh mục…"
+            className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
+          />
+        </div>
         {error && <p className="text-red-600">{error}</p>}
         {loading ? (
           <p className="text-center text-gray-500 py-10">Đang tải dữ liệu...</p>
         ) : (
           <>
             {/* Tìm kiếm */}
-            <div className="relative w-full sm:w-72 flex justify-center sm:justify-start mb-4">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm theo tên, SKU hoặc danh mục…"
-                className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
-              />
-            </div>
 
             {/* Bảng user */}
             <div className="overflow-x-auto rounded-lg shadow-md bg-white border border-gray-100">
@@ -139,9 +138,8 @@ export default function AdminUserPage() {
                   {filtered.map((u, i) => (
                     <tr
                       key={u.UserID}
-                      className={`border-t transition-all duration-300 ${
-                        removing === u.UserID ? "opacity-0 translate-x-4" : ""
-                      } ${i % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-teal-50`}
+                      className={`border-t transition-all duration-300 ${removing === u.UserID ? "opacity-0 translate-x-4" : ""
+                        } ${i % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-teal-50`}
                     >
                       <td className="p-3 text-gray-700">{u.UserID}</td>
                       <td className="p-3 font-medium text-gray-800">{u.FullName}</td>
@@ -169,11 +167,10 @@ export default function AdminUserPage() {
                           Xóa
                         </button>
                         <button
-                          className={`px-3 py-1 rounded-lg text-white text-xs sm:text-sm transition-all ${
-                            u.Status
+                          className={`px-3 py-1 rounded-lg text-white text-xs sm:text-sm transition-all ${u.Status
                               ? "bg-yellow-500 hover:bg-yellow-600"
                               : "bg-green-500 hover:bg-green-600"
-                          }`}
+                            }`}
                           onClick={() => handleToggleStatus(u.UserID, u.Status)}
                         >
                           {u.Status ? "Khóa" : "Mở khóa"}
