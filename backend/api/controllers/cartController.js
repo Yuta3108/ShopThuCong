@@ -106,10 +106,6 @@ export const mergeCart = async (req, res) => {
     const { items } = req.body;
     const userId = req.user.id;
 
-    if (!items || !Array.isArray(items)) {
-      return res.status(400).json({ message: "Thiếu items." });
-    }
-
     let [cartRows] = await Cart.getCartByUserId(userId);
 
     if (!cartRows.length) {
@@ -123,12 +119,8 @@ export const mergeCart = async (req, res) => {
       const [existArr] = await CartItem.findItem(cartId, item.VariantID);
       const exist = existArr[0];
 
-      if (exist) {
-        await CartItem.updateQuantity(
-          exist.CartItemID,
-          exist.Quantity + item.quantity
-        );
-      } else {
+      // Nếu đã có product trong DB → KHÔNG cộng thêm
+      if (!exist) {
         await CartItem.addItem(cartId, item.VariantID, item.quantity);
       }
     }

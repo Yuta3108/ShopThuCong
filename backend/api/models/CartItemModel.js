@@ -4,14 +4,21 @@ import db from "../config/db.js";
 export const CartItem = {
   // Lấy toàn bộ item trong cart
   getCartItems: (cartId) => {
-    return db.query(
-      `SELECT ci.*, pv.Price AS VariantPrice
-       FROM cart_items ci
-       JOIN product_variants pv ON ci.VariantID = pv.VariantID
-       WHERE ci.CartID = ?`,
-      [cartId]
-    );
-  },
+  return db.query(
+    `SELECT 
+        ci.*,
+        pv.Price AS VariantPrice,
+        p.ProductName,
+        p.ProductID,
+        img.ImageURL
+     FROM cart_items ci
+     JOIN product_variants pv ON ci.VariantID = pv.VariantID
+     JOIN products p ON pv.ProductID = p.ProductID
+     LEFT JOIN images img ON img.ProductID = p.ProductID AND img.DisplayOrder = 1
+     WHERE ci.CartID = ?`,
+    [cartId]
+  );
+},
 
   // Insert item mới (LẤY GIÁ TỪ product_variants)
   addItem: (cartId, variantId, quantity) => {
