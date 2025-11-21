@@ -82,7 +82,7 @@ export default function CartPage() {
       );
     } else {
       // DB MODE
-      await fetch(`${API}/cart/update/${item.key}`, {
+      await fetch(`${API}/cart/updateQuantity/${item.key}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export default function CartPage() {
         )
       );
     } else {
-      await fetch(`${API}/cart/update/${item.key}`, {
+      await fetch(`${API}/cart/updateQuantity/${item.key}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -133,20 +133,30 @@ export default function CartPage() {
   // ========================
   // REMOVE ITEM
   // ========================
-  const removeItem = async (item) => {
-    if (!isDB) {
-      saveLocalCart(cart.filter((i) => i.key !== item.key));
-    } else {
-      await fetch(`${API}/cart/remove/${item.key}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+  const removeItem = async (item) => { 
+  if (!isDB) {
+    // Local mode
+    saveLocalCart(cart.filter((i) => i.key !== item.key));
+    setCart(cart.filter((i) => i.key !== item.key));
+    return;
+  }
 
-      window.location.reload();
-    }
-  };
+  // DB mode
+  try {
+    await fetch(`${API}/cart/remove/${item.key}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    // Xoá item trong state FE
+    setCart((prev) => prev.filter((i) => i.key !== item.key));
+
+  } catch (err) {
+    console.error("DELETE ERROR:", err);
+  }
+};
 
   const total = cart.reduce(
     (sum, i) => sum + Number(i.price) * Number(i.quantity),
