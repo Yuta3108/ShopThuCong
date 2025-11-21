@@ -89,9 +89,9 @@ export default function Header() {
             className="border border-gray-300 rounded-full px-4 py-2 text-sm w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-teal-400 transition"
           />
 
-          <button className="text-gray-700 hover:text-teal-600 text-xl transition">
+          <Link to="/cart" className="text-gray-700 hover:text-teal-600 text-xl transition">
             🛒
-          </button>
+          </Link>
 
           {user ? (
             <div className="flex items-center gap-3">

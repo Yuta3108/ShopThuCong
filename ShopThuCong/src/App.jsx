@@ -13,6 +13,7 @@ import ProductCategoryPage from './User/ChucNang/Products/ProductCategoryPage';
 import ProductAllPage from './User/ChucNang/Products/ProductAllPage';
 import ProductDetailPage from './User/ChucNang/Products/ProductDetailPage';
 import AdminVoucherPage from './Admin/Pages/AdminVoucher';
+import CartPage from './User/ChucNang/Cart';
 function App() {
   return (
     
@@ -28,6 +29,7 @@ function App() {
       <Route path="/san-pham/:slug" element={<ProductCategoryPage />} />
       <Route path="/san-pham" element={<ProductAllPage />} />
       <Route path="/chi-tiet/:id" element={<ProductDetailPage />} />
+      <Route path="/cart" element={<CartPage />} />
       //== Admin Routes ==// 
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />

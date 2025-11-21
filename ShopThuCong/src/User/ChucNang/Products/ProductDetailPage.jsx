@@ -67,14 +67,22 @@ export default function ProductDetailPage() {
   const addToCart = () => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    cart.push({
-      ProductID: p.ProductID,
-      VariantID: selectedVariant?.VariantID,
-      ProductName: p.ProductName,
-      ImageURL: mainImage,
-      quantity,
-      price: finalPrice,
-    });
+    const existing = cart.find(
+      (item) => item.VariantID === selectedVariant?.VariantID
+    );
+
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      cart.push({
+        ProductID: p.ProductID,
+        VariantID: selectedVariant.VariantID,
+        ProductName: p.ProductName,
+        ImageURL: mainImage,
+        quantity,
+        price: finalPrice,
+      });
+    }
 
     localStorage.setItem("cart", JSON.stringify(cart));
     alert("Đã thêm vào giỏ hàng!");

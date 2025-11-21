@@ -41,17 +41,24 @@ export default function HomePage() {
     fetchInit();
   }, []);
 
-  const addToCart = (p) => {
+  const addToCart = (product) => {
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const index = cart.findIndex((item) => item.ProductID === p.ProductID);
 
-    if (index !== -1) cart[index].quantity += 1;
-    else {
+    // Nếu SP có biến thể thì dùng VariantID, không thì dùng ProductID
+    const key = product.VariantID ?? product.ProductID;
+
+    const existing = cart.find((item) => item.key === key);
+
+    if (existing) {
+      existing.quantity += 1;
+    } else {
       cart.push({
-        ProductID: p.ProductID,
-        ProductName: p.ProductName,
-        ImageURL: p.ImageURL,
-        price: Number(p.minPrice),
+        key, // duy nhất
+        ProductID: product.ProductID,
+        VariantID: product.VariantID ?? null,
+        ProductName: product.ProductName,
+        ImageURL: product.ImageURL,
+        price: Number(product.minPrice ?? product.Price ?? product.price),
         quantity: 1,
       });
     }

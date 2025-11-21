@@ -74,18 +74,23 @@ export default function ProductAllPage() {
 
     // ADD CART
     const addToCart = (product) => {
-        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-        const index = cart.findIndex((item) => item.ProductID === product.ProductID);
+        // Nếu SP có biến thể thì dùng VariantID, không thì dùng ProductID
+        const key = product.VariantID ?? product.ProductID;
 
-        if (index !== -1) {
-            cart[index].quantity += 1;
+        const existing = cart.find((item) => item.key === key);
+
+        if (existing) {
+            existing.quantity += 1;
         } else {
             cart.push({
+                key,
                 ProductID: product.ProductID,
+                VariantID: product.VariantID ?? null,
                 ProductName: product.ProductName,
                 ImageURL: product.ImageURL,
-                price: Number(product.minPrice),
+                price: Number(product.minPrice ?? product.Price ?? product.price),
                 quantity: 1,
             });
         }
@@ -153,8 +158,8 @@ export default function ProductAllPage() {
                                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                                 disabled={safePage === 1}
                                 className={`px-3 py-1.5 text-sm rounded-md border ${safePage === 1
-                                        ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                                        : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                                    ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                                    : "text-gray-700 border-gray-300 hover:bg-gray-100"
                                     }`}
                             >
                                 Trước
@@ -166,8 +171,8 @@ export default function ProductAllPage() {
                                         key={page}
                                         onClick={() => setCurrentPage(page)}
                                         className={`w-8 h-8 rounded-md text-sm flex items-center justify-center border ${page === safePage
-                                                ? "bg-pink-600 text-white border-pink-600"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                                            ? "bg-pink-600 text-white border-pink-600"
+                                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                                             }`}
                                     >
                                         {page}
@@ -181,8 +186,8 @@ export default function ProductAllPage() {
                                 }
                                 disabled={safePage === totalPages}
                                 className={`px-3 py-1.5 text-sm rounded-md border ${safePage === totalPages
-                                        ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                                        : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                                    ? "text-gray-400 border-gray-200 cursor-not-allowed"
+                                    : "text-gray-700 border-gray-300 hover:bg-gray-100"
                                     }`}
                             >
                                 Sau
