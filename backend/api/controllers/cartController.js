@@ -2,9 +2,6 @@ import { Cart } from "../models/CartModel.js";
 import { CartItem } from "../models/CartItemModel.js";
 import db from "../config/db.js";
 
-// ================================
-//  LẤY GIỎ HÀNG USER
-// ================================
 export const getCart = async (req, res) => {
   try {
     const userId = req.user.id;
