@@ -186,7 +186,7 @@ export default function ProductDetailPage() {
                       }
                     `}
                   >
-                    {v.attributes.map((a) => a.Value).join(" / ")}
+                    {v.attributes.map((a) => a.Value).join(" - ")}
                   </button>
                 ))}
               </div>
