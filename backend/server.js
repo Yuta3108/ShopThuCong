@@ -10,6 +10,7 @@ import attributeValuesRoute from "./api/routes/attributeValuesRoute.js";
 import variantAttributesRoute from "./api/routes/variantAttributesRoute.js";
 import variantRoutes from "./api/routes/variantsRoute.js";
 import voucherRoute from "./api/routes/voucherRoute.js";
+import cartRoutes from "./api/routes/cartRoutes.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -26,6 +27,7 @@ app.use("/api/attributes", attributesRoute);
 app.use("/api/attribute-values", attributeValuesRoute);
 app.use("/api/variant-attributes", variantAttributesRoute);
 app.use("/api/vouchers", voucherRoute);
+app.use("/api/cart", cartRoutes);
 app.get("/check", (req, res) => {
   res.send("ShopThuCong User API is running...");
 });

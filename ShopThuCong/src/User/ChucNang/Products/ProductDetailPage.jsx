@@ -64,17 +64,20 @@ export default function ProductDetailPage() {
     ...p.variants.flatMap((v) => v.images),
   ];
 
-  const addToCart = () => {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const addToCart = async () => {
+  const isDB = localStorage.getItem("cartMode") === "db";
 
+  if (!isDB) {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    
     const existing = cart.find(
       (item) => item.VariantID === selectedVariant?.VariantID
     );
 
-    if (existing) {
-      existing.quantity += quantity;
-    } else {
+    if (existing) existing.quantity += quantity;
+    else {
       cart.push({
+        key: selectedVariant.VariantID,
         ProductID: p.ProductID,
         VariantID: selectedVariant.VariantID,
         ProductName: p.ProductName,
@@ -86,7 +89,25 @@ export default function ProductDetailPage() {
 
     localStorage.setItem("cart", JSON.stringify(cart));
     alert("Đã thêm vào giỏ hàng!");
-  };
+  }
+
+  else {
+    await fetch(`${API}/cart/add`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      },
+      body: JSON.stringify({
+        variantId: selectedVariant.VariantID,
+        quantity
+      })
+    });
+
+    alert("Đã thêm vào giỏ hàng!");
+  }
+};
+
 
   return (
     <div className="bg-[#F5F5F5] min-h-screen">

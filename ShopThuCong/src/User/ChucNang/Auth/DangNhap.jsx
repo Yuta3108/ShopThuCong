@@ -3,14 +3,12 @@ import { useNavigate, Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
-
 function DangNhap() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -38,7 +36,19 @@ function DangNhap() {
         localStorage.setItem("user", JSON.stringify(data));
         localStorage.setItem("email", data.email);
         localStorage.setItem("token", data.token);
+        const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
+        await fetch(`https://backend-eta-ivory-29.vercel.app/api/cart/merge`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${data.token}`,
+          },
+          body: JSON.stringify({ items: localCart }),
+        });
+
+        localStorage.removeItem("cart");
+        localStorage.setItem("cartMode", "db");
         Swal.fire({
           icon: "success",
           title: "Đăng nhập thành công !",

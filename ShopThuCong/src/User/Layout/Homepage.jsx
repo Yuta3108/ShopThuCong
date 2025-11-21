@@ -42,31 +42,29 @@ export default function HomePage() {
   }, []);
 
   const addToCart = (product) => {
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    // Nếu SP có biến thể thì dùng VariantID, không thì dùng ProductID
-    const key = product.VariantID ?? product.ProductID;
+  const key = product.ProductID;
 
-    const existing = cart.find((item) => item.key === key);
+  const existing = cart.find((item) => item.key === key);
 
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({
-        key, // duy nhất
-        ProductID: product.ProductID,
-        VariantID: product.VariantID ?? null,
-        ProductName: product.ProductName,
-        ImageURL: product.ImageURL,
-        price: Number(product.minPrice ?? product.Price ?? product.price),
-        quantity: 1,
-      });
-    }
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({
+      key,                     
+      ProductID: product.ProductID,
+      VariantID: null,         
+      ProductName: product.ProductName,
+      ImageURL: product.ImageURL,
+      price: Number(product.minPrice),
+      quantity: 1,
+    });
+  }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
-    alert("Đã thêm vào giỏ hàng!");
-  };
-
+  localStorage.setItem("cart", JSON.stringify(cart));
+  alert("Đã thêm vào giỏ hàng!");
+};
   if (loading)
     return (
       <div className="flex justify-center items-center h-screen">

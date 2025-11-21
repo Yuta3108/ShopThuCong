@@ -12,8 +12,8 @@ import ProductManagement from './Admin/Pages/ProductManagement';
 import ProductCategoryPage from './User/ChucNang/Products/ProductCategoryPage';
 import ProductAllPage from './User/ChucNang/Products/ProductAllPage';
 import ProductDetailPage from './User/ChucNang/Products/ProductDetailPage';
+import CartPage from './User/ChucNang/Cart/Cart';
 import AdminVoucherPage from './Admin/Pages/AdminVoucher';
-import CartPage from './User/ChucNang/Cart';
 function App() {
   return (
     
