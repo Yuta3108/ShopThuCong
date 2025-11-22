@@ -30,7 +30,7 @@ export const createAttribute = async (data) => {
 
 export const updateAttribute = async (id, name) => {
   const [res] = await db.query(
-    `UPDATE attributes SET AttributeName = ?, UpdatedAt = NOW() WHERE AttributeID = ?`,
+    `UPDATE attributes SET AttributeName = ? WHERE AttributeID = ?`,
     [name, id]
   );
   return res.affectedRows > 0;
