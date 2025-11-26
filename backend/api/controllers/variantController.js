@@ -12,7 +12,7 @@ export const createVariantController = async (req, res) => {
   try {
     const ProductID = Number(req.params.productId); 
     const {
-      SKU,
+      ProductCode,
       Price,
       StockQuantity = 0,
       Weight = null,
@@ -24,7 +24,7 @@ export const createVariantController = async (req, res) => {
     console.log("🧩 createVariant body:", req.body, "ProductID:", ProductID);
     const { VariantID } = await createVariant({
       ProductID,
-      SKU,
+      ProductCode,
       Price,
       StockQuantity,
       Weight,

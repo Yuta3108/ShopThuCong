@@ -1,25 +1,25 @@
 import db from "../config/db.js";
 
-export const createVariant = async ({ ProductID, SKU, Price, StockQuantity = 0, Weight = null, IsActive = 1, attributeValueIds = [] }) => {
+export const createVariant = async ({ ProductID, ProductCode, Price, StockQuantity = 0, Weight = null, IsActive = 1, attributeValueIds = [] }) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
-    let finalSKU = SKU?.trim();
+    let finalProductCode = ProductCode?.trim();
 
-    if (!finalSKU) {
-      const [[p]] = await conn.query("SELECT SKU FROM products WHERE ProductID = ?", [ProductID]);
+    if (!finalProductCode) {
+      const [[p]] = await conn.query("SELECT ProductCode FROM products WHERE ProductID = ?", [ProductID]);
       const [[countRes]] = await conn.query("SELECT COUNT(*) AS count FROM product_variants WHERE ProductID = ?", [ProductID]);
-      finalSKU = p?.SKU ? `${p.SKU}-${countRes.count + 1}` : `P${ProductID}-${Date.now().toString().slice(-4)}`;
+      finalProductCode = p?.ProductCode ? `${p.ProductCode}-${countRes.count + 1}` : `P${ProductID}-${Date.now().toString().slice(-4)}`;
     }
 
-    const [[exist]] = await conn.query("SELECT VariantID FROM product_variants WHERE SKU = ?", [finalSKU]);
-    if (exist) throw new Error(`SKU '${finalSKU}' đã tồn tại.`);
+    const [[exist]] = await conn.query("SELECT VariantID FROM product_variants WHERE ProductCode = ?", [finalProductCode]);
+    if (exist) throw new Error(`ProductCode '${finalProductCode}' đã tồn tại.`);
 
     const [variantRes] = await conn.query(`
       INSERT INTO product_variants 
-        (ProductID, SKU, Price, StockQuantity, Weight, IsActive, CreatedAt)
+        (ProductID, ProductCode, Price, StockQuantity, Weight, IsActive, CreatedAt)
       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [ProductID, finalSKU, Price, StockQuantity, Weight, IsActive]
+      [ProductID, finalProductCode, Price, StockQuantity, Weight, IsActive]
     );
 
     const VariantID = variantRes.insertId;
