@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X,ShoppingCartIcon } from "lucide-react";
 import axios from "axios";
 
 export default function Header() {
@@ -8,8 +8,8 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -27,7 +27,19 @@ export default function Header() {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
+  const calculateCartCount = () => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+    setCartCount(total);
+  };
+  useEffect(() => {
+    calculateCartCount();
 
+    const handler = () => calculateCartCount();
+    window.addEventListener("updateCart", handler);
+
+    return () => window.removeEventListener("updateCart", handler);
+  }, []);
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -90,8 +102,13 @@ export default function Header() {
             className="border border-gray-300 rounded-full px-4 py-2 text-sm w-48 md:w-64 focus:outline-none focus:ring-2 focus:ring-teal-400 transition"
           />
 
-          <Link to="/cart" className="text-gray-700 hover:text-teal-600 text-xl transition">
-            🛒
+          <Link to="/cart" className="relative">
+            <ShoppingCartIcon className="w-7 h-7 text-teal-600" />
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-teal-600 text-white text-xs font-bold rounded-full px-2 py-0.5 shadow">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           {user ? (
@@ -200,7 +217,22 @@ export default function Header() {
             >
               Giới thiệu
             </Link>
+            <Link
+              to="/cart"
+              className="relative flex items-center justify-between px-4 py-3 border-b border-gray-100"
+            >
+              <span className="text-gray-700 font-medium">Giỏ hàng</span>
 
+              <div className="relative">
+                <ShoppingCartIcon className="w-7 h-7 text-teal-600" />
+
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-teal-600 text-white text-xs font-bold rounded-full px-2 py-0.5 shadow">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+            </Link>
             {/* USER MOBILE */}
             <div className="px-4 py-4 flex flex-col items-center gap-3 border-t border-gray-100 bg-gray-50">
               {user ? (

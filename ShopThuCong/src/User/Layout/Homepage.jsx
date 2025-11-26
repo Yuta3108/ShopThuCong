@@ -12,8 +12,6 @@ export default function HomePage() {
   const [featured, setFeatured] = useState([]);
   const [productsByCat, setProductsByCat] = useState({});
   const [loading, setLoading] = useState(true);
-
-  //  Popup state
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   useEffect(() => {
@@ -38,14 +36,14 @@ export default function HomePage() {
         }
         setProductsByCat(productMap);
       } catch (err) {
-        console.log("❌ Lỗi khi tải dữ liệu:", err);
+        console.log("Lỗi khi tải dữ liệu:", err);
       } finally {
         setLoading(false);
       }
     };
     fetchInit();
   }, []);
-
+  
   if (loading)
     return (
       <div className="flex justify-center items-center h-screen">

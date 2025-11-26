@@ -21,6 +21,14 @@ export default {
         },
       },
       keyframes: {
+        luxury: {
+          '0%': { transform: 'scale(0.92)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        popup: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
         fadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
@@ -43,6 +51,8 @@ export default {
         fadeSlide: "fadeSlide 0.4s ease-out forwards",
         scaleUp: "scaleUp 0.35s ease-out forwards",
         slideDown: "slideDown 0.3s ease-out forwards",
+        popup: 'popup 0.18s ease-out',
+        luxury: 'luxury 0.25s ease-out',
       },
     },
   },

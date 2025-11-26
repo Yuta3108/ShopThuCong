@@ -46,7 +46,7 @@ export const updateVariant = async (id, data) => {
       StockQuantity,
       IsActive,
       attributeValueIds = []
-    } = data; // ✅ chỉ lấy đúng field cần update
+    } = data; // chỉ lấy đúng field cần update
 
     // ép kiểu an toàn
     const priceNum = parseFloat(Price) || 0;

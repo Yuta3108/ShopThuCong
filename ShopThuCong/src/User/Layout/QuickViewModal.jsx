@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { X, Minus, Plus } from "lucide-react";
 import axios from "axios";
@@ -6,51 +5,47 @@ import axios from "axios";
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function QuickViewModal({ product, onClose }) {
-  const [variants, setVariants] = useState([]);
+  const [details, setDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Fetch product detail 1 lần duy nhất khi mở popup
   useEffect(() => {
-    if (!product) return;
+    if (!product?.ProductID) return;
 
     const fetchDetail = async () => {
+      setLoading(true);
       try {
         const res = await axios.get(`${API}/products/${product.ProductID}`);
+        const data = res.data;
 
-        const mapped = (res.data.variants || []).map((v) => ({
+        setDetails(data);
+
+        const mapped = data.variants.map((v) => ({
           ...v,
-          VariantName: v.attributes?.map((a) => a.Value).join(" / ") || "Biến thể",
+          VariantName: v.attributes?.map((a) => a.Value).join(" - "),
         }));
 
-        setVariants(mapped);
-
-        // CHỈ SET selectedVariant LẦN ĐẦU
-        if (!selectedVariant && mapped.length > 0) {
-          setSelectedVariant(mapped[0]);
-        }
-      } catch (err) {
-        console.error("Lỗi load biến thể:", err);
+        setSelectedVariant(prev => prev ?? mapped[0]);
+      } catch (e) {
+        console.error("Lỗi load popup:", e);
       }
+      setLoading(false);
     };
 
     fetchDetail();
-  }, [product]);
-
-  if (!product) return null;
+  }, [product?.ProductID]);
 
   const handleAddToCart = async () => {
-    const isDB = localStorage.getItem("cartMode") === "db" &&
-                 !!localStorage.getItem("token");
-
     if (!selectedVariant) {
       alert("Vui lòng chọn biến thể!");
       return;
     }
 
-    // -------------------
-    // LOCAL CART
-    // -------------------
+    const isDB =
+      localStorage.getItem("cartMode") === "db" &&
+      !!localStorage.getItem("token");
+
     if (!isDB) {
       let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -58,28 +53,28 @@ export default function QuickViewModal({ product, onClose }) {
         (i) => i.VariantID === selectedVariant.VariantID
       );
 
-      if (existing) existing.quantity += quantity;
-      else {
+      if (existing) {
+        existing.quantity += quantity;
+      } else {
         cart.push({
           key: selectedVariant.VariantID,
-          ProductID: product.ProductID,
+          ProductID: details.ProductID,
           VariantID: selectedVariant.VariantID,
-          ProductName: product.ProductName,
-          ImageURL: product.ImageURL,
+          ProductName: details.ProductName,
+          ImageURL:
+            selectedVariant?.images?.[0]?.ImageURL || details.ImageURL,
           quantity,
-          price: selectedVariant.Price,
+          price: Number(selectedVariant.Price),
         });
       }
 
       localStorage.setItem("cart", JSON.stringify(cart));
+      window.dispatchEvent(new Event("updateCart"));
       alert("Đã thêm vào giỏ hàng!");
       onClose();
       return;
     }
 
-    // -------------------
-    // DATABASE CART
-    // -------------------
     await axios.post(
       `${API}/cart/add`,
       {
@@ -92,89 +87,175 @@ export default function QuickViewModal({ product, onClose }) {
         },
       }
     );
-
+    window.dispatchEvent(new Event("updateCart"));
     alert("Đã thêm vào giỏ hàng!");
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 px-4">
-      <div className="bg-white max-w-4xl w-full rounded-xl p-6 shadow-lg relative animate-fadeIn">
+  if (loading || !details) {
+    return (
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50 px-4">
+        <div className="bg-white rounded-2xl w-full max-w-5xl p-6 shadow-2xl animate-luxury">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-pulse">
+            <div className="bg-gray-100 h-[340px] rounded-xl"></div>
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-100 w-2/3 rounded"></div>
+              <div className="h-6 bg-gray-100 w-1/3 rounded"></div>
+              <div className="h-10 bg-gray-100 w-1/2 rounded"></div>
+              <div className="h-10 bg-gray-100 w-full rounded"></div>
+              <div className="h-10 bg-gray-100 w-full rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-        <button onClick={onClose} className="absolute top-4 right-4">
-          <X size={24} />
+  const stock = selectedVariant?.StockQuantity ?? 0;
+  const currentPrice = Number(selectedVariant?.Price || details.minPrice || 0);
+
+  return (
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center px-4 z-50">
+      <div className="bg-white max-w-5xl w-full rounded-lg p-8 shadow-2xl relative animate-luxury">
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-[#C2185B] transition"
+        >
+          <X size={26} />
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
           {/* IMAGE */}
-          <img
-            src={product.ImageURL}
-            alt=""
-            className="rounded-xl w-full object-cover"
-          />
-
-          {/* INFO */}
           <div>
-            <h2 className="text-xl font-semibold">{product.ProductName}</h2>
+            <img
+              src={
+                selectedVariant?.images?.[0]?.ImageURL || details.ImageURL
+              }
+              className="rounded-lg w-full object-cover shadow-[0_4px_20px_rgba(0,0,0,0.05)]"
+            />
+          </div>
 
-            <p className="text-[#C2185B] text-2xl font-bold mt-2">
-              {Number(product.minPrice).toLocaleString()}₫
+          {/* RIGHT INFO */}
+          <div className="flex flex-col">
+
+            <h2 className="text-[22px] font-semibold text-gray-900 leading-snug">
+              {details.ProductName}
+            </h2>
+
+            <div className="text-sm text-gray-600 mt-2">
+              Mã SP: <b className="text-gray-800">{details.SKU}</b>
+            </div>
+
+            <div className="text-sm text-gray-600">
+              Danh mục: <b className="text-gray-800">{details.CategoryName}</b>
+            </div>
+
+            {/* PRICE */}
+            <p className="text-[32px] font-bold text-[#C2185B] mt-4 tracking-tight">
+              {currentPrice.toLocaleString()}₫
             </p>
 
             {/* VARIANTS */}
-            <div className="mt-4">
-              <p className="font-semibold mb-1">Biến thể:</p>
+            <div className="mt-8">
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Biến thể
+              </p>
 
               <div className="flex flex-wrap gap-2">
-                {variants.map((v) => (
-                  <button
-                    key={v.VariantID}
-                    onClick={() => setSelectedVariant(v)}
-                    className={`px-4 py-2 rounded-lg border transition ${
-                      selectedVariant?.VariantID === v.VariantID
-                        ? "bg-[#C2185B] text-white border-[#C2185B]"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    {v.VariantName}
-                  </button>
-                ))}
+                {details.variants.map((v) => {
+                  const isActive =
+                    selectedVariant?.VariantID === v.VariantID;
+                  const outOfStock = v.StockQuantity === 0;
+
+                  return (
+                    <button
+                      key={v.VariantID}
+                      onClick={() => !outOfStock && setSelectedVariant(v)}
+                      className={`
+                        px-4 py-[10px] rounded-md border text-sm transition
+                        ${
+                          isActive
+                            ? "border-[#C2185B] bg-[#C2185B] text-white"
+                            : "border-gray-300 text-gray-700 hover:border-[#C2185B]"
+                        }
+                        ${
+                          outOfStock
+                            ? "opacity-40 cursor-not-allowed hover:border-gray-300"
+                            : ""
+                        }
+                      `}
+                    >
+                      {v.attributes.map((a) => a.Value).join(" / ")}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* QUANTITY */}
-            <div className="mt-6">
-              <p className="font-semibold mb-1">Số lượng:</p>
+            {/* STOCK */}
+            <p className="mt-4 text-sm text-gray-700">
+              Tình trạng:{" "}
+              {stock > 0 ? (
+                <span className="font-medium text-green-600">
+                  Còn hàng ({stock})
+                </span>
+              ) : (
+                <span className="font-medium text-red-600">Hết hàng</span>
+              )}
+            </p>
 
-              <div className="flex items-center gap-3">
+            {/* QUANTITY */}
+            <div className="mt-8">
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Số lượng
+              </p>
+
+              <div className="flex items-center gap-5">
                 <button
-                  className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center"
                   onClick={() => quantity > 1 && setQuantity(quantity - 1)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
                 >
                   <Minus size={16} />
                 </button>
 
-                <span className="w-10 text-center font-semibold">{quantity}</span>
+                <span className="text-lg font-semibold">{quantity}</span>
 
                 <button
-                  className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center"
                   onClick={() => setQuantity(quantity + 1)}
+                  className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200"
                 >
                   <Plus size={16} />
                 </button>
               </div>
             </div>
 
-            {/* ADD BUTTON */}
+            {/* ADD CART */}
             <button
               onClick={handleAddToCart}
-              className="mt-6 w-full py-3 bg-[#C2185B] text-white rounded-xl text-lg font-semibold"
+              disabled={stock === 0}
+              className={`
+                w-full mt-8 py-3 rounded-md text-[15px] font-semibold transition
+                ${
+                  stock === 0
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-[#C2185B] text-white hover:bg-[#a4164b]"
+                }
+              `}
             >
-              Thêm vào giỏ hàng
+              {stock === 0 ? "HẾT HÀNG" : "THÊM VÀO GIỎ HÀNG"}
             </button>
-          </div>
 
+            <a
+              href={`/chi-tiet-san-pham/${details.ProductID}`}
+              className="mt-4 text-center text-sm text-[#C2185B] underline hover:text-[#a4164b]"
+            >
+              Xem chi tiết sản phẩm →
+            </a>
+
+          </div>
         </div>
       </div>
     </div>
