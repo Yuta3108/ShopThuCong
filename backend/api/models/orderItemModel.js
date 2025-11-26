@@ -2,7 +2,7 @@ import db from "../config/db.js";
 
 export const createOrderItemsModel = async (orderId, cart) => {
   for (const item of cart) {
-    const totalPrice = item.unitPrice * item.quantity;
+    const totalPrice = item.UnitPrice * item.Quantity;
 
     await db.query(
       `INSERT INTO order_items
@@ -10,10 +10,10 @@ export const createOrderItemsModel = async (orderId, cart) => {
       VALUES (?, ?, ?, ?, ?, ?)`,
       [
         orderId,
-        item.variantId,
-        item.productName,
-        item.quantity,
-        item.unitPrice,
+        item.VariantID,
+        item.ProductName,
+        item.Quantity,
+        item.UnitPrice,
         totalPrice
       ]
     );

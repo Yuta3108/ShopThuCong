@@ -1,6 +1,14 @@
 import db from "../config/db.js";
 import { Cart } from "../models/CartModel.js";
 import { CartItem } from "../models/CartItemModel.js";
+import {
+  createOrderModel,
+  getAllOrdersModel,
+  getOrderDetailModel,
+  updateOrderStatusModel,
+  deleteOrderModel,
+} from "../models/orderModel.js";
+import { createOrderItemsModel } from "../models/orderItemModel.js";
 
 export const createOrderFromCart = async (req, res) => {
   try {
@@ -15,166 +23,103 @@ export const createOrderFromCart = async (req, res) => {
       voucherCode,
       discount
     } = req.body;
-    // 1. Lấy cart theo user
+
     const [cartRows] = await Cart.getCartByUserId(userId);
-    if (!cartRows.length) {
-      return res.status(400).json({ message: "Giỏ hàng trống!" });
-    }
+    if (!cartRows.length) return res.status(400).json({ message: "Giỏ hàng trống!" });
 
     const cartId = cartRows[0].CartID;
-    // 2. Lấy tất cả items
     const [items] = await CartItem.getCartItems(cartId);
-    if (!items.length)
-      return res.status(400).json({ message: "Không có sản phẩm trong giỏ!" });
+    if (!items.length) return res.status(400).json({ message: "Không có sản phẩm trong giỏ!" });
 
-    // 3. Tính tổng tiền
-    const subtotal = items.reduce(
-      (sum, item) => sum + item.UnitPrice * item.Quantity,
-      0
-    );
-    const total = subtotal - (discount || 0);
+    const total =
+      items.reduce((sum, item) => sum + item.UnitPrice * item.Quantity, 0) -
+      (discount || 0);
 
-    const connection = await db.getConnection();
-    await connection.beginTransaction();
+    const conn = await db.getConnection();
+    await conn.beginTransaction();
 
-    // 4. Tạo ORDER trước
-    const [orderRes] = await connection.query(
-      `INSERT INTO orders
-        (UserID, ReceiverName, Phone,Email, ShippingAddress, PaymentMethod, 
-         IsPaid, Total, Status, Note, VoucherCode, Discount, CreatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [
-        userId,
-        receiverName,
-        phone,
-        email,
-        address,
-        paymentMethod,
-        0,
-        total,
-        "pending",
-        note || null,
-        voucherCode || null,
-        discount || 0
-      ]
-    );
-
-    const orderId = orderRes.insertId;
-    // 5. Insert order_items
-    for (const item of items) {
-      await connection.query(
-        `INSERT INTO order_items
-          (OrderID, VariantID, ProductName, Quantity, UnitPrice, TotalPrice)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [
-          orderId,
-          item.VariantID,
-          item.ProductName,
-          item.Quantity,
-          item.UnitPrice,
-          item.UnitPrice * item.Quantity
-        ]
-      );
-    }
-    // 6. Xóa giỏ hàng sau khi đặt đơn
-    await connection.query(
-      `DELETE FROM cart_items WHERE CartID = ?`,
-      [cartId]
-    );
-
-    await connection.commit();
-    res.json({
-      message: "Đặt hàng thành công!",
-      orderId
+    const orderId = await createOrderModel({
+      userId,
+      receiverName,
+      phone,
+      email,
+      shippingAddress: address,
+      paymentMethod,
+      note,
+      voucherCode,
+      discount,
+      total,
     });
 
-  } catch (err) {
-    console.error("ORDER ERROR:", err);
+    await createOrderItemsModel(orderId, items);
+
+    await conn.query(`DELETE FROM cart_items WHERE CartID = ?`, [cartId]);
+
+    await conn.commit();
+    conn.release();
+
+    res.json({ message: "Đặt hàng thành công!", orderId });
+  } catch {
     res.status(500).json({ message: "Lỗi khi tạo đơn hàng." });
   }
 };
+
 export const getMyOrders = async (req, res) => {
   try {
-    const userId = req.user.id;
-
     const [orders] = await db.query(
-      `SELECT * FROM orders 
-       WHERE UserID = ?
-       ORDER BY CreatedAt DESC`,
-      [userId]
+      `SELECT * FROM orders WHERE UserID = ? ORDER BY CreatedAt DESC`,
+      [req.user.id]
     );
-
-    res.json({
-      message: "Lấy danh sách đơn hàng thành công!",
-      data: orders
-    });
-
-  } catch (err) {
-    console.error("GET MY ORDERS ERROR:", err);
-    res.status(500).json({ message: "Lỗi khi lấy danh sách đơn hàng." });
+    res.json({ message: "Lấy danh sách đơn hàng thành công!", data: orders });
+  } catch {
+    res.status(500).json({ message: "Lỗi khi lấy đơn hàng." });
   }
 };
+
+export const getAllOrders = async (req, res) => {
+  try {
+    const orders = await getAllOrdersModel();
+    res.json({ message: "Lấy tất cả đơn hàng thành công!", data: orders });
+  } catch {
+    res.status(500).json({ message: "Lỗi khi lấy tất cả đơn hàng." });
+  }
+};
+
 export const getOrderDetail = async (req, res) => {
   try {
-    const orderId = req.params.id;
-    const userId = req.user.id;
+    const id = req.params.id;
+    const order = await getOrderDetailModel(id);
+    if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng!" });
 
-    // Kiểm tra order có thuộc về user không
-    const [[order]] = await db.query(
-      `SELECT * FROM orders WHERE OrderID = ? AND UserID = ?`,
-      [orderId, userId]
-    );
-
-    if (!order) {
-      return res.status(404).json({ message: "Không tìm thấy đơn hàng!" });
-    }
-
-    // Lấy danh sách sản phẩm trong order
-    const [items] = await db.query(
+    const items = await db.query(
       `SELECT * FROM order_items WHERE OrderID = ?`,
-      [orderId]
+      [id]
     );
 
     res.json({
       message: "Lấy chi tiết đơn hàng thành công!",
       order,
-      items
+      items: items[0],
     });
-
-  } catch (err) {
-    console.error("GET ORDER DETAIL ERROR:", err);
+  } catch {
     res.status(500).json({ message: "Lỗi khi lấy chi tiết đơn hàng." });
   }
 };
-export const getAllOrders = async (req, res) => {
+
+export const updateOrderStatus = async (req, res) => {
   try {
-    const [orders] = await db.query(
-      `SELECT 
-          OrderID,
-          UserID,
-          ReceiverName,
-          Phone,
-          Email,
-          ShippingAddress,
-          PaymentMethod,
-          IsPaid,
-          Total,
-          Status,
-          VoucherCode,
-          Discount,
-          CreatedAt,
-          UpdatedAt
-       FROM orders
-       ORDER BY CreatedAt DESC`
-    );
+    await updateOrderStatusModel(req.params.id, req.body.status);
+    res.json({ message: "Cập nhật trạng thái thành công" });
+  } catch {
+    res.status(500).json({ message: "Lỗi khi cập nhật trạng thái" });
+  }
+};
 
-    res.json({
-      message: "Lấy tất cả đơn hàng thành công!",
-      data: orders,
-    });
-
-  } catch (err) {
-    console.error("GET ALL ORDERS ERROR:", err);
-    res.status(500).json({ message: "Lỗi khi lấy tất cả đơn hàng." });
+export const deleteOrder = async (req, res) => {
+  try {
+    await deleteOrderModel(req.params.id);
+    res.json({ message: "Xóa đơn hàng thành công" });
+  } catch {
+    res.status(500).json({ message: "Lỗi khi xóa đơn hàng" });
   }
 };

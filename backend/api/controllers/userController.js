@@ -3,9 +3,13 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import db from "../config/db.js";
 import nodemailer from "nodemailer";
-import { findUserByEmail, createUser,findUserById,updateUserPassword } from "../models/userModel.js";
+import {
+  findUserByEmail,
+  createUser,
+  findUserById,
+  updateUserPassword,
+} from "../models/userModel.js";
 
-// ===== JWT =====
 const generateToken = (user) => {
   return jwt.sign(
     { id: user.UserID, role: user.Role },
@@ -14,20 +18,26 @@ const generateToken = (user) => {
   );
 };
 
-// ===== Đăng ký =====
 export const dangKy = async (req, res) => {
   try {
-    const { ho, ten, tenKhachHang, email, matKhau, sdt, diaChi, role } = req.body;
-    const fullName = tenKhachHang || `${ho?.trim() || ""} ${ten?.trim() || ""}`.trim();
+    const { ho, ten, tenKhachHang, email, matKhau, sdt, diaChi, role } =
+      req.body;
+
+    const fullName =
+      tenKhachHang || `${ho?.trim() || ""} ${ten?.trim() || ""}`.trim();
 
     if (!fullName || !email || !matKhau)
-      return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin." });
+      return res
+        .status(400)
+        .json({ message: "Vui lòng nhập đầy đủ thông tin." });
 
     const existed = await findUserByEmail(email);
     if (existed)
       return res.status(400).json({ message: "Email đã tồn tại." });
 
-    const finalRole = role?.toLowerCase() === "admin" ? "admin" : "customer";
+    const finalRole =
+      role?.toLowerCase() === "admin" ? "admin" : "customer";
+
     await createUser({
       email,
       password: matKhau,
@@ -38,28 +48,32 @@ export const dangKy = async (req, res) => {
     });
 
     res.status(201).json({ message: "Đăng ký thành công!" });
-  } catch (err) {
-    console.error("Lỗi đăng ký:", err);
+  } catch {
     res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
 
-// ===== Đăng nhập =====
 export const dangNhap = async (req, res) => {
   try {
     const { email, matKhau } = req.body;
     const user = await findUserByEmail(email);
+
     if (!user)
-      return res.status(400).json({ message: "Email hoặc mật khẩu không đúng." });
+      return res
+        .status(400)
+        .json({ message: "Email hoặc mật khẩu không đúng." });
 
     if (user.Status === 0)
       return res.status(403).json({ message: "Tài khoản đã bị khóa." });
 
     const match = await bcrypt.compare(matKhau, user.Password);
     if (!match)
-      return res.status(400).json({ message: "Email hoặc mật khẩu không đúng." });
+      return res
+        .status(400)
+        .json({ message: "Email hoặc mật khẩu không đúng." });
 
     const token = generateToken(user);
+
     res.json({
       id: user.UserID,
       email: user.Email,
@@ -67,33 +81,33 @@ export const dangNhap = async (req, res) => {
       role: user.Role,
       token,
     });
-  } catch (err) {
-    console.error("Lỗi đăng nhập:", err);
+  } catch {
     res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
 
-// ===== Yêu cầu đặt lại mật khẩu =====
 export const yeuCauDatLaiMatKhau = async (req, res) => {
   try {
     const { email } = req.body;
+
     if (!email)
       return res.status(400).json({ message: "Vui lòng nhập email." });
 
-    // Tìm user
-    const [rows] = await db.query("SELECT * FROM users WHERE Email = ?", [email]);
+    const [rows] = await db.query(
+      "SELECT * FROM users WHERE Email = ?",
+      [email]
+    );
+
     if (rows.length === 0)
-      return res.json({ message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi." });
+      return res.json({
+        message: "Nếu email hợp lệ, liên kết đặt lại mật khẩu đã được gửi.",
+      });
 
-    const user = rows[0];
-
-    // Xóa token cũ
     await db.query(
       "UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE Email = ?",
       [email]
     );
 
-    //  Tạo token mới
     const token = crypto.randomBytes(20).toString("hex");
     const expireTime = new Date(Date.now() + 5 * 60 * 1000);
 
@@ -102,10 +116,10 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       [token, expireTime, email]
     );
 
-    // Tạo link đặt lại mật khẩu
-    const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${token}`;
+    const resetLink = `${
+      process.env.FRONTEND_URL || "http://localhost:5173"
+    }/reset-password/${token}`;
 
-    //  Gửi mail
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -114,36 +128,41 @@ export const yeuCauDatLaiMatKhau = async (req, res) => {
       },
     });
 
+    const user = rows[0];
+
     await transporter.sendMail({
       from: `"Then Fong Store" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Đặt lại mật khẩu - Then Fong Store",
       html: `
         <h2>Xin chào ${user.FullName || "bạn"}!</h2>
-        <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản tại <b>Then Fong Store</b>.</p>
-        <a href="${resetLink}" target="_blank" 
-           style="display:inline-block;padding:10px 18px;background-color:#14b8a6;color:#fff;
-           border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
+        <p>Bạn vừa yêu cầu đặt lại mật khẩu.</p>
+        <a href="${resetLink}"
+           target="_blank"
+           style="display:inline-block;padding:10px 18px;background-color:#14b8a6;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;margin:8px 0;">
            Đặt lại mật khẩu
         </a>
-        <p><i>Liên kết này có hiệu lực trong 5 phút.</i></p>
+        <p>Liên kết này có hiệu lực trong 5 phút.</p>
       `,
     });
 
-    // 6Sau khi tất cả xong rồi mới trả response
-    res.json({ message: "Liên kết đặt lại mật khẩu đã được gửi nếu email hợp lệ!" });
-  } catch (err) {
-    console.error("🔥 Lỗi yêu cầu đặt lại mật khẩu:", err);
+    res.json({
+      message:
+        "Liên kết đặt lại mật khẩu đã được gửi nếu email hợp lệ!",
+    });
+  } catch {
     res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
 
-// ===== Đặt lại mật khẩu =====
 export const datLaiMatKhau = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
+
     if (!token || !newPassword)
-      return res.status(400).json({ message: "Thiếu token hoặc mật khẩu mới." });
+      return res
+        .status(400)
+        .json({ message: "Thiếu token hoặc mật khẩu mới." });
 
     const [rows] = await db.query(
       "SELECT * FROM users WHERE resetToken = ? AND resetExpires > NOW()",
@@ -151,7 +170,7 @@ export const datLaiMatKhau = async (req, res) => {
     );
 
     if (rows.length === 0)
-      return res.status(400).json({ message: "Mã Của bạn đã hết hạn." });
+      return res.status(400).json({ message: "Mã đã hết hạn." });
 
     const user = rows[0];
     const hashed = await bcrypt.hash(newPassword, 10);
@@ -162,43 +181,48 @@ export const datLaiMatKhau = async (req, res) => {
     );
 
     res.json({ message: "Đặt lại mật khẩu thành công!" });
-  } catch (err) {
-    console.error("Lỗi đặt lại mật khẩu:", err);
+  } catch {
     res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
-// ===== Đổi mật khẩu =====
+
 export const doiMatKhau = async (req, res) => {
   try {
     const userId = req.params.id;
     const { oldPassword, newPassword } = req.body;
 
     if (!oldPassword || !newPassword)
-      return res
-        .status(400)
-        .json({ message: "Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới." });
+      return res.status(400).json({
+        message: "Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới.",
+      });
 
     const user = await findUserById(userId);
     if (!user)
-      return res.status(404).json({ message: "Không tìm thấy người dùng." });
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy người dùng." });
 
     const match = await bcrypt.compare(oldPassword, user.Password);
     if (!match)
-      return res.status(400).json({ message: "Mật khẩu hiện tại không đúng." });
+      return res
+        .status(400)
+        .json({ message: "Mật khẩu hiện tại không đúng." });
 
     const hashed = await bcrypt.hash(newPassword, 10);
     await updateUserPassword(userId, hashed);
 
     res.json({ message: "Đổi mật khẩu thành công!" });
   } catch (err) {
-    console.error("🔥 Lỗi đổi mật khẩu:", err);
-    res.status(500).json({ message: "Lỗi máy chủ.", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Lỗi máy chủ.", error: err.message });
   }
 };
+
 setInterval(async () => {
   try {
-    await db.query("UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE resetExpires < NOW()");
-  } catch (err) {
-    console.error("⚠️ Dọn token lỗi:", err);
-  }
+    await db.query(
+      "UPDATE users SET resetToken = NULL, resetExpires = NULL WHERE resetExpires < NOW()"
+    );
+  } catch {}
 }, 6 * 60 * 1000);

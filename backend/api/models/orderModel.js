@@ -5,7 +5,7 @@ export const createOrderModel = async (data) => {
     userId,
     receiverName,
     phone,
-    Email,
+    email,
     shippingAddress,
     paymentMethod,
     note,
@@ -16,19 +16,17 @@ export const createOrderModel = async (data) => {
 
   const [result] = await db.query(
     `INSERT INTO orders 
-    (UserID, ReceiverName, Phone,Email, ShippingAddress, PaymentMethod, 
+    (UserID, ReceiverName, Phone, Email, ShippingAddress, PaymentMethod,
      IsPaid, Total, Status, Note, VoucherCode, Discount, CreatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+     VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'pending', ?, ?, ?, NOW())`,
     [
       userId,
       receiverName,
       phone,
-      Email,
+      email,
       shippingAddress,
       paymentMethod,
-      0,
       total,
-      "pending",
       note || null,
       voucherCode || null,
       discount || 0
@@ -51,4 +49,16 @@ export const getOrderDetailModel = async (id) => {
     [id]
   );
   return order;
+};
+
+export const updateOrderStatusModel = async (orderId, status) => {
+  await db.query(
+    `UPDATE orders SET Status = ?, UpdatedAt = NOW() WHERE OrderID = ?`,
+    [status, orderId]
+  );
+};
+
+export const deleteOrderModel = async (orderId) => {
+  await db.query(`DELETE FROM order_items WHERE OrderID = ?`, [orderId]);
+  await db.query(`DELETE FROM orders WHERE OrderID = ?`, [orderId]);
 };
