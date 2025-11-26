@@ -8,7 +8,7 @@ export const CartItem = {
           ci.*,
           pv.Price AS VariantPrice,
           pv.ProductID,
-          pv.SKU,
+          pv.ProductCode,
           pv.VariantName,
           p.ProductName,
           img.ImageURL
