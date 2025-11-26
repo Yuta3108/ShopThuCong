@@ -152,7 +152,7 @@ export default function ProductManagement() {
     const keyword = search.toLowerCase().trim();
     return (
       p.ProductName?.toLowerCase().includes(keyword) ||
-      p.SKU?.toLowerCase().includes(keyword) ||
+      p.ProductCode?.toLowerCase().includes(keyword) ||
       p.CategoryName?.toLowerCase().includes(keyword)
     );
   });
@@ -183,7 +183,7 @@ export default function ProductManagement() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm theo tên, SKU hoặc danh mục…"
+              placeholder="Tìm theo tên, ProductCode hoặc danh mục…"
               className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
             />
           </div>

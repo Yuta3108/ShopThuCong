@@ -83,24 +83,24 @@ export const findProductDetailById = async (productId) => {
 };
 
 export const createProduct = async (data) => {
-  const { CategoryID, SKU, ProductName, ShortDescription, Material, Description, ImageURL, IsActive } = data;
+  const { CategoryID, ProductCode, ProductName, ShortDescription, Material, Description, ImageURL, IsActive } = data;
   const [res] = await db.query(`
     INSERT INTO products 
-      (CategoryID, SKU, ProductName, ShortDescription, Material, Description, ImageURL, IsActive, CreatedAt)
+      (CategoryID, ProductCode, ProductName, ShortDescription, Material, Description, ImageURL, IsActive, CreatedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-    [CategoryID, SKU, ProductName, ShortDescription, Material, Description, ImageURL, IsActive ?? 1]
+    [CategoryID, ProductCode, ProductName, ShortDescription, Material, Description, ImageURL, IsActive ?? 1]
   );
   return res.insertId;
 };
 
 export const updateProduct = async (id, data) => {
-  const { CategoryID, SKU, ProductName, ShortDescription, Material, Description, ImageURL, IsActive } = data;
+  const { CategoryID, ProductCode, ProductName, ShortDescription, Material, Description, ImageURL, IsActive } = data;
   const [res] = await db.query(`
     UPDATE products 
-    SET CategoryID=?, SKU=?, ProductName=?, ShortDescription=?, 
+    SET CategoryID=?, ProductCode=?, ProductName=?, ShortDescription=?, 
         Material=?, Description=?, ImageURL=?, IsActive=?, UpdatedAt=NOW()
     WHERE ProductID=?`,
-    [CategoryID, SKU, ProductName, ShortDescription, Material, Description, ImageURL, IsActive, id]
+    [CategoryID, ProductCode, ProductName, ShortDescription, Material, Description, ImageURL, IsActive, id]
   );
   return res.affectedRows > 0;
 };

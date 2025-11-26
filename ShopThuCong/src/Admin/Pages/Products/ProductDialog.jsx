@@ -16,7 +16,7 @@ export default function ProductDialog({
   const [product, setProduct] = useState(
     initialData || {
       CategoryID: "",
-      SKU: "",
+      ProductCode: "",
       ProductName: "",
       ShortDescription: "",
       Material: "",
@@ -24,7 +24,7 @@ export default function ProductDialog({
       IsActive: 1,
       variants: [
         {
-          SKU: "",
+          ProductCode: "",
           Price: 0,
           StockQuantity: 0,
           IsActive: 1,
@@ -81,7 +81,7 @@ export default function ProductDialog({
       variants: [
         ...product.variants,
         {
-          SKU: "",
+          ProductCode: "",
           Price: 0,
           StockQuantity: 0,
           IsActive: 1,
@@ -136,7 +136,7 @@ export default function ProductDialog({
   const resetForm = () => {
     setProduct({
       CategoryID: "",
-      SKU: "",
+      ProductCode: "",
       ProductName: "",
       ShortDescription: "",
       Material: "",
@@ -144,7 +144,7 @@ export default function ProductDialog({
       IsActive: 1,
       variants: [
         {
-          SKU: "",
+          ProductCode: "",
           Price: 0,
           StockQuantity: 0,
           IsActive: 1,
@@ -204,12 +204,12 @@ export default function ProductDialog({
 
           <input
             className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
-            placeholder="Mã SKU sản phẩm"
-            value={product.SKU}
-            onChange={(e) => setProduct({ ...product, SKU: e.target.value })}
+            placeholder="Mã ProductCode sản phẩm"
+            value={product.ProductCode}
+            onChange={(e) => setProduct({ ...product, ProductCode: e.target.value })}
           />
           <p className="text-xs text-gray-500 italic -mt-2">
-            SKU sản phẩm phải duy nhất trong toàn hệ thống.
+            ProductCode sản phẩm phải duy nhất trong toàn hệ thống.
           </p>
             {/* ===== Ảnh đại diện sản phẩm ===== */}
           <div>
@@ -315,13 +315,13 @@ export default function ProductDialog({
                 key={i}
                 className="bg-gray-50 border rounded-xl p-3 sm:p-4 mb-3 space-y-3"
               >
-                {isEdit && v.SKU && (
+                {isEdit && v.ProductCode && (
                   <p className="text-sm text-teal-700 font-semibold">
-                    SKU: <span className="text-gray-700">{v.SKU}</span>
+                    ProductCode: <span className="text-gray-700">{v.ProductCode}</span>
                     <Info
                       size={14}
                       className="inline ml-1 text-gray-400"
-                      title="SKU tự động được sinh bởi hệ thống"
+                      title="ProductCode tự động được sinh bởi hệ thống"
                     />
                   </p>
                 )}

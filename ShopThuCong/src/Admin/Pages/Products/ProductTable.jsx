@@ -34,7 +34,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete, }) {
           <tr className="bg-gradient-to-r from-teal-400 to-teal-300 text-white text-sm sm:text-base">
             <th className="px-3 sm:px-4 py-3 text-left">Ảnh</th>
             <th className="px-3 sm:px-4 py-3 text-left">Id</th>
-            <th className="px-3 sm:px-4 py-3 text-left">SKU</th>
+            <th className="px-3 sm:px-4 py-3 text-left">Product Code</th>
             <th className="px-3 sm:px-4 py-3 text-left">Tên sản phẩm</th>
             <th className="px-3 sm:px-4 py-3 text-left hidden md:table-cell">
               Danh mục
@@ -77,9 +77,9 @@ export default function ProductTable({ products, loading, onEdit, onDelete, }) {
                 {(currentPage - 1) * productsPerPage + idx + 1}
               </td>
 
-              {/* SKU */}
+              {/* ProductCode */}
               <td className="px-3 sm:px-4 py-3 font-semibold text-gray-700">
-                {p.SKU}
+                {p.ProductCode}
               </td>
 
               {/* Tên */}
