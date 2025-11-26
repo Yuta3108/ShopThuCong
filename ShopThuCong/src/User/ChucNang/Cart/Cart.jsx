@@ -8,80 +8,71 @@ const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
+
   const isDB =
-  localStorage.getItem("cartMode") === "db" &&
-  !!localStorage.getItem("token");
+    localStorage.getItem("cartMode") === "db" &&
+    !!localStorage.getItem("token");
 
   useEffect(() => {
-  const isDB =
-  localStorage.getItem("cartMode") === "db" &&
-  !!localStorage.getItem("token");
+    const isDB =
+      localStorage.getItem("cartMode") === "db" &&
+      !!localStorage.getItem("token");
 
-  if (!isDB) {
-    // LOCAL MODE
-    const saved = JSON.parse(localStorage.getItem("cart")) || [];
-    const normalized = saved.map((item) => ({
-      ...item,
-      key: item.key ?? item.VariantID ?? item.ProductID,
-      quantity: Number(item.quantity ?? 1),
-      price: Number(item.price ?? 0),
-    }));
-    setCart(normalized);
-    return;
-  }
-
-  // DB MODE
-  const loadDBCart = async () => {
-    const res = await fetch(`${API}/cart`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    if (!res.ok) {
-      setCart([]); 
+    if (!isDB) {
+      const saved = JSON.parse(localStorage.getItem("cart")) || [];
+      const normalized = saved.map((item) => ({
+        ...item,
+        key: item.key ?? item.VariantID ?? item.ProductID,
+        quantity: Number(item.quantity ?? 1),
+        price: Number(item.price ?? 0),
+      }));
+      setCart(normalized);
       return;
     }
 
-    const data = await res.json();
-    const items = Array.isArray(data.items) ? data.items : [];
+    const loadDBCart = async () => {
+      const res = await fetch(`${API}/cart`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-    const normalized = items.map((item) => ({
-      ...item,
-      key: item.CartItemID,
-      quantity: Number(item.Quantity ?? 1),
-      price: Number(item.UnitPrice ?? 0),
-      ProductName: item.ProductName,
-      ImageURL: item.ImageURL,
-    }));
+      if (!res.ok) {
+        setCart([]);
+        return;
+      }
 
-    setCart(normalized);
-  };
+      const data = await res.json();
+      const items = Array.isArray(data.items) ? data.items : [];
 
-  loadDBCart();
-}, []);
+      const normalized = items.map((item) => ({
+        ...item,
+        key: item.CartItemID,
+        quantity: Number(item.Quantity ?? 1),
+        price: Number(item.UnitPrice ?? 0),
+        ProductName: item.ProductName,
+        ImageURL: item.ImageURL,
+      }));
 
-  // ========================
-  // LOCAL MODE SAVE
-  // ========================
+      setCart(normalized);
+    };
+
+    loadDBCart();
+  }, []);
+
   const saveLocalCart = (newCart) => {
     setCart(newCart);
     localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
-  // ========================
-  // INCREASE QUANTITY
-  // ========================
   const increaseQty = async (item) => {
     if (!isDB) {
-      // LOCAL
       saveLocalCart(
         cart.map((i) =>
           i.key === item.key ? { ...i, quantity: i.quantity + 1 } : i
         )
       );
     } else {
-      // DB MODE
       await fetch(`${API}/cart/updateQuantity/${item.key}`, {
         method: "PUT",
         headers: {
@@ -91,18 +82,14 @@ export default function CartPage() {
         body: JSON.stringify({ quantity: item.quantity + 1 }),
       });
 
-      // reload
       setCart((prev) =>
-          prev.map((i) =>
-            i.key === item.key ? { ...i, quantity: i.quantity + 1 } : i
-          )
-        );
+        prev.map((i) =>
+          i.key === item.key ? { ...i, quantity: i.quantity + 1 } : i
+        )
+      );
     }
   };
 
-  // ========================
-  // DECREASE QUANTITY
-  // ========================
   const decreaseQty = async (item) => {
     if (item.quantity <= 1) return;
 
@@ -123,45 +110,48 @@ export default function CartPage() {
       });
 
       setCart((prev) =>
-          prev.map((i) =>
-            i.key === item.key ? { ...i, quantity: i.quantity - 1 } : i
-          )
-        );
+        prev.map((i) =>
+          i.key === item.key ? { ...i, quantity: i.quantity - 1 } : i
+        )
+      );
     }
   };
 
-  // ========================
-  // REMOVE ITEM
-  // ========================
-  const removeItem = async (item) => { 
-  if (!isDB) {
-    // Local mode
-    saveLocalCart(cart.filter((i) => i.key !== item.key));
-    setCart(cart.filter((i) => i.key !== item.key));
-    return;
-  }
+  const removeItem = async (item) => {
+    if (!isDB) {
+      saveLocalCart(cart.filter((i) => i.key !== item.key));
+      setCart(cart.filter((i) => i.key !== item.key));
+      return;
+    }
 
-  // DB mode
-  try {
-    await fetch(`${API}/cart/remove/${item.key}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
+    try {
+      await fetch(`${API}/cart/remove/${item.key}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
-    // Xoá item trong state FE
-    setCart((prev) => prev.filter((i) => i.key !== item.key));
-
-  } catch (err) {
-    console.error("DELETE ERROR:", err);
-  }
-};
+      setCart((prev) => prev.filter((i) => i.key !== item.key));
+    } catch {}
+  };
 
   const total = cart.reduce(
     (sum, i) => sum + Number(i.price) * Number(i.quantity),
     0
   );
+
+  //   HANDLE CHECKOUT
+  const handleCheckout = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Vui lòng đăng nhập để thanh toán!");
+      return (window.location.href = "/login");
+    }
+
+    window.location.href = "/checkout";
+  };
 
   return (
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
@@ -186,7 +176,6 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
-            {/* LIST ITEMS */}
             <div className="lg:col-span-2 space-y-4">
               {cart.map((item) => (
                 <div
@@ -208,7 +197,6 @@ export default function CartPage() {
                       {Number(item.price).toLocaleString()}₫
                     </p>
 
-                    {/* QUANTITY */}
                     <div className="flex items-center gap-3 mt-4">
                       <button
                         onClick={() => decreaseQty(item)}
@@ -258,7 +246,11 @@ export default function CartPage() {
                 <span>{total.toLocaleString()}₫</span>
               </div>
 
-              <button className="w-full py-3 bg-[#C2185B] text-white rounded-xl text-lg font-semibold hover:bg-[#a6144c] transition-all shadow-md hover:shadow-lg">
+              <button
+                onClick={handleCheckout}
+                className="w-full py-3 bg-gradient-to-r from-[#C2185B] to-[#E91E63]
+                text-white rounded-xl text-lg font-semibold hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
+              >
                 Thanh toán ngay
               </button>
             </div>

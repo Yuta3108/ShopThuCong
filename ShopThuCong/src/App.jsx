@@ -14,6 +14,7 @@ import ProductAllPage from './User/ChucNang/Products/ProductAllPage';
 import ProductDetailPage from './User/ChucNang/Products/ProductDetailPage';
 import CartPage from './User/ChucNang/Cart/Cart';
 import AdminVoucherPage from './Admin/Pages/AdminVoucher';
+import Checkout from './User/ChucNang/Cart/Checkout';
 function App() {
   return (
     
@@ -30,6 +31,7 @@ function App() {
       <Route path="/san-pham" element={<ProductAllPage />} />
       <Route path="/chi-tiet/:ProductName" element={<ProductDetailPage />} />
       <Route path="/cart" element={<CartPage />} />
+      <Route path='/checkout' element={<Checkout />} />
       //== Admin Routes ==// 
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />
