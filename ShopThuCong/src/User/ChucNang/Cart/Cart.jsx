@@ -15,7 +15,7 @@ export default function CartPage() {
     localStorage.getItem("cartMode") === "db" &&
     !!localStorage.getItem("token");
 
-  // ==================== LOAD CART ====================
+  // LOAD CART
   useEffect(() => {
     const loadLocalCart = () => {
       const saved = JSON.parse(localStorage.getItem("cart")) || [];
@@ -69,14 +69,14 @@ export default function CartPage() {
     loadDBCart();
   }, []);
 
-  // ==================== SYNC LOCAL CART ====================
+  // Kết Hợp Cart Local
   const saveLocalCart = (newCart) => {
     setCart(newCart);
     localStorage.setItem("cart", JSON.stringify(newCart));
-    window.dispatchEvent(new Event("updateCart")); // ⭐ realtime header
+    window.dispatchEvent(new Event("updateCart"));
   };
 
-  // ==================== INCREASE QTY ====================
+  // Tăng Số Lượng
   const increaseQty = async (item) => {
     if (!isDB) {
       saveLocalCart(
@@ -105,7 +105,7 @@ export default function CartPage() {
     window.dispatchEvent(new Event("updateCart")); // ⭐ realtime
   };
 
-  // ==================== DECREASE QTY ====================
+  // Giảm Số Lượng
   const decreaseQty = async (item) => {
     if (item.quantity <= 1) return;
 
@@ -136,7 +136,7 @@ export default function CartPage() {
     window.dispatchEvent(new Event("updateCart")); // ⭐ realtime
   };
 
-  // ==================== REMOVE ITEM ====================
+  //REMOVE ITEM
   const removeItem = async (item) => {
     if (!isDB) {
       const newCart = cart.filter((i) => i.key !== item.key);
@@ -157,13 +157,13 @@ export default function CartPage() {
     } catch {}
   };
 
-  // ==================== TOTAL ====================
+  //TOTAL
   const total = cart.reduce(
     (sum, i) => sum + Number(i.price) * Number(i.quantity),
     0
   );
 
-  // ==================== CHECKOUT ====================
+  // CHECKOUT 
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
 
@@ -175,9 +175,6 @@ export default function CartPage() {
     navigate("/checkout");
   };
 
-  // ================================================================
-  // =========================== RENDER ==============================
-  // ================================================================
   return (
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
