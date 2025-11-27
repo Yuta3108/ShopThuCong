@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Minus, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
