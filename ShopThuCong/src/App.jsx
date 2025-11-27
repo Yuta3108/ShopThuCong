@@ -1,11 +1,11 @@
 import TrangChu from './User/TrangChu'
-import DangNhap from './User/ChucNang/login/DangNhap';
+import DangNhap from './User/ChucNang/Auth/DangNhap';
 import { Routes, Route } from "react-router-dom";
-import DangKy from './User/ChucNang/login/DangKy';
+import DangKy from './User/ChucNang/Auth/DangKy';
 import LienHe from './User/Layout/Lienhe';
-import QuenMatKhau from './User/ChucNang/login/QuenMK';
-import DatLaiMatKhau from './User/ChucNang/login/ResetPass';
-import UserProfile from './User/ChucNang/login/ProfileUser';
+import QuenMatKhau from './User/ChucNang/Auth/QuenMK';
+import DatLaiMatKhau from './User/ChucNang/Auth/ResetPass';
+import UserProfile from './User/ChucNang/Auth/ProfileUser';
 import DashBoard from './Admin/Layout/DashBoard';
 import AdminUserPage from './Admin/Pages/AdminUser';
 import ProductManagement from './Admin/Pages/ProductManagement';
