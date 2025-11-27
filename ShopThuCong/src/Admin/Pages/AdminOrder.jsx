@@ -6,7 +6,7 @@ import { Search, Pencil, Trash2, Eye } from "lucide-react";
 import OrderDetailModal from "../Pages/Order/OrderDetailModal";
 import OrderStatusModal from "../Pages/Order/OrderStatusModal";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function AdminOrderPage() {
   const [orders, setOrders] = useState([]);
