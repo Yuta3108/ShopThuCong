@@ -45,7 +45,7 @@ export default function Header() {
     localStorage.removeItem("token");
     localStorage.removeItem("cartMode")
     setUser(null);
-    navigate("/auth");
+    navigate("/login");
   };
 
   const handleProfileClick = () => {
@@ -137,7 +137,7 @@ export default function Header() {
           ) : (
             <>
               <Link
-                to="/auth"
+                to="/login"
                 className="text-gray-700 font-medium hover:text-teal-600 transition"
               >
                 Đăng Nhập
@@ -267,7 +267,7 @@ export default function Header() {
               ) : (
                 <>
                   <Link
-                    to="/auth"
+                    to="/login"
                     onClick={() => setIsMenuOpen(false)}
                     className="w-full text-center bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 rounded-full transition"
                   >

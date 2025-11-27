@@ -35,7 +35,7 @@ export default function DatLaiMatKhau() {
           showConfirmButton: false,
           timer: 1500,
         });
-        setTimeout(() => navigate("/auth"), 1500);
+        setTimeout(() => navigate("/login"), 1500);
       } else {
         Swal.fire({
           icon: "error",

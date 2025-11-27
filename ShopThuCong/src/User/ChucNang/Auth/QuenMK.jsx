@@ -65,7 +65,7 @@ export default function QuenMatKhau() {
           </form>
           <p className="text-center mt-5 text-gray-600">
             Nhớ lại mật khẩu?{" "}
-            <a href="/auth" className="text-purple-700 hover:underline font-medium">
+            <a href="/login" className="text-purple-700 hover:underline font-medium">
               Đăng nhập
             </a>
           </p>

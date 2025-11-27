@@ -68,7 +68,7 @@ function DangKy() {
           showConfirmButton: false,
           timer: 1500,
         });
-        setTimeout(() => navigate("/auth"), 1500);
+        setTimeout(() => navigate("/login"), 1500);
       } else {
         Swal.fire({
           icon: "error",
@@ -178,7 +178,7 @@ function DangKy() {
             <p>
               Đã có tài khoản?{" "}
               <Link
-                to="/auth"
+                to="/login"
                 className="text-purple-700 hover:underline font-medium"
               >
                 Đăng nhập
