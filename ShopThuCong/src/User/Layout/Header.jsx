@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X,ShoppingCartIcon } from "lucide-react";
+import { Menu, X, ShoppingCartIcon } from "lucide-react";
 import axios from "axios";
 
 export default function Header() {
@@ -19,10 +19,30 @@ export default function Header() {
         console.error("Lỗi load categories:", err);
       }
     };
-
     fetchCategories();
   }, []);
+  useEffect(() => {
+    const fetchCartFromDB = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
+      try {
+        const res = await axios.get("https://backend-eta-ivory-29.vercel.app/api/cart", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const items = res.data.items || [];
+        const total = items.reduce((sum, item) => sum + item.Quantity, 0);
+        setCartCount(total);
+      } catch (err) {
+        console.log("Lỗi load cart từ DB:", err);
+      }
+    };
+    if (user) {
+      fetchCartFromDB();
+    }
+  }, [user]);
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
@@ -94,7 +114,7 @@ export default function Header() {
           </Link>
         </nav>
 
-        {/* SEARCH + USER (DESKTOP) */}
+        {/* SEARCH + USER ) */}
         <div className="hidden md:flex items-center gap-4">
           <input
             type="text"
