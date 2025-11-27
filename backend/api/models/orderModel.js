@@ -52,10 +52,12 @@ export const getOrderDetailModel = async (id) => {
 };
 
 export const updateOrderStatusModel = async (orderId, status) => {
-  await db.query(
+  const [result] = await db.query(
     `UPDATE orders SET Status = ?, UpdatedAt = NOW() WHERE OrderID = ?`,
-    [status, orderId]
+    [status.toLowerCase(), orderId]
   );
+
+  return result;
 };
 
 export const deleteOrderModel = async (orderId) => {

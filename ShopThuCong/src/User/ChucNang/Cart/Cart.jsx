@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Trash2, Plus, Minus, ArrowLeft } from "lucide-react";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
@@ -8,6 +8,7 @@ const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
+  const navigate = useNavigate(); // ⬅ THÊM
 
   const isDB =
     localStorage.getItem("cartMode") === "db" &&
@@ -141,16 +142,18 @@ export default function CartPage() {
     0
   );
 
-  //   HANDLE CHECKOUT
+  // ============================
+  //   HANDLE CHECKOUT (NAVIGATE)
+  // ============================
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
       alert("Vui lòng đăng nhập để thanh toán!");
-      return (window.location.href = "/login");
+      return navigate("/login"); // ⬅ CHUYỂN SANG NAVIGATE
     }
 
-    window.location.href = "/checkout";
+    navigate("/checkout"); // ⬅ CHUYỂN SANG NAVIGATE
   };
 
   return (
@@ -228,7 +231,6 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* SUMMARY */}
             <div className="bg-white p-6 rounded-2xl shadow h-fit border">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
                 Tổng cộng

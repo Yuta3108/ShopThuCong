@@ -41,7 +41,7 @@ export default function QuickViewModal({ product, onClose }) {
       alert("Vui lòng chọn biến thể!");
       return;
     }
-
+    
     const isDB =
       localStorage.getItem("cartMode") === "db" &&
       !!localStorage.getItem("token");
@@ -146,7 +146,7 @@ export default function QuickViewModal({ product, onClose }) {
             </h2>
 
             <div className="text-sm text-gray-600 mt-2">
-              Mã SP: <b className="text-gray-800">{details.SKU}</b>
+              Mã SP: <b className="text-gray-800">{details.ProductCode}</b>
             </div>
 
             <div className="text-sm text-gray-600">

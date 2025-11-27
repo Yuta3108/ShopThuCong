@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Home, Users, Package, Menu, X, ParkingCircle } from "lucide-react";
+import { Home, Users, Package, Menu, X, ParkingCircle, ListOrdered } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Sidebar() {
@@ -16,6 +16,7 @@ export default function Sidebar() {
     { name: "Dashboard", icon: <Home size={18} />, path: "/admin" },
     { name: "Người dùng", icon: <Users size={18} />, path: "/admin/users" },
     { name: "Sản phẩm", icon: <Package size={18} />, path: "/admin/Products" },
+    { name: "Đơn Hàng", icon: <ListOrdered size={18} />, path: "/admin/Order" },
     { name: "Voucher", icon: <ParkingCircle size={18} />, path: "/admin/Voucher" },
   ];
 

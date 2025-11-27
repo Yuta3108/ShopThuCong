@@ -166,11 +166,6 @@ export default function ProductManagement() {
           <h1 className="text-xl sm:text-2xl font-bold text-teal-700 text-center md:text-left">
             Quản Lý Sản Phẩm
           </h1>
-
-
-
-
-
         </header>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 

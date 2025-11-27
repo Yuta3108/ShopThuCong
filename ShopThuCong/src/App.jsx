@@ -15,6 +15,7 @@ import ProductDetailPage from './User/ChucNang/Products/ProductDetailPage';
 import CartPage from './User/ChucNang/Cart/Cart';
 import AdminVoucherPage from './Admin/Pages/AdminVoucher';
 import Checkout from './User/ChucNang/Cart/Checkout';
+import AdminOrderPage from './Admin/Pages/AdminOrder';
 function App() {
   return (
     
@@ -37,6 +38,7 @@ function App() {
       <Route path="/admin/users" element={<AdminUserPage />} />
       <Route path ="/admin/Products" element={<ProductManagement />} />
       <Route path="/admin/Voucher" element={<AdminVoucherPage />} />
+      <Route path="/admin/Order" element={<AdminOrderPage />}/>
     </Routes>
   );
 }

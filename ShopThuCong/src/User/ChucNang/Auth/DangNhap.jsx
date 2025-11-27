@@ -33,7 +33,9 @@ function DangNhap() {
         return;
       }
       if (data && data.email) {
-        localStorage.setItem("user", JSON.stringify(data));
+        localStorage.setItem("user", JSON.stringify({
+          ...data,
+          UserID: data.id,}));
         localStorage.setItem("email", data.email);
         localStorage.setItem("token", data.token);
         const localCart = JSON.parse(localStorage.getItem("cart") || "[]");

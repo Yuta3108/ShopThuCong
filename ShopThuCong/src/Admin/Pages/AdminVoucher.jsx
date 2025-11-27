@@ -57,11 +57,7 @@ export default function AdminVoucherPage() {
             setRemoving(null);
         }, 200);
     };
-
-    // ============================
     // ADD LOGIC
-    // ============================
-
     const emptyVoucher = {
         Code: "",
         Type: "percent",
