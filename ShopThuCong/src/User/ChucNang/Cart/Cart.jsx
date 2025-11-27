@@ -102,7 +102,7 @@ export default function CartPage() {
       )
     );
 
-    window.dispatchEvent(new Event("updateCart")); // ⭐ realtime
+    window.dispatchEvent(new Event("updateCart")); 
   };
 
   // Giảm Số Lượng
@@ -133,7 +133,7 @@ export default function CartPage() {
       )
     );
 
-    window.dispatchEvent(new Event("updateCart")); // ⭐ realtime
+    window.dispatchEvent(new Event("updateCart"));
   };
 
   //REMOVE ITEM
@@ -153,7 +153,7 @@ export default function CartPage() {
       });
 
       setCart((prev) => prev.filter((i) => i.key !== item.key));
-      window.dispatchEvent(new Event("updateCart")); // ⭐ realtime
+      window.dispatchEvent(new Event("updateCart"));
     } catch {}
   };
 
