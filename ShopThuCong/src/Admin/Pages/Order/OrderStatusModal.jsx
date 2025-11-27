@@ -41,7 +41,7 @@ export default function OrderStatusModal({
           }
         >
           <option value="pending">Chờ xử lý</option>
-          <option value="processing">Đang giao</option>
+          <option value="processing">Đang xử lý</option>
           <option value="completed">Hoàn tất</option>
           <option value="cancelled">Đã hủy</option>
         </select>

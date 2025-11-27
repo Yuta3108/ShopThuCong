@@ -8,7 +8,7 @@ const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
-  const navigate = useNavigate(); // ⬅ THÊM
+  const navigate = useNavigate();
 
   const isDB =
     localStorage.getItem("cartMode") === "db" &&
@@ -141,19 +141,16 @@ export default function CartPage() {
     (sum, i) => sum + Number(i.price) * Number(i.quantity),
     0
   );
-
-  // ============================
   //   HANDLE CHECKOUT (NAVIGATE)
-  // ============================
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
       alert("Vui lòng đăng nhập để thanh toán!");
-      return navigate("/login"); // ⬅ CHUYỂN SANG NAVIGATE
+      return navigate("/login");
     }
 
-    navigate("/checkout"); // ⬅ CHUYỂN SANG NAVIGATE
+    navigate("/checkout"); 
   };
 
   return (

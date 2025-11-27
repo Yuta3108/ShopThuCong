@@ -55,9 +55,16 @@ export default function OrderDetailModal({ open, onClose, data }) {
             </tbody>
           </table>
         </div>
-
+  {order.VoucherCode && (
+  <div className="text-right mt-3 text-sm text-gray-600">
+    <span className="font-semibold text-teal-700">Voucher áp dụng:</span>{" "}
+    <span className="font-bold text-teal-600 px-2 py-0.5 bg-teal-50 rounded-md border border-teal-200">
+      {order.VoucherCode.toUpperCase()}
+    </span>
+  </div>
+)}
         {/* TỔNG TIỀN */}
-        <div className="text-right mt-4 text-lg font-bold text-teal-700">
+        <div className="text-right mt-4 text-lg font-bold text-red-600">
           Tổng đơn: {Number(order.Total).toLocaleString()}₫
         </div>
 

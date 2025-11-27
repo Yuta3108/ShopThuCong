@@ -248,13 +248,11 @@ export default function QuickViewModal({ product, onClose }) {
               {stock === 0 ? "HẾT HÀNG" : "THÊM VÀO GIỎ HÀNG"}
             </button>
 
-            <a
-              href={`/chi-tiet-san-pham/${details.ProductID}`}
+            <Link to={`/chi-tiet${details.ProductID}`}
               className="mt-4 text-center text-sm text-[#C2185B] underline hover:text-[#a4164b]"
             >
               Xem chi tiết sản phẩm →
-            </a>
-
+            </Link>
           </div>
         </div>
       </div>

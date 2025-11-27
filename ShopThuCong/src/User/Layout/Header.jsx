@@ -10,6 +10,7 @@ export default function Header() {
   const [categories, setCategories] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const navigate = useNavigate();
+  // Load categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -21,58 +22,56 @@ export default function Header() {
     };
     fetchCategories();
   }, []);
-  useEffect(() => {
-    const fetchCartFromDB = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const res = await axios.get("https://backend-eta-ivory-29.vercel.app/api/cart", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const items = res.data.items || [];
-        const total = items.reduce((sum, item) => sum + item.Quantity, 0);
-        setCartCount(total);
-      } catch (err) {
-        console.log("Lỗi load cart từ DB:", err);
-      }
-    };
-    if (user) {
-      fetchCartFromDB();
-    }
-  }, [user]);
+  // Load user
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUser(JSON.parse(storedUser));
   }, []);
-  const calculateCartCount = () => {
+  // Hàm update giỏ hàng chung (local + DB)
+  const updateCart = async () => {
+    const isDB = localStorage.getItem("cartMode") === "db";
+    const token = localStorage.getItem("token");
+    // Nếu dùng CART DB
+    if (isDB && token) {
+      try {
+        const res = await axios.get(
+          "https://backend-eta-ivory-29.vercel.app/api/cart",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const items = res.data.items || [];
+        const total = items.reduce((sum, item) => sum + item.Quantity, 0);
+        setCartCount(total);
+        return;
+      } catch (err) {
+        console.log("Lỗi load cart từ DB:", err);
+      }
+    }
+    // Nếu dùng CART LOCAL
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
     setCartCount(total);
   };
+  // Sync cart khi login
   useEffect(() => {
-    calculateCartCount();
-
-    const handler = () => calculateCartCount();
-    window.addEventListener("updateCart", handler);
-
-    return () => window.removeEventListener("updateCart", handler);
+    if (user) updateCart();
+  }, [user]);
+  useEffect(() => {
+    updateCart(); 
+    window.addEventListener("updateCart", updateCart);
+    return () => window.removeEventListener("updateCart", updateCart);
   }, []);
+  // Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    localStorage.removeItem("cartMode")
+    localStorage.removeItem("cartMode");
     setUser(null);
     navigate("/login");
   };
-
   const handleProfileClick = () => {
     if (user?.role === "admin") navigate("/admin");
     else navigate("/user");
   };
-
   return (
     <header className="bg-white shadow-md sticky top-0 z-50 border-b border-gray-200">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-4 py-3 relative">

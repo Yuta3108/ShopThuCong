@@ -95,6 +95,7 @@ export default function ProductDetailPage() {
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("updateCart"));
     alert("Đã thêm vào giỏ hàng!");
     return;
   }
@@ -111,7 +112,7 @@ export default function ProductDetailPage() {
       quantity,
     }),
   });
-
+  window.dispatchEvent(new Event("updateCart")); 
   alert("Đã thêm vào giỏ hàng!");
 };
 
