@@ -4,8 +4,7 @@ import {
   updateUserInfo,
   deleteUserById,
   updateUserStatus,
-  updateUserPassword,
-  findUserById
+  updateUserRole  
 } from "../models/userModel.js";
 
 // ===== Xem tất cả user (Admin) =====
@@ -85,5 +84,27 @@ export const updateUserStatusController = async (req, res) => {
   } catch (err) {
     console.error("Lỗi updateUserStatus:", err);
     res.status(500).json({ message: "Lỗi máy chủ" });
+  }
+};
+//== cập nhật Role ==
+export const updateUserRoleController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (req.user.role !== "admin")
+      return res.status(403).json({ message: "Không có quyền thay đổi vai trò." });
+
+    if (!["admin", "customer"].includes(role))
+      return res.status(400).json({ message: "Vai trò không hợp lệ." });
+
+    const updated = await updateUserRole(id, role);
+    if (!updated)
+      return res.status(404).json({ message: "Không tìm thấy người dùng." });
+
+    res.json({ message: "Cập nhật vai trò thành công!" });
+
+  } catch {
+    res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };

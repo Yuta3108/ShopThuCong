@@ -18,7 +18,7 @@ export const createUser = async ({ email, password, fullName, phone, address, ro
   const [result] = await db.query(
     `INSERT INTO users (Email, Password, FullName, Phone, Address, Role, Status, CreatedAt)
      VALUES (?, ?, ?, ?, ?, ?, 1, NOW())`,
-    [email, hashedPassword, fullName, phone, address, role || "user"]
+    [email, hashedPassword, fullName, phone, address, role || "customer"]
   );
   return result.insertId;
 };
@@ -76,4 +76,11 @@ export const verifyUserCredentials = async (email, password) => {
 export const updateUserPassword = async (id, hashedPassword) => {
   await db.query("UPDATE users SET Password = ? WHERE UserID = ?", [hashedPassword, id]);
   return true;
+};
+export const updateUserRole = async (id, role) => {
+  const [result] = await db.query(
+    "UPDATE users SET Role = ?, UpdatedAt = NOW() WHERE UserID = ?",
+    [role, id]
+  );
+  return result.affectedRows;
 };

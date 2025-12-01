@@ -77,7 +77,18 @@ export default function AdminUserPage() {
       }
     }, 200);
   };
-
+  const handleUpdateRole = async (id, newRole) => {
+  try {
+    await axiosClient.put(`/users/${id}/Role`, { role: newRole });
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.UserID === id ? { ...u, Role: newRole } : u
+      )
+    );
+  } catch {
+    alert("Cập nhật vai trò thất bại!");
+  }
+};
   //  Lọc user theo tìm kiếm
   const filtered = users.filter(
     (u) =>
@@ -145,9 +156,16 @@ export default function AdminUserPage() {
                       <td className="p-3 font-medium text-gray-800">{u.FullName}</td>
                       <td className="p-3 text-gray-600 hidden sm:table-cell">{u.Email}</td>
                       <td className="p-3 text-gray-600 hidden md:table-cell">{u.Phone}</td>
-                      <td className="p-3 capitalize text-teal-700 font-medium hidden md:table-cell">
-                        {u.Role}
-                      </td>
+                      <td className="p-3 hidden md:table-cell">
+                          <select
+                            value={u.Role}
+                            onChange={(e) => handleUpdateRole(u.UserID, e.target.value)}
+                            className="px-2 py-1 border rounded-lg bg-white text-gray-800 text-sm cursor-pointer focus:ring-2 focus:ring-teal-500"
+                          >
+                            <option value="customer">Customer</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </td>
                       <td className="p-3">
                         {u.Status ? (
                           <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
