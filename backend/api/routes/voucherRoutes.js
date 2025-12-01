@@ -1,21 +1,21 @@
 import express from "express";
 import {
-  getVouchers,
+  getVouchersController,
   createVoucherController,
   updateVoucherController,
   deleteVoucherController,
-  applyVoucher
+  applyVoucherController
 } from "../controllers/voucherController.js";
 
 import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// USER: chỉ được sử dụng voucher
-router.post("/apply", applyVoucher);
+// USER: chỉ được áp dụng voucher
+router.post("/apply", applyVoucherController);
 
 // ADMIN: quản lý voucher
-router.get("/", authMiddleware, adminMiddleware, getVouchers);
+router.get("/", authMiddleware, adminMiddleware, getVouchersController);
 router.post("/", authMiddleware, adminMiddleware, createVoucherController);
 router.put("/:id", authMiddleware, adminMiddleware, updateVoucherController);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteVoucherController);

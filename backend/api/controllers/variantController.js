@@ -49,7 +49,7 @@ export const createVariantController = async (req, res) => {
       .status(201)
       .json({ message: "Tạo biến thể thành công", VariantID });
   } catch (err) {
-    console.error("❌ createVariantController error:", err);
+    console.error("createVariantController error:", err);
     res
       .status(500)
       .json({
