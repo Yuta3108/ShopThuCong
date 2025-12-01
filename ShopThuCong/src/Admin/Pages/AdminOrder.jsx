@@ -200,7 +200,7 @@ export default function AdminOrderPage() {
                     } ${i % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-teal-50`}
                   >
                     <td className="p-3 text-center">{o.OrderID}</td>
-                    <td className="p-3 font-semibold">{o.ReceiverName}</td>
+                    <td className="p-3 text-center font-semibold">{o.ReceiverName}</td>
                     <td className="p-3 text-center">{o.Phone}</td>
                     <td className="p-3 text-center">{o.Email}</td>
                     <td className="p-3 text-center uppercase">
