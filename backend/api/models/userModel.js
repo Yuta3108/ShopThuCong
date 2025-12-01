@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 export const findUserByEmail = async (email) => {
   const [rows] = await db.query(
-    "SELECT UserID, Email, Password, FullName, Phone, Address, Role, Status FROM users WHERE Email = ? LIMIT 1",
+    "SELECT UserID, Email, Password, FullName, Phone, Address, Role, Status,Verified FROM users WHERE Email = ? LIMIT 1",
     [email]
   );
   return rows[0];

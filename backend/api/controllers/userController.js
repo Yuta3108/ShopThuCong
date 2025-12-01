@@ -117,7 +117,6 @@ export const dangNhap = async (req, res) => {
   try {
     const { email, matKhau } = req.body;
     const user = await findUserByEmail(email);
-
     if (!user)
       return res.status(400).json({ message: "Email hoặc mật khẩu không đúng." });
 

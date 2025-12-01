@@ -64,7 +64,7 @@ function DangKy() {
         Swal.fire({
           icon: "success",
           title: "Đăng ký thành công!",
-          text: "Bạn có thể đăng nhập ngay bây giờ.",
+          text: "Vui Lòng Check Email để xác thực Email",
           showConfirmButton: false,
           timer: 1500,
         });

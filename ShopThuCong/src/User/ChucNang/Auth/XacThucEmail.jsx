@@ -7,7 +7,7 @@ export default function VerifyEmail() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/verify/${token}`)
+    fetch(`https://backend-eta-ivory-29.vercel.app/api/verify/${token}`)
       .then(res => res.json())
       .then(data => {
         Swal.fire({
