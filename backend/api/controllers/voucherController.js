@@ -5,100 +5,110 @@ import {
   createVoucher,
   updateVoucher,
   deleteVoucher,
-  decreaseVoucherQuantity
 } from "../models/VoucherModel.js";
 
-// Helper convert number
-const toNumber = (v, fb = 0) => {
-  if (v === undefined || v === null || v === "") return fb;
-  if (typeof v === "string")
-    v = v.replace(/\./g, "").replace(",", ".");
-  const n = Number(v);
-  return Number.isNaN(n) ? fb : n;
-};
+// ==== Helper convert số an toàn ====
+const toNumber = (val, fallback = 0) => {
+  if (val === undefined || val === null || val === "") return fallback;
 
-const normalizeDate = (d) => {
-  if (!d) return null;
-  if (d.includes("/")) {
-    const [dd, mm, yy] = d.split("/");
-    return `${yy}-${mm}-${dd}`;
+  // "20.000,00" → "20000.00"
+  if (typeof val === "string") {
+    val = val.replace(/\./g, "").replace(",", ".");
   }
-  if (d.includes("T")) return d.slice(0, 10);
-  return d;
+
+  const n = Number(val);
+  return Number.isNaN(n) ? fallback : n;
 };
 
-// ADMIN — Lấy danh sách voucher
+// ==== Helper chuẩn hóa ngày về MySQL YYYY-MM-DD ====
+const normalizeDate = (val) => {
+  if (!val) return null;
+
+  // "31/12/2025" -> "2025-12-31"
+  if (val.includes("/")) {
+    const [d, m, y] = val.split("/");
+    return `${y}-${m}-${d}`;
+  }
+
+  // "2025-12-31T00:00:00.000Z"
+  if (val.includes("T")) return val.slice(0, 10);
+
+  return val; // đã đúng yyyy-mm-dd
+};
+
+// ==== GET ALL ====
 export const getVouchersController = async (req, res) => {
   try {
     const rows = await getAllVouchers();
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: "Lỗi server", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ADMIN — Thêm voucher
+// ==== CREATE ====
 export const createVoucherController = async (req, res) => {
   try {
-    const body = req.body;
+    const d = req.body;
 
     const payload = {
-      Code: body.Code.trim(),
-      Type: body.Type,
-      DiscountValue: toNumber(body.DiscountValue),
-      MinOrder: toNumber(body.MinOrder),
-      MaxDiscount: body.Type === "fixed" ? 0 : toNumber(body.MaxDiscount),
-      Quantity: toNumber(body.Quantity),
-      StartDate: normalizeDate(body.StartDate),
-      EndDate: normalizeDate(body.EndDate),
-      Status: body.Status ? 1 : 0,
+      Code: d.Code.trim(),
+      Type: d.Type,
+      DiscountValue: toNumber(d.DiscountValue),
+      MinOrder: toNumber(d.MinOrder),
+      MaxDiscount: d.Type === "fixed" ? 0 : toNumber(d.MaxDiscount),
+      Quantity: toNumber(d.Quantity),
+      StartDate: normalizeDate(d.StartDate),
+      EndDate: normalizeDate(d.EndDate),
+      Status: d.Status ? 1 : 0,
     };
 
     const id = await createVoucher(payload);
 
-    res.json({ VoucherID: id });
+    res.json({ VoucherID: id, ...payload });
   } catch (err) {
-    res.status(500).json({ message: "Lỗi tạo voucher", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ADMIN — Sửa voucher
+// ==== UPDATE ====
 export const updateVoucherController = async (req, res) => {
   try {
     const id = req.params.id;
-    const body = req.body;
+    const d = req.body;
 
     const payload = {
-      Code: body.Code.trim(),
-      Type: body.Type,
-      DiscountValue: toNumber(body.DiscountValue),
-      MinOrder: toNumber(body.MinOrder),
-      MaxDiscount: body.Type === "fixed" ? 0 : toNumber(body.MaxDiscount),
-      Quantity: toNumber(body.Quantity),
-      StartDate: normalizeDate(body.StartDate),
-      EndDate: normalizeDate(body.EndDate),
-      Status: body.Status ? 1 : 0,
+      Code: d.Code.trim(),
+      Type: d.Type,
+      DiscountValue: toNumber(d.DiscountValue),
+      MinOrder: toNumber(d.MinOrder),
+      MaxDiscount: d.Type === "fixed" ? 0 : toNumber(d.MaxDiscount),
+      Quantity: toNumber(d.Quantity),
+      StartDate: normalizeDate(d.StartDate),
+      EndDate: normalizeDate(d.EndDate),
+      Status: d.Status ? 1 : 0,
     };
 
     await updateVoucher(id, payload);
 
-    res.json({ message: "Cập nhật thành công" });
+    res.json({ message: "Cập nhật thành công", ...payload });
   } catch (err) {
-    res.status(500).json({ message: "Lỗi cập nhật voucher", error: err.message });
+    console.log("❌ Lỗi updateVoucher:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ADMIN — Xóa voucher
+// ==== DELETE ====
 export const deleteVoucherController = async (req, res) => {
   try {
     await deleteVoucher(req.params.id);
     res.json({ message: "Xóa thành công" });
   } catch (err) {
-    res.status(500).json({ message: "Lỗi xóa voucher", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// USER — Áp dụng voucher
+// ==== APPLY (USER) ====
 export const applyVoucherController = async (req, res) => {
   try {
     const { code, total } = req.body;
@@ -116,14 +126,13 @@ export const applyVoucherController = async (req, res) => {
 
     if (voucher.Type === "percent") {
       discount = (total * voucher.DiscountValue) / 100;
-      if (voucher.MaxDiscount)
-        discount = Math.min(discount, voucher.MaxDiscount);
+      if (voucher.MaxDiscount) discount = Math.min(discount, voucher.MaxDiscount);
     } else {
       discount = voucher.DiscountValue;
     }
 
     res.json({ discount, voucher });
   } catch (err) {
-    res.status(500).json({ message: "Lỗi áp dụng voucher", error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
