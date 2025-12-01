@@ -43,27 +43,32 @@ export const createVoucher = async (data) => {
 
 // Cập nhật voucher
 export const updateVoucher = async (id, data) => {
-  const sql = `
-    UPDATE vouchers SET
-      Code = ?, Type = ?, DiscountValue = ?, MinOrder = ?, MaxDiscount = ?, Quantity = ?,
-      StartDate = ?, EndDate = ?, Status = ?
-    WHERE VoucherID = ?
-  `;
-
-  await db.query(sql, [
-    data.Code,
-    data.Type,
-    data.DiscountValue,
-    data.MinOrder,
-    data.MaxDiscount,
-    data.Quantity,
-    data.StartDate,
-    data.EndDate,
-    data.Status,
-    id,
-  ]);
-
-  return true;
+  await db.query(
+    `UPDATE vouchers 
+     SET 
+       Code = ?, 
+       Type = ?, 
+       DiscountValue = CAST(? AS DECIMAL(10,2)),
+       MinOrder = CAST(? AS DECIMAL(10,2)),
+       MaxDiscount = CAST(? AS DECIMAL(10,2)),
+       Quantity = CAST(? AS DECIMAL(10,0)),
+       StartDate = ?, 
+       EndDate = ?, 
+       Status = ?
+     WHERE VoucherID = ?`,
+    [
+      data.Code,
+      data.Type,
+      data.DiscountValue,
+      data.MinOrder,
+      data.MaxDiscount,
+      data.Quantity,
+      data.StartDate,
+      data.EndDate,
+      data.Status,
+      id,
+    ]
+  );
 };
 
 // Xóa voucher
