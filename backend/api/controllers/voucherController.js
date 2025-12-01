@@ -42,10 +42,10 @@ export const updateVoucherController = async (req, res) => {
       [
         data.Code,
         data.Type,
-        data.DiscountValue,
-        data.MinOrder || 0,
-        data.MaxDiscount || null,
-        data.Quantity || 999,
+        Number(data.DiscountValue) || 0,
+        Number(data.MinOrder) || 0,
+        Number(data.MaxDiscount) || 0,
+        Number(data.Quantity) || 0,
         data.StartDate,
         data.EndDate,
         data.Status ?? 1,
@@ -54,6 +54,7 @@ export const updateVoucherController = async (req, res) => {
     );
 
     res.json({ message: "Cập nhật voucher thành công" });
+
   } catch (err) {
     console.error("Lỗi updateVoucher:", err);
     res.status(500).json({ message: "Lỗi server" });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import Sidebar from "../Layout/Sidebar";
 import axios from "axios";
-
+import Swal from "sweetalert2";
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function AdminUserPage() {
@@ -78,17 +78,39 @@ export default function AdminUserPage() {
     }, 200);
   };
   const handleUpdateRole = async (id, newRole) => {
-  try {
-    await axiosClient.put(`/users/${id}/Role`, { role: newRole });
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.UserID === id ? { ...u, Role: newRole } : u
-      )
-    );
-  } catch {
-    alert("Cập nhật vai trò thất bại!");
-  }
-};
+    const confirm = await Swal.fire({
+      title: "Xác nhận thay đổi?",
+      text: `Bạn muốn đổi tài khoản này thành: ${newRole.toUpperCase()}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Đồng ý",
+      cancelButtonText: "Hủy",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await axiosClient.put(`/users/${id}/Role`, { role: newRole });
+
+      setUsers((prev) =>
+        prev.map((u) => (u.UserID === id ? { ...u, Role: newRole } : u))
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Cập nhật thành công!",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Cập nhật thất bại!",
+      });
+    }
+  };
   //  Lọc user theo tìm kiếm
   const filtered = users.filter(
     (u) =>
@@ -157,15 +179,23 @@ export default function AdminUserPage() {
                       <td className="p-3 text-gray-600 hidden sm:table-cell">{u.Email}</td>
                       <td className="p-3 text-gray-600 hidden md:table-cell">{u.Phone}</td>
                       <td className="p-3 hidden md:table-cell">
-                          <select
-                            value={u.Role}
-                            onChange={(e) => handleUpdateRole(u.UserID, e.target.value)}
-                            className="px-2 py-1 border rounded-lg bg-white text-gray-800 text-sm cursor-pointer focus:ring-2 focus:ring-teal-500"
-                          >
-                            <option value="customer">Customer</option>
-                            <option value="admin">Admin</option>
-                          </select>
-                        </td>
+                        <select
+                          value={u.Role}
+                          onChange={(e) => handleUpdateRole(u.UserID, e.target.value)}
+                          className={`px-2 py-1 border rounded-lg bg-white text-sm cursor-pointer focus:ring-2 transition 
+                            ${u.Role === "admin"
+                              ? "text-red-600 border-red-400 focus:ring-red-300"
+                              : "text-teal-700 border-teal-400 focus:ring-teal-300"
+                            }`}
+                        >
+                          <option value="customer" className="text-teal-700">
+                            Customer
+                          </option>
+                          <option value="admin" className="text-red-600">
+                            Admin
+                          </option>
+                        </select>
+                      </td>
                       <td className="p-3">
                         {u.Status ? (
                           <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
@@ -186,8 +216,8 @@ export default function AdminUserPage() {
                         </button>
                         <button
                           className={`px-3 py-1 rounded-lg text-white text-xs sm:text-sm transition-all ${u.Status
-                              ? "bg-yellow-500 hover:bg-yellow-600"
-                              : "bg-green-500 hover:bg-green-600"
+                            ? "bg-yellow-500 hover:bg-yellow-600"
+                            : "bg-green-500 hover:bg-green-600"
                             }`}
                           onClick={() => handleToggleStatus(u.UserID, u.Status)}
                         >

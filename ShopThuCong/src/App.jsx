@@ -17,6 +17,7 @@ import AdminVoucherPage from './Admin/Pages/AdminVoucher';
 import Checkout from './User/ChucNang/Cart/Checkout';
 import AdminOrderPage from './Admin/Pages/AdminOrder';
 import XacThucEmail from './User/ChucNang/Auth/XacThucEmail'
+//import AdminCategories from './Admin/Pages/AdminCategories'
 function App() {
   return (
     
