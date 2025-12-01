@@ -1,139 +1,143 @@
 import React, { useState } from "react";
 
-export default function AddVoucherModal({ onClose, onSubmit }) {
+export default function AddVoucherModal({ onSubmit, onClose }) {
   const [data, setData] = useState({
     Code: "",
-    Type: "percent",
+    Type: "fixed",
     DiscountValue: 0,
     MinOrder: 0,
     MaxDiscount: 0,
-    Quantity: 100,
+    Quantity: 1,
     StartDate: "",
     EndDate: "",
     Status: 1,
   });
 
-  const input = "border p-2 rounded";
+  const input = "border p-2 rounded w-full";
+
+  const updateField = (key, val) => {
+    setData((prev) => ({ ...prev, [key]: val }));
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
       <form
-        className="bg-white p-6 rounded-xl w-[420px]"
+        className="bg-white p-6 rounded-xl w-[460px]"
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit(data);
         }}
       >
-        <h2 className="text-lg font-semibold mb-4">Thêm Voucher</h2>
+        <h2 className="text-lg font-bold mb-4">Thêm Voucher</h2>
 
-        <div className="grid grid-cols-2 gap-3">
-          {/* Code */}
-          <input
-            className={input}
-            placeholder="Mã"
-            value={data.Code}
-            onChange={(e) => setData({ ...data, Code: e.target.value })}
-            required
-          />
+        <label>Mã voucher</label>
+        <input
+          className={input}
+          value={data.Code}
+          onChange={(e) => updateField("Code", e.target.value)}
+        />
 
-          {/* Type */}
-          <select
-            className={input}
-            value={data.Type}
-            onChange={(e) =>
-              setData({
-                ...data,
-                Type: e.target.value,
-                MaxDiscount:
-                  e.target.value === "fixed" ? 0 : data.MaxDiscount,
-              })
-            }
-          >
-            <option value="percent">Phần trăm</option>
-            <option value="fixed">Số tiền</option>
-          </select>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <label>Loại</label>
+            <select
+              className={input}
+              value={data.Type}
+              onChange={(e) => updateField("Type", e.target.value)}
+            >
+              <option value="percent">Phần trăm</option>
+              <option value="fixed">Số tiền</option>
+            </select>
+          </div>
 
-          {/* DiscountValue */}
-          <input
-            className={input}
-            type="number"
-            placeholder="Giá trị"
-            value={data.DiscountValue}
-            onChange={(e) =>
-              setData({ ...data, DiscountValue: e.target.value })
-            }
-            required
-          />
+          <div>
+            <label>Giá trị</label>
+            <input
+              type="number"
+              className={input}
+              value={data.DiscountValue}
+              onChange={(e) => updateField("DiscountValue", Number(e.target.value))}
+            />
+          </div>
 
-          {/* MinOrder */}
-          <input
-            className={input}
-            type="number"
-            placeholder="Tối thiểu"
-            value={data.MinOrder}
-            onChange={(e) =>
-              setData({ ...data, MinOrder: e.target.value })
-            }
-          />
+          <div>
+            <label>Đơn tối thiểu</label>
+            <input
+              type="number"
+              className={input}
+              value={data.MinOrder}
+              onChange={(e) => updateField("MinOrder", Number(e.target.value))}
+            />
+          </div>
 
-          {/* MaxDiscount */}
-          <input
-            className={`${input} ${
-              data.Type === "fixed" && "opacity-40 cursor-not-allowed bg-gray-100"
-            }`}
-            disabled={data.Type === "fixed"}
-            type="number"
-            placeholder="Giảm tối đa"
-            value={data.MaxDiscount}
-            onChange={(e) =>
-              setData({ ...data, MaxDiscount: e.target.value })
-            }
-          />
+          <div>
+            <label>Giảm tối đa</label>
+            <input
+              type="number"
+              disabled={data.Type === "fixed"}
+              className={`${input} ${
+                data.Type === "fixed" ? "bg-gray-200 cursor-not-allowed" : ""
+              }`}
+              value={data.Type === "fixed" ? 0 : data.MaxDiscount}
+              onChange={(e) =>
+                updateField("MaxDiscount", Number(e.target.value))
+              }
+            />
+          </div>
 
-          {/* Quantity */}
-          <input
-            className={input}
-            type="number"
-            placeholder="Lượt"
-            value={data.Quantity}
-            onChange={(e) =>
-              setData({ ...data, Quantity: e.target.value })
-            }
-          />
+          <div>
+            <label>Lượt sử dụng</label>
+            <input
+              type="number"
+              className={input}
+              value={data.Quantity}
+              onChange={(e) => updateField("Quantity", Number(e.target.value))}
+            />
+          </div>
 
-          {/* StartDate */}
-          <input
-            className={input}
-            type="date"
-            value={data.StartDate}
-            onChange={(e) =>
-              setData({ ...data, StartDate: e.target.value })
-            }
-            required
-          />
+          <div>
+            <label>Ngày bắt đầu</label>
+            <input
+              type="date"
+              className={input}
+              value={data.StartDate}
+              onChange={(e) => updateField("StartDate", e.target.value)}
+            />
+          </div>
 
-          {/* EndDate */}
-          <input
-            className={input}
-            type="date"
-            value={data.EndDate}
-            onChange={(e) =>
-              setData({ ...data, EndDate: e.target.value })
-            }
-            required
-          />
+          <div>
+            <label>Ngày kết thúc</label>
+            <input
+              type="date"
+              className={input}
+              value={data.EndDate}
+              onChange={(e) => updateField("EndDate", e.target.value)}
+            />
+          </div>
+
+          <div className="col-span-2">
+            <label>Trạng thái</label>
+            <select
+              className={input}
+              value={data.Status}
+              onChange={(e) => updateField("Status", Number(e.target.value))}
+            >
+              <option value={1}>Hoạt động</option>
+              <option value={0}>Khoá</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex justify-end mt-4 gap-2">
+        <div className="flex justify-end gap-2 mt-5">
           <button
-            type="button"
             onClick={onClose}
+            type="button"
             className="px-4 py-2 bg-gray-200 rounded"
           >
             Hủy
           </button>
           <button className="px-4 py-2 bg-teal-600 text-white rounded">
-            Lưu
+            Thêm
           </button>
         </div>
       </form>

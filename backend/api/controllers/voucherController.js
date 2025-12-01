@@ -77,8 +77,25 @@ export const updateVoucherController = async (req, res) => {
     const id = req.params.id;
     const d = req.body;
 
+    const toNumber = (v, fb = 0) => {
+      if (v === undefined || v === null || v === "") return fb;
+      if (typeof v === "string") v = v.replace(/\./g, "").replace(",", ".");
+      const n = Number(v);
+      return Number.isNaN(n) ? fb : n;
+    };
+
+    const normalizeDate = (val) => {
+      if (!val) return null;
+      if (val.includes("/")) {
+        const [dd, mm, yy] = val.split("/");
+        return `${yy}-${mm}-${dd}`;
+      }
+      if (val.includes("T")) return val.slice(0, 10);
+      return val;
+    };
+
     const payload = {
-      Code: d.Code.trim(),
+      Code: d.Code?.trim(),
       Type: d.Type,
       DiscountValue: toNumber(d.DiscountValue),
       MinOrder: toNumber(d.MinOrder),
@@ -86,18 +103,25 @@ export const updateVoucherController = async (req, res) => {
       Quantity: toNumber(d.Quantity),
       StartDate: normalizeDate(d.StartDate),
       EndDate: normalizeDate(d.EndDate),
-      Status: d.Status ? 1 : 0,
+      Status: d.Status === 0 || d.Status === "0" ? 0 : 1,
     };
+
+    // KIỂM TRA TRÙNG MÃ
+    const existed = await getVoucherByCode(payload.Code);
+    if (existed && existed.VoucherID != id) {
+      return res.status(400).json({
+        message: "Mã voucher đã tồn tại",
+      });
+    }
 
     await updateVoucher(id, payload);
 
-    res.json({ message: "Cập nhật thành công", ...payload });
+    res.json({ message: "Cập nhật thành công" });
   } catch (err) {
-    console.log("❌ Lỗi updateVoucher:", err);
+    console.log("Lỗi updateVoucher:", err);
     res.status(500).json({ error: err.message });
   }
 };
-
 // ==== DELETE ====
 export const deleteVoucherController = async (req, res) => {
   try {

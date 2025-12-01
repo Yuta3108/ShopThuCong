@@ -3,49 +3,37 @@ import React from "react";
 export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
   const input = "border p-2 rounded w-full";
 
-  const handleChange = (key, value) => {
-    setData({ ...data, [key]: value });
+  const updateField = (key, value) => {
+    setData((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
       <form
-        className="bg-white p-6 rounded-2xl w-full max-w-xl shadow-lg"
+        className="bg-white p-6 rounded-xl w-[460px]"
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit();
+          onSubmit(data);
         }}
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-teal-600">Sửa Voucher</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-500 hover:text-red-500 text-xl"
-          >
-            ×
-          </button>
-        </div>
+        <h2 className="text-lg font-bold mb-4">Sửa Voucher</h2>
 
-        <div className="grid grid-cols-2 gap-3">
-          {/* Code */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Mã Voucher</label>
-            <input
-              className={input}
-              required
-              value={data.Code}
-              onChange={(e) => handleChange("Code", e.target.value)}
-            />
-          </div>
+        {/* Code */}
+        <label>Mã voucher</label>
+        <input
+          className={input}
+          value={data.Code}
+          onChange={(e) => updateField("Code", e.target.value)}
+        />
 
+        <div className="grid grid-cols-2 gap-3 mt-3">
           {/* Type */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Loại</label>
+          <div>
+            <label>Loại</label>
             <select
               className={input}
               value={data.Type}
-              onChange={(e) => handleChange("Type", e.target.value)}
+              onChange={(e) => updateField("Type", e.target.value)}
             >
               <option value="percent">Phần trăm</option>
               <option value="fixed">Số tiền</option>
@@ -53,120 +41,99 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
           </div>
 
           {/* DiscountValue */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Giá trị</label>
+          <div>
+            <label>Giá trị</label>
             <input
               type="number"
               className={input}
-              required
               value={data.DiscountValue}
-              onChange={(e) =>
-                handleChange("DiscountValue", e.target.value)
-              }
+              onChange={(e) => updateField("DiscountValue", Number(e.target.value))}
             />
           </div>
 
           {/* MinOrder */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Đơn tối thiểu</label>
+          <div>
+            <label>Đơn tối thiểu</label>
             <input
               type="number"
               className={input}
               value={data.MinOrder}
-              onChange={(e) =>
-                handleChange("MinOrder", e.target.value)
-              }
+              onChange={(e) => updateField("MinOrder", Number(e.target.value))}
             />
           </div>
 
           {/* MaxDiscount */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Giảm tối đa</label>
+          <div>
+            <label>Giảm tối đa</label>
             <input
-              type={data.Type === "fixed" ? "text" : "number"}
+              type="number"
               disabled={data.Type === "fixed"}
               className={`${input} ${
-                data.Type === "fixed"
-                  ? "bg-gray-100 cursor-not-allowed opacity-70"
-                  : ""
+                data.Type === "fixed" ? "bg-gray-200 cursor-not-allowed" : ""
               }`}
-              value={data.MaxDiscount}
+              value={data.Type === "fixed" ? 0 : data.MaxDiscount}
               onChange={(e) =>
-                handleChange("MaxDiscount", e.target.value)
+                updateField("MaxDiscount", Number(e.target.value))
               }
             />
           </div>
 
           {/* Quantity */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Lượt sử dụng</label>
+          <div>
+            <label>Lượt sử dụng</label>
             <input
               type="number"
               className={input}
               value={data.Quantity}
-              onChange={(e) =>
-                handleChange("Quantity", e.target.value)
-              }
+              onChange={(e) => updateField("Quantity", Number(e.target.value))}
             />
           </div>
 
-          {/* Start Date */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Ngày bắt đầu</label>
+          {/* Start */}
+          <div>
+            <label>Ngày bắt đầu</label>
             <input
               type="date"
               className={input}
-              required
-              value={data.StartDate?.slice(0, 10)}
-              onChange={(e) =>
-                handleChange("StartDate", e.target.value)
-              }
+              value={data.StartDate}
+              onChange={(e) => updateField("StartDate", e.target.value)}
             />
           </div>
 
-          {/* End Date */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Ngày kết thúc</label>
+          {/* End */}
+          <div>
+            <label>Ngày kết thúc</label>
             <input
               type="date"
               className={input}
-              required
-              value={data.EndDate?.slice(0, 10)}
-              onChange={(e) =>
-                handleChange("EndDate", e.target.value)
-              }
+              value={data.EndDate}
+              onChange={(e) => updateField("EndDate", e.target.value)}
             />
           </div>
 
           {/* Status */}
-          <div className="flex flex-col">
-            <label className="text-sm font-medium">Trạng thái</label>
+          <div className="col-span-2">
+            <label>Trạng thái</label>
             <select
               className={input}
               value={data.Status}
-              onChange={(e) =>
-                handleChange("Status", Number(e.target.value))
-              }
+              onChange={(e) => updateField("Status", Number(e.target.value))}
             >
               <option value={1}>Hoạt động</option>
-              <option value={0}>Khóa</option>
+              <option value={0}>Khoá</option>
             </select>
           </div>
         </div>
 
-        {/* BUTTONS */}
-        <div className="flex justify-end mt-5 gap-2">
+        <div className="flex justify-end gap-2 mt-5">
           <button
             onClick={onClose}
             type="button"
-            className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+            className="px-4 py-2 bg-gray-200 rounded"
           >
             Hủy
           </button>
-          <button
-            type="submit"
-            className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
-          >
+          <button className="px-4 py-2 bg-blue-600 text-white rounded">
             Lưu thay đổi
           </button>
         </div>
