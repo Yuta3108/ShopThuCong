@@ -10,6 +10,12 @@ import {
 } from "../models/orderModel.js";
 import { createOrderItemsModel } from "../models/orderItemModel.js";
 
+// ⭐ THÊM IMPORT VOUCHER Ở ĐÂY
+import {
+  getVoucherByCode,
+  decreaseVoucherQuantity,
+} from "../models/VoucherModel.js";
+
 // TẠO ĐƠN HÀNG TỪ GIỎ
 export const createOrderFromCart = async (req, res) => {
   try {
@@ -25,14 +31,17 @@ export const createOrderFromCart = async (req, res) => {
       discount,
     } = req.body;
 
+    // Lấy giỏ hàng theo user
     const [cartRows] = await Cart.getCartByUserId(userId);
     if (!cartRows.length) return res.status(400).json({});
 
     const cartId = cartRows[0].CartID;
 
+    // Lấy item trong giỏ
     const [items] = await CartItem.getCartItems(cartId);
     if (!items.length) return res.status(400).json({});
 
+    // Tính tổng tiền sau khi trừ discount (nếu có)
     const total =
       items.reduce((sum, item) => sum + item.UnitPrice * item.Quantity, 0) -
       (discount || 0);
@@ -40,6 +49,7 @@ export const createOrderFromCart = async (req, res) => {
     const conn = await db.getConnection();
     await conn.beginTransaction();
 
+    // Tạo đơn hàng
     const orderId = await createOrderModel({
       userId,
       receiverName,
@@ -53,17 +63,26 @@ export const createOrderFromCart = async (req, res) => {
       total,
     });
 
+    // Tạo chi tiết đơn hàng
     await createOrderItemsModel(orderId, items);
-
-    // clear cart
+    if (voucherCode) {
+      try {
+        const voucher = await getVoucherByCode(voucherCode.trim());
+        if (voucher) {
+          await decreaseVoucherQuantity(voucher.VoucherID);
+        }
+      } catch (err) {
+        console.error("Lỗi khi giảm lượt voucher:", err);
+      }
+    }
+    // Xóa giỏ hàng sau khi tạo đơn thành công
     await conn.query("DELETE FROM cart_items WHERE CartID = ?", [cartId]);
-
     await conn.commit();
     conn.release();
-
     res.json({ orderId });
-  } catch {
-    res.status(500).json({});
+  } catch (err) {
+    console.error("Lỗi createOrderFromCart:", err);
+    res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
   }
 };
 
@@ -75,9 +94,10 @@ export const getMyOrders = async (req, res) => {
       [req.user.id]
     );
 
-    res.json(orders); // trả thẳng mảng
-  } catch {
-    res.status(500).json({});
+    res.json(orders); 
+  } catch (err) {
+    console.error("Lỗi getMyOrders:", err);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
 
@@ -85,9 +105,10 @@ export const getMyOrders = async (req, res) => {
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await getAllOrdersModel();
-    res.json(orders); // trả thẳng mảng
-  } catch {
-    res.status(500).json({});
+    res.json(orders);
+  } catch (err) {
+    console.error("Lỗi getAllOrders:", err);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
 
@@ -105,16 +126,19 @@ export const getOrderDetail = async (req, res) => {
     );
 
     res.json({ order, items });
-  } catch {
-    res.status(500).json({});
+  } catch (err) {
+    console.error("Lỗi getOrderDetail:", err);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
+
 // CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG
 export const updateOrderStatus = async (req, res) => {
   try {
     await updateOrderStatusModel(req.params.id, req.body.status);
     res.json({ success: true });
   } catch (err) {
+    console.error("Lỗi updateOrderStatus:", err);
     res.status(500).json({ message: "Lỗi server" });
   }
 };
@@ -124,7 +148,8 @@ export const deleteOrder = async (req, res) => {
   try {
     await deleteOrderModel(req.params.id);
     res.json({ success: true });
-  } catch {
-    res.status(500).json({});
+  } catch (err) {
+    console.error("Lỗi deleteOrder:", err);
+    res.status(500).json({ message: "Lỗi server" });
   }
 };
