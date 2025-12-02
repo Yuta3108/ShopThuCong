@@ -17,7 +17,7 @@ import AdminVoucherPage from './Admin/Pages/AdminVoucher';
 import Checkout from './User/ChucNang/Cart/Checkout';
 import AdminOrderPage from './Admin/Pages/AdminOrder';
 import XacThucEmail from './User/ChucNang/Auth/XacThucEmail'
-//import AdminCategories from './Admin/Pages/AdminCategories'
+import AdminCategories from './Admin/Pages/AdminCategories'
 function App() {
   return (
     
@@ -42,6 +42,7 @@ function App() {
       <Route path ="/admin/Products" element={<ProductManagement />} />
       <Route path="/admin/Voucher" element={<AdminVoucherPage />} />
       <Route path="/admin/Order" element={<AdminOrderPage />}/>
+      <Route path="/admin/Categories" element={<AdminCategories />}/>
     </Routes>
   );
 }
