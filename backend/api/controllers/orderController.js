@@ -13,8 +13,8 @@ import {
   getVoucherByCode,
   decreaseVoucherQuantity,
 } from "../models/VoucherModel.js";
-import { createInvoicePDF } from "../utils/createInvoicePDF.js";
-import { sendInvoiceEmail } from "../utils/sendInvoiceEmail.js";
+import { createInvoicePDF } from "../config/createInvoicePDF.js";
+import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
 import fs from "fs";
 
 // ======================= TẠO ĐƠN HÀNG TỪ GIỎ =======================
@@ -113,9 +113,6 @@ export const createOrderFromCart = async (req, res) => {
         console.error("Không thể xóa PDF:", err);
       }
     }, 3000);
-
-    // ===========================================================
-
     res.json({ orderId });
   } catch (err) {
     console.error("Lỗi createOrderFromCart:", err);
@@ -123,7 +120,7 @@ export const createOrderFromCart = async (req, res) => {
   }
 };
 
-// ======================= LẤY ĐƠN HÀNG USER =======================
+// LẤY ĐƠN HÀNG USER 
 export const getMyOrders = async (req, res) => {
   try {
     const [orders] = await db.query(
