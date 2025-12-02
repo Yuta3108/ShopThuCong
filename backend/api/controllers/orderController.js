@@ -14,7 +14,7 @@ import {
   decreaseVoucherQuantity,
 } from "../models/VoucherModel.js";
 
-// ⭐ KHÔNG DÙNG PDF NỮA
+// 
 import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
 
 // =========================== TẠO ĐƠN HÀNG ===============================
@@ -84,7 +84,7 @@ export const createOrderFromCart = async (req, res) => {
     await conn.commit();
     conn.release();
 
-    // ===================== GỬI EMAIL KHÔNG KÈM PDF =====================
+    // GỬI EMAIL 
     const orderData = {
       receiverName,
       phone,
@@ -98,10 +98,8 @@ export const createOrderFromCart = async (req, res) => {
       })),
     };
 
-    // Gửi email HTML kiểu Tiki (không PDF)
-    await sendInvoiceEmail(orderData);
-
-    // ==================================================================
+    // Gửi email HTML kiểu Tiki 
+    //await sendInvoiceEmail(orderData);
 
     res.json({ orderId });
   } catch (err) {
@@ -110,7 +108,6 @@ export const createOrderFromCart = async (req, res) => {
   }
 };
 
-// ========================== CÁC API KHÁC ===============================
 export const getMyOrders = async (req, res) => {
   try {
     const [orders] = await db.query(
