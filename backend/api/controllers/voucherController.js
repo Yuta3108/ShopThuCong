@@ -137,7 +137,7 @@ export const applyVoucherController = async (req, res) => {
   try {
     const { code, total } = req.body;
 
-    const voucher = await getVoucherByCode(code);
+    const voucher = await getVoucherByCode(code?.trim().toUpperCase());
     if (!voucher) return res.status(404).json({ message: "Mã giảm giá không tồn tại" });
 
     if (voucher.Quantity <= 0)

@@ -252,7 +252,7 @@ export default function CheckoutPage() {
                 className="flex-1 border rounded-lg p-3"
                 placeholder="Nhập mã voucher..."
                 value={voucherCode}
-                onChange={(e) => setVoucherCode(e.target.value)}
+                onChange={(e) => setVoucherCode(e.target.value.trim().toUpperCase())}
               />
               <button
                 onClick={applyVoucher}

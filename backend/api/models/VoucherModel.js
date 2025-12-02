@@ -14,8 +14,14 @@ export const getVoucherById = async (id) => {
 
 // Lấy voucher theo Code
 export const getVoucherByCode = async (code) => {
-  const [[row]] = await db.query(`SELECT * FROM vouchers WHERE Code = ?`, [code]);
-  return row;
+  const clean = code.trim().toUpperCase();
+
+  const [[row]] = await db.query(
+    `SELECT * FROM vouchers WHERE UPPER(Code) = ? LIMIT 1`,
+    [clean]
+  );
+
+  return row || null;
 };
 
 // Thêm voucher

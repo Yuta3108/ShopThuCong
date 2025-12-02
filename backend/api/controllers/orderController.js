@@ -17,7 +17,7 @@ import { createInvoicePDF } from "../config/createInvoicePDF.js";
 import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
 import fs from "fs";
 
-// ======================= TẠO ĐƠN HÀNG TỪ GIỎ =======================
+//  TẠO ĐƠN HÀNG TỪ GIỎ 
 export const createOrderFromCart = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -135,7 +135,7 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-// ======================= LẤY TẤT CẢ ĐƠN HÀNG =======================
+// LẤY TẤT CẢ ĐƠN HÀNG 
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await getAllOrdersModel();
@@ -146,7 +146,7 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-// ======================= LẤY CHI TIẾT 1 ĐƠN =======================
+// LẤY CHI TIẾT 1 ĐƠN 
 export const getOrderDetail = async (req, res) => {
   try {
     const id = req.params.id;
@@ -166,7 +166,7 @@ export const getOrderDetail = async (req, res) => {
   }
 };
 
-// ======================= CẬP NHẬT TRẠNG THÁI =======================
+//  CẬP NHẬT TRẠNG THÁI 
 export const updateOrderStatus = async (req, res) => {
   try {
     await updateOrderStatusModel(req.params.id, req.body.status);
@@ -177,7 +177,7 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-// ======================= XOÁ ĐƠN =======================
+//  XOÁ ĐƠN 
 export const deleteOrder = async (req, res) => {
   try {
     await deleteOrderModel(req.params.id);
