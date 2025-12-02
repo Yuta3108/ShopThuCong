@@ -13,11 +13,11 @@ import {
   getVoucherByCode,
   decreaseVoucherQuantity,
 } from "../models/VoucherModel.js";
-import { createInvoicePDF } from "../config/createInvoicePDF.js";
-import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
-import fs from "fs";
 
-//  TẠO ĐƠN HÀNG TỪ GIỎ 
+// ⭐ KHÔNG DÙNG PDF NỮA
+import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
+
+// =========================== TẠO ĐƠN HÀNG ===============================
 export const createOrderFromCart = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -32,7 +32,7 @@ export const createOrderFromCart = async (req, res) => {
       discount,
     } = req.body;
 
-    // Lấy giỏ hàng theo user
+    // Lấy giỏ hàng
     const [cartRows] = await Cart.getCartByUserId(userId);
     if (!cartRows.length) return res.status(400).json({});
 
@@ -42,7 +42,7 @@ export const createOrderFromCart = async (req, res) => {
     const [items] = await CartItem.getCartItems(cartId);
     if (!items.length) return res.status(400).json({});
 
-    // Tổng tiền sau giảm
+    // Tổng tiền
     const total =
       items.reduce((sum, item) => sum + item.UnitPrice * item.Quantity, 0) -
       (discount || 0);
@@ -67,7 +67,7 @@ export const createOrderFromCart = async (req, res) => {
     // Chi tiết đơn hàng
     await createOrderItemsModel(orderId, items);
 
-    // Giảm số lượng voucher
+    // Giảm lượt voucher
     if (voucherCode) {
       try {
         const voucher = await getVoucherByCode(voucherCode.trim());
@@ -79,11 +79,12 @@ export const createOrderFromCart = async (req, res) => {
       }
     }
 
-    // Xóa giỏ hàng
+    // Xoá giỏ hàng
     await conn.query("DELETE FROM cart_items WHERE CartID = ?", [cartId]);
     await conn.commit();
     conn.release();
-    //  TẠO PDF + GỬI EMAIL HOÁ ĐƠN
+
+    // ===================== GỬI EMAIL KHÔNG KÈM PDF =====================
     const orderData = {
       receiverName,
       phone,
@@ -97,22 +98,11 @@ export const createOrderFromCart = async (req, res) => {
       })),
     };
 
-    const pdfPath = `./invoices/order_${orderId}.pdf`;
+    // Gửi email HTML kiểu Tiki (không PDF)
+    await sendInvoiceEmail(orderData);
 
-    // Tạo hóa đơn PDF
-    await createInvoicePDF(orderData, pdfPath);
+    // ==================================================================
 
-    // Gửi email HTML đẹp
-    await sendInvoiceEmail(orderData, pdfPath);
-
-    // Xóa file PDF tạm sau khi gửi
-    setTimeout(() => {
-      try {
-        fs.unlinkSync(pdfPath);
-      } catch (err) {
-        console.error("Không thể xóa PDF:", err);
-      }
-    }, 3000);
     res.json({ orderId });
   } catch (err) {
     console.error("Lỗi createOrderFromCart:", err);
@@ -120,7 +110,7 @@ export const createOrderFromCart = async (req, res) => {
   }
 };
 
-// LẤY ĐƠN HÀNG USER 
+// ========================== CÁC API KHÁC ===============================
 export const getMyOrders = async (req, res) => {
   try {
     const [orders] = await db.query(
@@ -135,7 +125,6 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-// LẤY TẤT CẢ ĐƠN HÀNG 
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await getAllOrdersModel();
@@ -146,7 +135,6 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-// LẤY CHI TIẾT 1 ĐƠN 
 export const getOrderDetail = async (req, res) => {
   try {
     const id = req.params.id;
@@ -166,7 +154,6 @@ export const getOrderDetail = async (req, res) => {
   }
 };
 
-//  CẬP NHẬT TRẠNG THÁI 
 export const updateOrderStatus = async (req, res) => {
   try {
     await updateOrderStatusModel(req.params.id, req.body.status);
@@ -177,7 +164,6 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-//  XOÁ ĐƠN 
 export const deleteOrder = async (req, res) => {
   try {
     await deleteOrderModel(req.params.id);
