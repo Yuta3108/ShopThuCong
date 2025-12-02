@@ -93,8 +93,10 @@ export const xacMinhEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-    const [rows] = await db.query(
-      "SELECT * FROM users WHERE verifyToken = ? AND verifyExpires > (UTC_TIMESTAMP() + INTERVAL 7 HOUR)",
+        const [[rows]] = await db.query(
+      `SELECT * FROM users 
+      WHERE verifyToken = ? 
+      AND verifyExpires > UTC_TIMESTAMP()`,
       [token]
     );
 
