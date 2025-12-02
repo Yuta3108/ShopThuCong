@@ -98,8 +98,7 @@ export const createOrderFromCart = async (req, res) => {
       })),
     };
 
-    // Gửi email HTML kiểu Tiki 
-    //await sendInvoiceEmail(orderData);
+    await sendInvoiceEmail(orderData);
 
     res.json({ orderId });
   } catch (err) {

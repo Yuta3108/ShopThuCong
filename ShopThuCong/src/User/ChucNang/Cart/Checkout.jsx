@@ -64,7 +64,7 @@ export default function CheckoutPage() {
 
     try {
       const res = await axios.post(`${API}/vouchers/apply`, {
-        code: voucherCode,
+        code: voucherCode.trim().toUpperCase(),
         subtotal: subtotal,
       });
 

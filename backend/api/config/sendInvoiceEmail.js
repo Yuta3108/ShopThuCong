@@ -12,7 +12,7 @@ export const sendInvoiceEmail = async (order) => {
   const html = `
   <div style="font-family:Arial, sans-serif;background:#f5f6f7;padding:20px;">
     <div style="max-width:600px;margin:0 auto;background:white;border-radius:12px;
-         overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+      overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
 
       <div style="background:#1A94FF;padding:20px;text-align:center;color:white;">
         <h2 style="margin:0;font-size:22px;">XÁC NHẬN ĐƠN HÀNG</h2>
@@ -29,7 +29,7 @@ export const sendInvoiceEmail = async (order) => {
 
       <div style="padding:20px;">
         <h3 style="color:#1A94FF;">Chi tiết đơn hàng</h3>
-
+        
         <table style="width:100%;border-collapse:collapse;">
           <thead>
             <tr style="background:#e8f4ff;">
@@ -42,18 +42,21 @@ export const sendInvoiceEmail = async (order) => {
             ${order.items
               .map(
                 (item) => `
-              <tr style="border-bottom:1px solid #ddd;">
-                <td style="padding:10px;">${item.ProductName}</td>
-                <td style="padding:10px;text-align:center;">${item.Qty}</td>
-                <td style="padding:10px;text-align:right;">${Number(item.Price).toLocaleString()}₫</td>
-              </tr>`
+                <tr style="border-bottom:1px solid #ddd;">
+                  <td style="padding:10px;">${item.ProductName}</td>
+                  <td style="padding:10px;text-align:center;">${item.Qty}</td>
+                  <td style="padding:10px;text-align:right;">
+                    ${Number(item.Price).toLocaleString()}₫
+                  </td>
+                </tr>`
               )
               .join("")}
           </tbody>
         </table>
 
         <h2 style="text-align:right;margin-top:20px;">
-          Tổng tiền: <span style="color:#1A94FF;">${Number(order.total).toLocaleString()}₫</span>
+          Tổng cộng: <span style="color:#1A94FF;">
+          ${Number(order.total).toLocaleString()}₫</span>
         </h2>
       </div>
 
