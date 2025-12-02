@@ -60,24 +60,26 @@ export default function CheckoutPage() {
 
   // ÁP DỤNG VOUCHER
   const applyVoucher = async () => {
-    if (!voucherCode.trim()) return alert("Vui lòng nhập mã voucher!");
+  const code = voucherCode.trim().toUpperCase();
+  if (!code) return alert("Vui lòng nhập mã voucher!");
 
-    try {
-      const res = await axios.post(`${API}/vouchers/apply`, {
-        code: voucherCode.trim().toUpperCase(),
-        subtotal: subtotal,
-      });
+  try {
+    const res = await axios.post(`${API}/vouchers/apply`, {
+      code,
+      subtotal: subtotal,
+    });
 
-      if (res.data.success) {
-        setDiscount(res.data.discount);
-      } else {
-        alert(res.data.message || "Mã không hợp lệ!");
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || "Mã không hợp lệ!");
+    if (res.data.success) {
+      setDiscount(res.data.discount);
+      alert("Áp dụng thành công!");
+    } else {
+      alert(res.data.message || "Mã không hợp lệ!");
     }
-  };
-
+  } catch (err) {
+    alert(err.response?.data?.message || "Mã không hợp lệ!");
+    console.log("Voucher error:", err.response?.data);
+  }
+};
 
   // ĐẶT HÀNG
   const handleOrder = async () => {

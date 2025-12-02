@@ -135,9 +135,10 @@ export const deleteVoucherController = async (req, res) => {
 // ==== APPLY (USER) ====
 export const applyVoucherController = async (req, res) => {
   try {
-    const { code, total } = req.body;
+    const code = req.body.code?.trim().toUpperCase();
+    const total = Number(req.body.total ?? req.body.subtotal ?? 0);
 
-    const voucher = await getVoucherByCode(code?.trim().toUpperCase());
+    const voucher = await getVoucherByCode(code);
     if (!voucher) return res.status(404).json({ message: "Mã giảm giá không tồn tại" });
 
     if (voucher.Quantity <= 0)
@@ -155,8 +156,9 @@ export const applyVoucherController = async (req, res) => {
       discount = voucher.DiscountValue;
     }
 
-    res.json({ discount, voucher });
+    return res.json({ success: true, discount, voucher });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log("Voucher error:", err);
+    return res.status(500).json({ message: "Lỗi máy chủ" });
   }
 };
