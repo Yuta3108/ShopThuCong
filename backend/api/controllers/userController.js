@@ -93,24 +93,33 @@ export const xacMinhEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-        const [[rows]] = await db.query(
+    // Lấy đúng rows dạng array
+    const [rows] = await db.query(
       `SELECT * FROM users 
-      WHERE verifyToken = ? 
-      AND verifyExpires > UTC_TIMESTAMP()`,
+       WHERE verifyToken = ? 
+       AND verifyExpires > UTC_TIMESTAMP()`,
       [token]
     );
 
-    if (rows.length === 0)
-      return res.status(400).json({ message: "Liên kết không hợp lệ hoặc đã hết hạn." });
+    // Không có user hoặc token hết hạn
+    if (!rows || rows.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Liên kết không hợp lệ hoặc đã hết hạn." });
+    }
 
+    const user = rows[0];
+
+    // Cập nhật verified
     await db.query(
       "UPDATE users SET Verified = 1, verifyToken = NULL, verifyExpires = NULL WHERE UserID = ?",
-      [rows[0].UserID]
+      [user.UserID]
     );
 
-    res.json({ message: "Xác minh email thành công!" });
-  } catch {
-    res.status(500).json({ message: "Lỗi máy chủ." });
+    return res.json({ message: "Xác minh email thành công!" });
+  } catch (err) {
+    console.error("VERIFY ERROR:", err);
+    return res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
 
