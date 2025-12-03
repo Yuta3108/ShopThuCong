@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Header from "../../Layout/Header";
@@ -18,7 +17,6 @@ export default function ProductCategoryPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Popup QuickView
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
   // FILTER STATES
@@ -37,11 +35,9 @@ export default function ProductCategoryPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Get category
         const catRes = await axios.get(`${API}/categories/slug/${slug}`);
         setCategory(catRes.data);
 
-        // Get products
         const prodRes = await axios.get(
           `${API}/products?categoryId=${catRes.data.CategoryID}`
         );
@@ -56,12 +52,10 @@ export default function ProductCategoryPage() {
     loadData();
   }, [slug]);
 
-  // Reset page on filter
   useEffect(() => {
     setCurrentPage(1);
   }, [filterPrice, filterSort, filterType]);
 
-  // FILTER + SORT
   const filteredProducts = products
     .filter((p) => {
       if (!filterPrice) return true;
@@ -77,6 +71,7 @@ export default function ProductCategoryPage() {
     .filter((p) => {
       if (!filterType) return true;
       if (filterType === "new") return p.IsActive === 1;
+      if (filterType === "hot") return true; // sau này có field bán chạy thì chỉnh sau
       return true;
     })
     .sort((a, b) => {
@@ -86,43 +81,43 @@ export default function ProductCategoryPage() {
       return 0;
     });
 
-  // PAGINATION
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredProducts.length / itemsPerPage)
-  );
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * itemsPerPage;
-
   const paginatedProducts = filteredProducts.slice(
     startIndex,
     startIndex + itemsPerPage
   );
 
   if (loading)
-    return <p className="text-center py-10 text-gray-500">Đang tải...</p>;
+    return (
+      <div className="bg-[#F5F5F5] min-h-screen">
+        <Header />
+        <p className="text-center py-10 text-slate-500">Đang tải...</p>
+      </div>
+    );
 
   return (
     <div className="bg-[#F5F5F5] min-h-screen">
       <Header />
 
       {/* Breadcrumb */}
-      <div className="container mx-auto px-4 py-4 text-sm text-gray-600">
-        <Link to="/" className="hover:text-pink-500">
+      <div className="max-w-7xl mx-auto px-4 py-4 text-sm text-slate-600">
+        <Link to="/" className="hover:text-rose-500">
           Trang chủ
         </Link>{" "}
-        /
-        <Link to="/san-pham" className="hover:text-pink-500 ml-1">
+        /{" "}
+        <Link to="/san-pham" className="hover:text-rose-500">
           Tất cả sản phẩm
         </Link>{" "}
-        /
-        <span className="text-pink-600 ml-1">
+        /{" "}
+        <span className="text-rose-500 font-medium">
           {category?.CategoryName || "Danh mục"}
         </span>
       </div>
 
       {/* MAIN */}
-      <div className="container mx-auto px-4 pb-16 lg:grid lg:grid-cols-12 lg:gap-6 gap-4">
+      <div className="max-w-7xl mx-auto px-4 pb-16 lg:grid lg:grid-cols-12 lg:gap-6 gap-4">
         {/* LEFT SIDEBAR */}
         <ProductFilterSidebar
           openCatBox={openCatBox}
@@ -139,9 +134,9 @@ export default function ProductCategoryPage() {
         <div className="lg:col-span-9 mt-6 lg:mt-0">
           {/* TITLE + SORT */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-pink-600">
+            <h2 className="text-lg sm:text-xl font-semibold text-rose-500">
               {category?.CategoryName}
-              <span className="text-gray-500 ml-2">
+              <span className="text-slate-500 ml-2">
                 ({filteredProducts.length} sản phẩm)
               </span>
             </h2>
@@ -149,7 +144,7 @@ export default function ProductCategoryPage() {
             <select
               value={filterSort}
               onChange={(e) => setFilterSort(e.target.value)}
-              className="border px-3 py-2 rounded-md shadow-sm text-sm w-full sm:w-auto"
+              className="border border-slate-300 px-3 py-2 rounded-lg shadow-sm text-sm w-full sm:w-auto bg-white"
             >
               <option value="newest">Mới nhất</option>
               <option value="price_asc">Giá thấp → cao</option>
@@ -174,7 +169,7 @@ export default function ProductCategoryPage() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={safePage === 1}
-                className="px-3 py-1.5 text-sm rounded-md border text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-sm rounded-md border text-slate-700 bg-white hover:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed"
               >
                 Trước
               </button>
@@ -186,8 +181,8 @@ export default function ProductCategoryPage() {
                     onClick={() => setCurrentPage(page)}
                     className={`w-8 h-8 rounded-md text-sm flex items-center justify-center border ${
                       page === safePage
-                        ? "bg-pink-600 text-white border-pink-600"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                        ? "bg-rose-500 text-white border-rose-500"
+                        : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
                     }`}
                   >
                     {page}
@@ -200,7 +195,7 @@ export default function ProductCategoryPage() {
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={safePage === totalPages}
-                className="px-3 py-1.5 text-sm rounded-md border text-gray-700 hover:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-sm rounded-md border text-slate-700 bg-white hover:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed"
               >
                 Sau
               </button>

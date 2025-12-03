@@ -9,25 +9,28 @@ export default function QuenMatKhau() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://backend-eta-ivory-29.vercel.app/api/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      const res = await fetch(
+        "https://backend-eta-ivory-29.vercel.app/api/forgot-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         Swal.fire({
           icon: "success",
           title: "Đã gửi liên kết đặt lại mật khẩu!",
           text: "Kiểm tra email để lấy link đặt lại.",
-          confirmButtonColor: "#a855f7",
+          confirmButtonColor: "#fb7185",
         });
       } else {
         Swal.fire({
           icon: "error",
           title: "Không tìm thấy tài khoản",
           text: data.message,
-          confirmButtonColor: "#a855f7",
+          confirmButtonColor: "#fb7185",
         });
       }
     } catch (err) {
@@ -40,32 +43,38 @@ export default function QuenMatKhau() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-100 via-white to-purple-100">
+    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
       <main className="flex-grow flex justify-center items-center px-4 py-10">
-        <div className="bg-white w-full max-w-md shadow-2xl rounded-2xl p-8 border border-gray-100 animate-fadeIn">
-          <h2 className="text-3xl font-bold text-center text-purple-700 mb-6">
-            Quên Mật Khẩu
+        <div className="bg-white w-full max-w-md shadow-[0_18px_45px_rgba(15,23,42,0.12)] rounded-3xl p-8 border border-slate-200 animate-fadeIn">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-rose-500 mb-2">
+            Quên mật khẩu
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-xs text-center text-slate-500 mb-6">
+            Nhập email đăng ký để nhận liên kết đặt lại mật khẩu
+          </p>
+          <form onSubmit={handleSubmit} className="space-y-4 text-sm">
             <input
               type="email"
-              placeholder="Nhập email đăng ký của bạn"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:outline-none"
+              placeholder="Email của bạn"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-t from-purple-800 via-purple-500 to-purple-400 text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow-md hover:shadow-lg"
+              className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-semibold shadow-md hover:shadow-lg transition-all"
             >
               Gửi liên kết đặt lại
             </button>
           </form>
-          <p className="text-center mt-5 text-gray-600">
+          <p className="text-center mt-5 text-slate-600 text-sm">
             Nhớ lại mật khẩu?{" "}
-            <a href="/login" className="text-purple-700 hover:underline font-medium">
+            <a
+              href="/login"
+              className="text-rose-500 hover:text-rose-600 hover:underline font-medium"
+            >
               Đăng nhập
             </a>
           </p>

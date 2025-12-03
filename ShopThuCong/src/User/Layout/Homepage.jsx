@@ -25,8 +25,10 @@ export default function HomePage() {
         const cats = catRes.data;
         setCategories(cats);
 
+        // Lấy 20 sp đầu làm nổi bật
         setFeatured(prodRes.data.slice(0, 20));
 
+        // Lấy sp theo từng danh mục
         const productMap = {};
         for (const cat of cats) {
           const res = await axios.get(
@@ -43,100 +45,97 @@ export default function HomePage() {
     };
     fetchInit();
   }, []);
-  
+
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500 animate-pulse">Đang tải dữ liệu...</p>
+      <div className="flex justify-center items-center h-screen bg-white">
+        <p className="text-slate-500 animate-pulse text-sm tracking-[0.25em] uppercase">
+          Đang tải dữ liệu...
+        </p>
       </div>
     );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5] text-gray-900">
-      {/* Banner */}
+    <div className="min-h-screen flex flex-col bg-[#F5F5F5] text-slate-900">
+      {/* BANNER TRÊN CÙNG */}
       <Banner />
 
-      <main className="flex-grow container mx-auto px-4 sm:px-6 py-10">
-        {/* ===================== DANH MỤC ===================== */}
-        <section className="mb-16">
-          <h2 className="text-xl font-semibold mb-5 text-gray-800">
-            Danh mục sản phẩm
-          </h2>
-
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-5">
-            {categories.map((cat) => (
-              <Link
-                key={cat.CategoryID}
-                to={`/san-pham/${cat.Slug}`}
-                className="flex flex-col items-center text-center hover:scale-105 transition"
-              >
-                <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-2">
-                  <img
-                    src={`/category/${cat.CategoryID}.jpg`}
-                    onError={(e) =>
-                      (e.target.src = "https://placehold.co/200")
-                    }
-                    alt={cat.CategoryName}
-                    className="w-full h-full object-cover rounded-full shadow-md border"
-                  />
-                </div>
-                <span className="text-sm text-gray-700 line-clamp-2">
-                  {cat.CategoryName}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* ===================== SẢN PHẨM NỔI BẬT ===================== */}
-        <section className="mb-20">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-[#d81b60] mb-6">
-            Sản phẩm nổi bật
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Banner trái */}
-            <div className="md:col-span-1">
-              <img
-                src="/category/banner-new.jpg"
-                className="rounded-xl shadow-md w-full h-full object-cover"
-              />
+      <main className="flex-grow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
+          {/* ===================== DANH MỤC ===================== */}
+          <section className="mb-14 md:mb-20">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-rose-400/80">
+                  Danh mục
+                </p>
+                <h2 className="text-xl md:text-2xl font-semibold text-slate-900">
+                  Danh mục sản phẩm
+                </h2>
+              </div>
+              <span className="hidden md:inline-block text-[11px] text-slate-500 uppercase tracking-[0.22em]">
+                Lựa chọn cho mọi phong cách
+              </span>
             </div>
 
-            {/* Grid sản phẩm */}
-            <div className="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-              {featured.slice(0, 10).map((p) => (
-                <ProductCard
-                  key={p.ProductID}
-                  p={p}
-                  onQuickView={setQuickViewProduct}
-                />
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 md:gap-6">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.CategoryID}
+                  to={`/san-pham/${cat.Slug}`}
+                  className="group flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-2 rounded-2xl overflow-hidden relative shadow-md bg-white border border-slate-200">
+                    <img
+                      src={`/category/${cat.CategoryID}.jpg`}
+                      onError={(e) =>
+                        (e.target.src = "https://placehold.co/260x260")
+                      }
+                      alt={cat.CategoryName}
+                      className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <span className="text-xs sm:text-sm text-slate-800 line-clamp-2 group-hover:text-rose-500 transition-colors">
+                    {cat.CategoryName}
+                  </span>
+                </Link>
               ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* ===================== SẢN PHẨM THEO DANH MỤC ===================== */}
-        {categories.map((cat) => {
-          const prods = productsByCat[cat.CategoryID] || [];
-          if (!prods.length) return null;
+          {/* ===================== SẢN PHẨM NỔI BẬT ===================== */}
+          <section className="mb-16 md:mb-20">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.22em] text-rose-400/80">
+                  Gợi ý cho bạn
+                </p>
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-rose-500">
+                  Sản phẩm nổi bật
+                </h2>
+              </div>
+              <Link
+                to="/san-pham"
+                className="hidden md:inline-flex items-center text-[13px] text-rose-500 hover:text-rose-600 transition-colors"
+              >
+                Xem tất cả sản phẩm →
+              </Link>
+            </div>
 
-          return (
-            <section key={cat.CategoryID} className="mb-20">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  {cat.CategoryName}
-                </h3>
-                <Link
-                  to={`/san-pham/${cat.Slug}`}
-                  className="text-[#d81b60] hover:text-[#ff2f6d] font-medium"
-                >
-                  Xem tất cả →
-                </Link>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Banner trái – GIỮ NGUYÊN HÌNH NHƯ ANH */}
+              <div className="md:col-span-1">
+                <img
+                  src="/category/banner-new.jpg"
+                  className="rounded-xl shadow-md w-full h-full object-cover"
+                  alt="Banner nổi bật"
+                />
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-                {prods.map((p) => (
+              {/* Grid sản phẩm */}
+              <div className="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+                {featured.slice(0, 10).map((p) => (
                   <ProductCard
                     key={p.ProductID}
                     p={p}
@@ -144,17 +143,54 @@ export default function HomePage() {
                   />
                 ))}
               </div>
-            </section>
-          );
-        })}
+            </div>
+          </section>
 
-        {/* ===================== POPUP QUICK VIEW ===================== */}
-        {quickViewProduct && (
-          <QuickViewModal
-            product={quickViewProduct}
-            onClose={() => setQuickViewProduct(null)}
-          />
-        )}
+          {/* ===================== SẢN PHẨM THEO DANH MỤC ===================== */}
+          {categories.map((cat) => {
+            const prods = productsByCat[cat.CategoryID] || [];
+            if (!prods.length) return null;
+
+            return (
+              <section key={cat.CategoryID} className="mb-16 md:mb-20">
+                <div className="flex justify-between items-baseline mb-5">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-slate-400">
+                      Danh mục
+                    </p>
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      {cat.CategoryName}
+                    </h3>
+                  </div>
+                  <Link
+                    to={`/san-pham/${cat.Slug}`}
+                    className="text-sm text-rose-500 hover:text-rose-600 font-medium"
+                  >
+                    Xem tất cả →
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+                  {prods.map((p) => (
+                    <ProductCard
+                      key={p.ProductID}
+                      p={p}
+                      onQuickView={setQuickViewProduct}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+
+          {/* ===================== POPUP QUICK VIEW ===================== */}
+          {quickViewProduct && (
+            <QuickViewModal
+              product={quickViewProduct}
+              onClose={() => setQuickViewProduct(null)}
+            />
+          )}
+        </div>
       </main>
     </div>
   );

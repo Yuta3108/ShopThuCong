@@ -16,16 +16,19 @@ export default function DatLaiMatKhau() {
       Swal.fire({
         icon: "warning",
         title: "Mật khẩu không khớp!",
-        confirmButtonColor: "#a855f7",
+        confirmButtonColor: "#fb7185",
       });
       return;
     }
     try {
-      const res = await fetch("https://backend-eta-ivory-29.vercel.app/api/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
-      });
+      const res = await fetch(
+        "https://backend-eta-ivory-29.vercel.app/api/reset-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, newPassword }),
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         Swal.fire({
@@ -53,18 +56,18 @@ export default function DatLaiMatKhau() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-100 via-white to-purple-100">
+    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
       <main className="flex-grow flex justify-center items-center px-4 py-10">
-        <div className="bg-white w-full max-w-md shadow-2xl rounded-2xl p-8 border border-gray-100 animate-fadeIn">
-          <h2 className="text-3xl font-bold text-center text-purple-700 mb-6">
-            Đặt Lại Mật Khẩu
+        <div className="bg-white w-full max-w-md shadow-[0_18px_45px_rgba(15,23,42,0.12)] rounded-3xl p-8 border border-slate-200 animate-fadeIn">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-rose-500 mb-6">
+            Đặt lại mật khẩu
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 text-sm">
             <input
               type="password"
               placeholder="Nhập mật khẩu mới"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:outline-none"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
@@ -72,14 +75,14 @@ export default function DatLaiMatKhau() {
             <input
               type="password"
               placeholder="Xác nhận mật khẩu mới"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:outline-none"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-t from-purple-800 via-purple-500 to-purple-400 text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow-md hover:shadow-lg"
+              className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-semibold shadow-md hover:shadow-lg transition-all"
             >
               Xác nhận
             </button>

@@ -17,14 +17,16 @@ export default function UserProfile() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userId = storedUser?.UserID || storedUser?.id;
 
-
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId || !token) return;
       try {
-        const res = await fetch(`https://backend-eta-ivory-29.vercel.app/api/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(
+          `https://backend-eta-ivory-29.vercel.app/api/users/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await res.json();
 
         if (res.ok) {
@@ -53,14 +55,13 @@ export default function UserProfile() {
     fetchUser();
   }, [userId, token]);
 
-  // Validate dữ liệu
   const validateForm = () => {
     if (!form.FullName.trim() || !form.Phone.trim() || !form.Address.trim()) {
       Swal.fire({
         icon: "warning",
         title: "Thiếu thông tin!",
         text: "Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ.",
-        confirmButtonColor: "#a855f7",
+        confirmButtonColor: "#fb7185",
       });
       return false;
     }
@@ -71,7 +72,7 @@ export default function UserProfile() {
         icon: "warning",
         title: "Số điện thoại không hợp lệ!",
         text: "Số điện thoại chỉ được chứa số và phải có 10–11 chữ số.",
-        confirmButtonColor: "#a855f7",
+        confirmButtonColor: "#fb7185",
       });
       return false;
     }
@@ -79,24 +80,26 @@ export default function UserProfile() {
     return true;
   };
 
-  // Cập nhật thông tin user
   const handleUpdate = async () => {
     if (!user) return;
-    if (!validateForm()) return; 
+    if (!validateForm()) return;
 
     try {
-      const res = await fetch(`https://backend-eta-ivory-29.vercel.app/api/users/${user.UserID}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          fullName: form.FullName,
-          phone: form.Phone,
-          address: form.Address,
-        }),
-      });
+      const res = await fetch(
+        `https://backend-eta-ivory-29.vercel.app/api/users/${user.UserID}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            fullName: form.FullName,
+            phone: form.Phone,
+            address: form.Address,
+          }),
+        }
+      );
 
       const data = await res.json();
       if (res.ok) {
@@ -125,104 +128,102 @@ export default function UserProfile() {
     }
   };
 
-  //  Đặt lại mật khẩu
   const handleResetPassword = async () => {
-  const { value: passwords } = await Swal.fire({
-    title: "Đổi mật khẩu",
-    html: `
+    const { value: passwords } = await Swal.fire({
+      title: "Đổi mật khẩu",
+      html: `
       <input id="oldPass" type="password" placeholder="Mật khẩu hiện tại" class="swal2-input" />
       <input id="newPass" type="password" placeholder="Mật khẩu mới" class="swal2-input" />
     `,
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonText: "Xác nhận",
-    preConfirm: () => {
-      const oldPass = document.getElementById("oldPass").value;
-      const newPass = document.getElementById("newPass").value;
-      
-      if (!oldPass || !newPass) {
-        Swal.showValidationMessage("Vui lòng nhập đủ 2 mật khẩu");
-        return false;
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Xác nhận",
+      preConfirm: () => {
+        const oldPass = document.getElementById("oldPass").value;
+        const newPass = document.getElementById("newPass").value;
+
+        if (!oldPass || !newPass) {
+          Swal.showValidationMessage("Vui lòng nhập đủ 2 mật khẩu");
+          return false;
+        }
+        if (!/[a-zA-Z]/.test(newPass) || newPass.length < 8) {
+          Swal.showValidationMessage(
+            "🔒 Mật khẩu phải có ít nhất 8 ký tự và chứa ít nhất một chữ cái"
+          );
+          return false;
+        }
+        return { oldPass, newPass };
+      },
+    });
+
+    if (!passwords) return;
+
+    try {
+      const res = await fetch(
+        `https://backend-eta-ivory-29.vercel.app/api/${user.UserID}/password`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            oldPassword: passwords.oldPass,
+            newPassword: passwords.newPass,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Đổi mật khẩu thành công!",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Đổi mật khẩu thất bại",
+          text: data.message || "Vui lòng kiểm tra lại mật khẩu hiện tại.",
+        });
       }
-      if (!/[a-zA-Z]/.test(newPass) || newPass.length < 8)
-         {
-            Swal.showValidationMessage("🔒 Mật khẩu phải có ít nhất 8 ký tự và chứa ít nhất một chữ cái");
-            return false;
-          }
-      return { oldPass, newPass };
-    },
-  });
-
-  if (!passwords) return;
-
-  try {
-    const res = await fetch(
-      `https://backend-eta-ivory-29.vercel.app/api/${user.UserID}/password`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          oldPassword: passwords.oldPass,
-          newPassword: passwords.newPass,
-        }),
-      }
-    );
-
-    const data = await res.json();
-    if (res.ok) {
-      Swal.fire({
-        icon: "success",
-        title: "Đổi mật khẩu thành công!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } else {
+    } catch (err) {
       Swal.fire({
         icon: "error",
-        title: "Đổi mật khẩu thất bại",
-        text: data.message || "Vui lòng kiểm tra lại mật khẩu hiện tại.",
+        title: "Lỗi kết nối máy chủ",
+        text: "Vui lòng thử lại sau.",
       });
     }
-  } catch (err) {
-    Swal.fire({
-      icon: "error",
-      title: "Lỗi kết nối máy chủ",
-      text: "Vui lòng thử lại sau.",
-    });
-  }
-};
+  };
 
   if (!user)
     return (
-      <div className="flex justify-center items-center h-screen text-gray-600">
+      <div className="bg-[#F5F5F5] min-h-screen flex items-center justify-center text-slate-600">
         Đang tải thông tin người dùng...
       </div>
     );
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-white to-purple-100">
+    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
       <Header />
 
       <main className="flex-grow flex justify-center items-center px-4 py-10 animate-fadeIn">
-        <div className="bg-white shadow-2xl p-8 rounded-2xl w-full max-w-lg border border-gray-100 transition-all duration-500 hover:scale-[1.01]">
-          <h2 className="text-3xl font-bold text-center text-purple-700 mb-6">
-            Thông Tin Tài Khoản
+        <div className="bg-white shadow-[0_18px_45px_rgba(15,23,42,0.12)] p-8 rounded-3xl w-full max-w-lg border border-slate-200 transition-all duration-500 hover:-translate-y-1">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-rose-500 mb-6">
+            Thông tin tài khoản
           </h2>
 
-          {/* Form hiển thị */}
-          <div className="space-y-4">
-            {/* FullName */}
+          <div className="space-y-4 text-sm">
             <div>
-              <label className="text-gray-600 font-medium">Họ Tên</label>
+              <label className="text-slate-600 font-medium">Họ tên</label>
               <input
                 type="text"
-                className={`w-full px-4 py-2 border rounded-lg mt-1 ${
+                className={`w-full px-4 py-2 border rounded-lg mt-1 text-sm ${
                   editMode
-                    ? "focus:ring-2 focus:ring-purple-300 outline-none"
-                    : "bg-gray-100 text-gray-500"
+                    ? "bg-white focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
+                    : "bg-slate-100 text-slate-500 border-slate-200"
                 }`}
                 value={form.FullName}
                 disabled={!editMode}
@@ -232,57 +233,58 @@ export default function UserProfile() {
               />
             </div>
 
-            {/* Email */}
             <div>
-              <label className="text-gray-600 font-medium">Email</label>
+              <label className="text-slate-600 font-medium">Email</label>
               <input
                 type="email"
-                className="w-full px-4 py-2 border rounded-lg mt-1 bg-gray-100 text-gray-500"
+                className="w-full px-4 py-2 border rounded-lg mt-1 bg-slate-100 text-slate-500 border-slate-200 text-sm"
                 value={form.Email}
                 disabled
               />
             </div>
 
-            {/* Phone */}
             <div>
-              <label className="text-gray-600 font-medium">Số điện thoại</label>
+              <label className="text-slate-600 font-medium">
+                Số điện thoại
+              </label>
               <input
                 type="text"
-                className={`w-full px-4 py-2 border rounded-lg mt-1 ${
+                className={`w-full px-4 py-2 border rounded-lg mt-1 text-sm ${
                   editMode
-                    ? "focus:ring-2 focus:ring-purple-300 outline-none"
-                    : "bg-gray-100 text-gray-500"
+                    ? "bg-white focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
+                    : "bg-slate-100 text-slate-500 border-slate-200"
                 }`}
                 value={form.Phone}
                 disabled={!editMode}
-                onChange={(e) => setForm({ ...form, Phone: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, Phone: e.target.value })
+                }
               />
             </div>
 
-            {/* Address */}
             <div>
-              <label className="text-gray-600 font-medium">Địa chỉ</label>
+              <label className="text-slate-600 font-medium">Địa chỉ</label>
               <input
                 type="text"
-                className={`w-full px-4 py-2 border rounded-lg mt-1 ${
+                className={`w-full px-4 py-2 border rounded-lg mt-1 text-sm ${
                   editMode
-                    ? "focus:ring-2 focus:ring-purple-300 outline-none"
-                    : "bg-gray-100 text-gray-500"
+                    ? "bg-white focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
+                    : "bg-slate-100 text-slate-500 border-slate-200"
                 }`}
                 value={form.Address}
                 disabled={!editMode}
-                onChange={(e) => setForm({ ...form, Address: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, Address: e.target.value })
+                }
               />
             </div>
 
-            {/* Nút hành động */}
-            <div className="flex justify-between mt-6">
+            <div className="flex justify-between mt-6 gap-3">
               {editMode ? (
                 <>
                   <button
                     onClick={handleUpdate}
-                    className="w-[48%] py-2 bg-gradient-to-t from-purple-700 via-purple-500 to-purple-400 
-                               text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow-md"
+                    className="w-1/2 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-semibold text-sm shadow-md"
                   >
                     Lưu thay đổi
                   </button>
@@ -296,7 +298,7 @@ export default function UserProfile() {
                         Address: user.Address || "",
                       });
                     }}
-                    className="w-[48%] py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all"
+                    className="w-1/2 py-2.5 bg-slate-100 text-slate-700 rounded-full font-semibold text-sm hover:bg-slate-200 border border-slate-200"
                   >
                     Hủy
                   </button>
@@ -304,8 +306,7 @@ export default function UserProfile() {
               ) : (
                 <button
                   onClick={() => setEditMode(true)}
-                  className="w-full py-2 bg-gradient-to-t from-purple-700 via-purple-500 to-purple-400 
-                             text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow-md"
+                  className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-semibold text-sm shadow-md"
                 >
                   Chỉnh sửa thông tin
                 </button>
@@ -316,7 +317,7 @@ export default function UserProfile() {
           <div className="text-center mt-6">
             <button
               onClick={handleResetPassword}
-              className="text-purple-700 font-medium hover:underline"
+              className="text-rose-500 font-medium hover:underline text-sm"
             >
               Đặt lại mật khẩu
             </button>

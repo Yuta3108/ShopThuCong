@@ -69,14 +69,14 @@ export default function CartPage() {
     loadDBCart();
   }, []);
 
-  // Kết Hợp Cart Local
+  // LƯU LOCAL CART
   const saveLocalCart = (newCart) => {
     setCart(newCart);
     localStorage.setItem("cart", JSON.stringify(newCart));
     window.dispatchEvent(new Event("updateCart"));
   };
 
-  // Tăng Số Lượng
+  // TĂNG SỐ LƯỢNG
   const increaseQty = async (item) => {
     if (!isDB) {
       saveLocalCart(
@@ -102,10 +102,10 @@ export default function CartPage() {
       )
     );
 
-    window.dispatchEvent(new Event("updateCart")); 
+    window.dispatchEvent(new Event("updateCart"));
   };
 
-  // Giảm Số Lượng
+  // GIẢM SỐ LƯỢNG
   const decreaseQty = async (item) => {
     if (item.quantity <= 1) return;
 
@@ -136,7 +136,7 @@ export default function CartPage() {
     window.dispatchEvent(new Event("updateCart"));
   };
 
-  //REMOVE ITEM
+  // XOÁ ITEM
   const removeItem = async (item) => {
     if (!isDB) {
       const newCart = cart.filter((i) => i.key !== item.key);
@@ -157,13 +157,13 @@ export default function CartPage() {
     } catch {}
   };
 
-  //TOTAL
+  // TỔNG TIỀN
   const total = cart.reduce(
     (sum, i) => sum + Number(i.price) * Number(i.quantity),
     0
   );
 
-  // CHECKOUT 
+  // ĐI TỚI CHECKOUT
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
 
@@ -179,67 +179,80 @@ export default function CartPage() {
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
 
-      <div className="container mx-auto px-4 mt-8 flex-1">
+      <main className="flex-1 max-w-6xl mx-auto px-4 md:px-6 pt-8 pb-16">
+        {/* Back link */}
         <Link
           to="/"
-          className="flex items-center text-gray-600 hover:text-[#C2185B] mb-6 transition-all"
+          className="inline-flex items-center text-slate-500 hover:text-rose-500 mb-6 text-sm"
         >
           <ArrowLeft size={18} className="mr-1" />
           Tiếp tục mua sắm
         </Link>
 
-        <h1 className="text-3xl font-bold mb-6 text-gray-900">Giỏ hàng của bạn</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold mb-6 text-slate-900">
+          Giỏ hàng của bạn
+        </h1>
 
         {loading ? (
-          <div className="text-center py-20 text-gray-500 animate-pulse">
+          <div className="text-center py-20 text-slate-500 animate-pulse text-sm tracking-[0.2em] uppercase">
             Đang tải giỏ hàng…
           </div>
         ) : cart.length === 0 ? (
-          <div className="text-center py-20 text-gray-600">
-            Giỏ hàng đang trống…
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm py-14 px-6 text-center">
+            <p className="text-lg font-medium text-slate-800 mb-2">
+              Giỏ hàng đang trống
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              Bắt đầu thêm vài món xinh xinh vào nhé ✨
+            </p>
+            <Link
+              to="/san-pham"
+              className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 shadow-md hover:shadow-lg transition-all"
+            >
+              Xem sản phẩm
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.6fr,0.9fr] gap-8">
             {/* LIST ITEMS */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="space-y-4">
               {cart.map((item) => (
                 <div
                   key={item.key}
-                  className="bg-white rounded-xl shadow p-4 flex items-center gap-4 
-                  hover:shadow-xl transition-all border border-gray-100"
+                  className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all flex gap-4 p-4"
                 >
                   <img
                     src={item.ImageURL}
                     alt={item.ProductName}
-                    className="w-24 h-24 object-cover rounded-lg border shadow-sm"
+                    className="w-24 h-24 md:w-28 md:h-28 object-cover rounded-xl border border-slate-200"
                   />
 
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-base mb-1 line-clamp-2">
-                      {item.ProductName}
-                    </h3>
+                  <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm md:text-base line-clamp-2">
+                        {item.ProductName}
+                      </h3>
 
-                    <p className="text-pink-600 font-bold text-lg mb-2">
-                      {Number(item.price).toLocaleString()}₫
-                    </p>
+                      <p className="text-rose-500 font-bold text-base mt-2">
+                        {Number(item.price).toLocaleString()}₫
+                      </p>
+                    </div>
 
-                    <div className="flex items-center gap-3 mt-3">
+                    <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => decreaseQty(item)}
-                        className="w-9 h-9 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center 
-                        justify-center transition-all hover:scale-110"
+                        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center transition-all"
                       >
                         <Minus size={16} />
                       </button>
 
-                      <span className="w-10 text-center font-semibold text-gray-800">
+                      <span className="w-10 text-center font-semibold text-slate-900">
                         {item.quantity}
                       </span>
 
                       <button
                         onClick={() => increaseQty(item)}
-                        className="w-9 h-9 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center 
-                        justify-center transition-all hover:scale-110"
+                        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center transition-all"
                       >
                         <Plus size={16} />
                       </button>
@@ -248,7 +261,8 @@ export default function CartPage() {
 
                   <button
                     onClick={() => removeItem(item)}
-                    className="text-red-500 hover:text-red-700 hover:scale-110 transition-all"
+                    className="text-slate-400 hover:text-rose-500 hover:scale-110 transition-all self-start"
+                    aria-label="Xoá sản phẩm"
                   >
                     <Trash2 size={20} />
                   </button>
@@ -257,33 +271,48 @@ export default function CartPage() {
             </div>
 
             {/* SUMMARY */}
-            <div className="bg-white p-6 rounded-2xl shadow h-fit border">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Tổng cộng</h2>
+            <aside className="lg:sticky lg:top-24 h-fit">
+              <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                  Tóm tắt đơn hàng
+                </h2>
 
-              <div className="flex justify-between mb-3 text-gray-700">
-                <span>Tạm tính</span>
-                <span>{total.toLocaleString()}₫</span>
+                <div className="flex justify-between mb-2 text-sm text-slate-600">
+                  <span>Tạm tính</span>
+                  <span>{total.toLocaleString()}₫</span>
+                </div>
+
+                <div className="flex justify-between text-sm text-slate-600 mb-4">
+                  <span>Phí vận chuyển</span>
+                  <span className="text-slate-400">Tính ở bước sau</span>
+                </div>
+
+                <hr className="my-3" />
+
+                <div className="flex justify-between items-baseline mb-4">
+                  <span className="text-sm font-medium text-slate-800">
+                    Tổng tiền
+                  </span>
+                  <span className="text-xl font-bold text-rose-500">
+                    {total.toLocaleString()}₫
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleCheckout}
+                  className="w-full py-3 mt-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full text-sm font-semibold shadow-md hover:shadow-lg transition-all"
+                >
+                  Thanh toán
+                </button>
+
+                <p className="mt-3 text-xs text-slate-500 text-center">
+                  Bạn có thể nhập mã giảm giá ở bước thanh toán tiếp theo.
+                </p>
               </div>
-
-              <hr className="my-3" />
-
-              <div className="flex justify-between text-xl font-bold text-[#C2185B] mb-4">
-                <span>Tổng tiền</span>
-                <span>{total.toLocaleString()}₫</span>
-              </div>
-
-              <button
-                onClick={handleCheckout}
-                className="w-full py-3 bg-gradient-to-r from-[#C2185B] to-[#E91E63]
-                text-white rounded-xl text-lg font-semibold hover:opacity-90 transition-all 
-                shadow-lg hover:shadow-xl"
-              >
-                Thanh toán ngay
-              </button>
-            </div>
+            </aside>
           </div>
         )}
-      </div>
+      </main>
 
       <Footer />
     </div>
