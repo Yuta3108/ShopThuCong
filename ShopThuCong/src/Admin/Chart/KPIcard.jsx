@@ -1,11 +1,9 @@
-import React from "react";
-
 export default function KPIcard({ title, value, badge }) {
   return (
-    <div className="bg-[#FFFFFF] p-4 rounded-lg text-black shadow">
-      <h3 className="text-sm text-black mb-1">{title}</h3>
-      <h2 className="text-2xl font-bold">{value}</h2>
-      <p className="text-xs text-green-400 mt-1">{badge}</p>
+    <div className="bg-white border border-slate-200 rounded-2xl px-4 py-4 shadow-sm hover:shadow-md transition-all">
+      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
+      <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
+      <p className="text-xs text-emerald-600 mt-2">{badge}</p>
     </div>
   );
 }

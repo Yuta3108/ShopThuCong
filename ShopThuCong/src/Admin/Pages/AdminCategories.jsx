@@ -5,6 +5,19 @@ import axios from "axios";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
+// ================= AXIOS CLIENT =================
+const axiosClient = axios.create({
+    baseURL: API,
+    headers: { "Content-Type": "application/json" },
+});
+
+axiosClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
+// ================= MAIN COMPONENT =================
 export default function AdminCategories() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -12,6 +25,7 @@ export default function AdminCategories() {
 
     const [modalOpen, setModalOpen] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
+    const [editID, setEditID] = useState(null);
 
     const [form, setForm] = useState({
         CategoryName: "",
@@ -19,20 +33,7 @@ export default function AdminCategories() {
         Description: "",
     });
 
-    const [editID, setEditID] = useState(null);
-
-    const axiosClient = axios.create({
-        baseURL: API,
-        headers: { "Content-Type": "application/json" },
-    });
-
-    axiosClient.interceptors.request.use((config) => {
-        const token = localStorage.getItem("token");
-        if (token) config.headers.Authorization = `Bearer ${token}`;
-        return config;
-    });
-
-    // ======= FETCH DATA =======
+    // ================= FETCH DATA =================
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -45,59 +46,56 @@ export default function AdminCategories() {
         fetchData();
     }, []);
 
-    // ======= OPEN MODAL (ADD) =======
-    const openAddModal = () => {
+    // ================= OPEN MODAL =================
+    const openAdd = () => {
         setIsEdit(false);
         setForm({ CategoryName: "", Slug: "", Description: "" });
         setModalOpen(true);
     };
 
-    // ======= OPEN MODAL (EDIT) =======
-    const openEditModal = (cat) => {
+    const openEdit = (cat) => {
         setIsEdit(true);
         setEditID(cat.CategoryID);
+
         setForm({
             CategoryName: cat.CategoryName,
             Slug: cat.Slug,
             Description: cat.Description || "",
         });
+
         setModalOpen(true);
     };
 
-    // ======= HANDLE SUBMIT =======
+    // ================= HANDLE SUBMIT =================
     const handleSubmit = async () => {
-        if (!form.CategoryName.trim() || !form.Slug.trim()) {
+        const { CategoryName, Slug } = form;
+
+        if (!CategoryName.trim() || !Slug.trim()) {
             alert("Tên & Slug không được để trống!");
             return;
         }
 
         try {
             if (isEdit) {
-                // update
                 await axiosClient.put(`/categories/sua/${editID}`, form);
 
                 setCategories((prev) =>
-                    prev.map((c) =>
-                        c.CategoryID === editID ? { ...c, ...form } : c
-                    )
+                    prev.map((c) => (c.CategoryID === editID ? { ...c, ...form } : c))
                 );
             } else {
-                // add
                 const res = await axiosClient.post("/categories/them", form);
-                setCategories((prev) => [
-                    ...prev,
-                    { CategoryID: res.data.id, ...form },
-                ]);
+                setCategories((prev) => [...prev, { CategoryID: res.data.id, ...form }]);
             }
+
             setModalOpen(false);
-        } catch (err) {
-            alert("Lỗi thao tác danh mục!");
+        } catch {
+            alert("Lỗi thao tác với danh mục!");
         }
     };
 
-    // ======= DELETE =======
+    // ================= DELETE =================
     const handleDelete = async (id) => {
-        if (!window.confirm("Xác nhận xóa danh mục này?")) return;
+        if (!window.confirm("Xác nhận xoá danh mục?")) return;
 
         try {
             await axiosClient.delete(`/categories/xoa/${id}`);
@@ -107,145 +105,152 @@ export default function AdminCategories() {
         }
     };
 
-    const filtered = categories.filter(
-        (c) =>
-            c.CategoryName.toLowerCase().includes(search.toLowerCase()) ||
-            c.Slug.toLowerCase().includes(search.toLowerCase())
+    // ================= FILTER =================
+    const filtered = categories.filter((c) =>
+        [c.CategoryName, c.Slug].some((v) =>
+            v.toLowerCase().includes(search.toLowerCase())
+        )
     );
 
     return (
-        <div className="flex bg-[#EDEDED] min-h-screen">
+        <div className="flex bg-[#F5F5F5] min-h-screen">
             <Sidebar />
 
-            <div className="flex-1 p-6">
-                {/* TITLE */}
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-teal-700">
+            <div className="flex-1 ml-64 p-6">
+                {/* PAGE HEADER */}
+                <div className="max-w-6xl mx-auto">
+
+                    <h1 className="text-2xl font-semibold text-slate-800 tracking-tight mb-6">
                         Quản Lý Danh Mục
                     </h1>
 
+                    {/* SEARCH + BUTTON */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-6">
 
-                </div>
+                        {/* SEARCH */}
+                        <div className="relative w-full sm:w-80">
+                            <Search
+                                size={18}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            />
+                            <input
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Tìm theo tên hoặc slug…"
+                                className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm 
+                                           focus:ring-2 focus:ring-teal-500 outline-none"
+                            />
+                        </div>
 
-                {/* SEARCH + BUTTON ROW */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
-
-                    {/* SEARCH */}
-                    <div className="relative w-full sm:w-80">
-                        <Search
-                            size={18}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                        />
-                        <input
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Tìm theo tên hoặc slug…"
-                            className="w-full pl-10 pr-3 py-2 border rounded-xl shadow-sm bg-white 
-                 focus:ring-2 focus:ring-teal-500 outline-none"
-                        />
+                        {/* ADD BUTTON */}
+                        <button
+                            onClick={openAdd}
+                            className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl 
+                                     hover:bg-teal-700 transition shadow"
+                        >
+                            <Plus size={18} />
+                            Thêm danh mục
+                        </button>
                     </div>
 
-                    {/* ADD BUTTON */}
-                    <button
-                        onClick={openAddModal}
-                        className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl 
-               hover:bg-teal-700 transition shadow"
-                    >
-                        <Plus size={18} /> Thêm danh mục
-                    </button>
+                    {/* ================= LOADING ================= */}
+                    {loading ? (
+                        <p className="text-center py-10 text-slate-500">Đang tải dữ liệu...</p>
+                    ) : (
+                        <>
+                            {/* MOBILE LIST */}
+                            <div className="grid grid-cols-1 md:hidden gap-4">
+                                {filtered.map((c) => (
+                                    <div
+                                        key={c.CategoryID}
+                                        className="p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition border"
+                                    >
+                                        <div className="font-semibold text-lg">{c.CategoryName}</div>
+                                        <div className="text-slate-600 text-sm">@{c.Slug}</div>
+                                        <div className="text-slate-500 text-sm mt-2">
+                                            {c.Description || "—"}
+                                        </div>
 
-                </div>
-                {/* LOADING */}
-                {loading ? (
-                    <p className="text-center py-10 text-gray-500">Đang tải dữ liệu...</p>
-                ) : (
-                    <>
-                        {/* MOBILE VIEW - CARD STYLE */}
-                        <div className="grid grid-cols-1 md:hidden gap-4">
-                            {filtered.map((c) => (
-                                <div
-                                    key={c.CategoryID}
-                                    className="p-4 bg-white rounded-xl shadow hover:shadow-md transition border"
-                                >
-                                    <div className="font-semibold text-lg">{c.CategoryName}</div>
-                                    <div className="text-gray-600 text-sm">@{c.Slug}</div>
-                                    <div className="text-gray-500 text-sm mt-2">{c.Description || "—"}</div>
-
-                                    <div className="flex gap-3 mt-4">
-                                        <button
-                                            onClick={() => openEditModal(c)}
-                                            className="flex-1 flex items-center justify-center gap-1 bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600"
-                                        >
-                                            <Edit size={16} /> Sửa
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(c.CategoryID)}
-                                            className="flex-1 flex items-center justify-center gap-1 bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600"
-                                        >
-                                            <Trash2 size={16} /> Xóa
-                                        </button>
+                                        <div className="flex gap-3 mt-4">
+                                            <button
+                                                onClick={() => openEdit(c)}
+                                                className="flex-1 flex items-center justify-center gap-1 bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600"
+                                            >
+                                                <Edit size={16} />
+                                                Sửa
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(c.CategoryID)}
+                                                className="flex-1 flex items-center justify-center gap-1 bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600"
+                                            >
+                                                <Trash2 size={16} />
+                                                Xoá
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
 
-                        {/* DESKTOP TABLE */}
-                        <div className="hidden md:block overflow-x-auto bg-white rounded-xl shadow border">
-                            <table className="min-w-full text-sm">
-                                <thead className="bg-teal-600 text-white">
-                                    <tr>
-                                        <th className="p-3 text-left">ID</th>
-                                        <th className="p-3 text-left">Tên danh mục</th>
-                                        <th className="p-3 text-left">Slug</th>
-                                        <th className="p-3 text-left w-1/3">Mô tả</th>
-                                        <th className="p-3 text-center">Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filtered.map((c, i) => (
-                                        <tr
-                                            key={c.CategoryID}
-                                            className={`border-t hover:bg-teal-50 transition ${i % 2 === 0 ? "bg-gray-50" : "bg-white"
-                                                }`}
-                                        >
-                                            <td className="p-3">{c.CategoryID}</td>
-                                            <td className="p-3 font-semibold">{c.CategoryName}</td>
-                                            <td className="p-3 text-gray-700">{c.Slug}</td>
-                                            <td className="p-3 text-gray-600">
-                                                {c.Description || "—"}
-                                            </td>
-
-                                            <td className="p-3 text-center space-x-2">
-                                                <button
-                                                    onClick={() => openEditModal(c)}
-                                                    className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-                                                >
-                                                    Sửa
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(c.CategoryID)}
-                                                    className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                                                >
-                                                    Xóa
-                                                </button>
-                                            </td>
+                            {/* DESKTOP TABLE */}
+                            <div className="hidden md:block overflow-x-auto bg-white rounded-xl shadow border">
+                                <table className="min-w-full text-sm">
+                                    <thead className="bg-teal-600 text-white">
+                                        <tr>
+                                            <th className="p-3 text-left">ID</th>
+                                            <th className="p-3 text-left">Tên danh mục</th>
+                                            <th className="p-3 text-left">Slug</th>
+                                            <th className="p-3 text-left w-1/3">Mô tả</th>
+                                            <th className="p-3 text-center">Hành động</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </>
-                )}
+                                    </thead>
+
+                                    <tbody>
+                                        {filtered.map((c, i) => (
+                                            <tr
+                                                key={c.CategoryID}
+                                                className={`border-t hover:bg-teal-50 transition ${
+                                                    i % 2 === 0 ? "bg-gray-50" : "bg-white"
+                                                }`}
+                                            >
+                                                <td className="p-3">{c.CategoryID}</td>
+                                                <td className="p-3 font-semibold">{c.CategoryName}</td>
+                                                <td className="p-3 text-slate-700">{c.Slug}</td>
+                                                <td className="p-3 text-slate-600">
+                                                    {c.Description || "—"}
+                                                </td>
+
+                                                <td className="p-3 text-center space-x-2">
+                                                    <button
+                                                        onClick={() => openEdit(c)}
+                                                        className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                                                    >
+                                                        Sửa
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(c.CategoryID)}
+                                                        className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                                                    >
+                                                        Xoá
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
+                    )}
+                </div>
             </div>
 
-            {/* ===================== MODAL ===================== */}
+            {/* ======================== MODAL ======================== */}
             {modalOpen && (
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
                     <div className="bg-white p-6 rounded-2xl shadow-xl w-11/12 sm:w-96 animate-scaleIn relative">
 
                         <button
                             onClick={() => setModalOpen(false)}
-                            className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                            className="absolute right-3 top-3 text-slate-500 hover:text-slate-700"
                         >
                             <X size={20} />
                         </button>

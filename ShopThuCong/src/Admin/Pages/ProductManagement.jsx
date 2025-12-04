@@ -3,6 +3,7 @@ import { Plus, Search, Settings, Pencil, Trash2 } from "lucide-react";
 import Sidebar from "../Layout/Sidebar";
 import ProductTable from "../Pages/Products/ProductTable";
 import ProductDialog from "../Pages/Products/ProductDialog";
+
 import {
   saveProduct,
   deleteProduct,
@@ -17,41 +18,46 @@ import {
   deleteAttributeValue,
 } from "../Pages/Products/productService";
 import axios from "axios";
-
 const API = "https://backend-eta-ivory-29.vercel.app/api";
-
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [attributes, setAttributes] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
   const [isAttrDialogOpen, setAttrDialogOpen] = useState(false);
   const [editingAttr, setEditingAttr] = useState(null);
   const [newAttrName, setNewAttrName] = useState("");
+
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
+  /* ================= Axios Client ================= */
   const axiosClient = axios.create({
     baseURL: API,
     headers: { "Content-Type": "application/json" },
   });
 
-  // Auto gắn token
   axiosClient.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   });
+
+  /* ================= Check Admin ================= */
   if (!user || user.role !== "admin") {
     return (
-      <div className="flex justify-center items-center h-screen text-red-600 font-semibold text-center p-6">
+      <div className="flex justify-center items-center h-screen text-red-600 font-semibold p-6 text-center">
         Bạn không có quyền truy cập trang này.
       </div>
     );
   }
-  /** ============ FETCH API ============ */
+
+  /* ================= FETCH ================= */
   const fetchCategories = async () => {
     const { data } = await axios.get(`${API}/categories`);
     setCategories(data.data || data);
@@ -72,17 +78,21 @@ export default function ProductManagement() {
     Promise.all([fetchCategories(), fetchProducts(), fetchAttributes()]);
   }, []);
 
-  /** ============ CRUD PRODUCT ============ */
+  /* ================= CRUD PRODUCT ================= */
   const handleAddOrEdit = async (prod) => {
     if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
+
     const isEdit = !!selectedProduct;
-    const data = await saveProduct(prod, isEdit);
-    const ProductID = data.ProductID;
+
+    const res = await saveProduct(prod, isEdit);
+    const ProductID = res.ProductID;
 
     for (const v of prod.variants || []) {
       const isVarEdit = !!v.VariantID;
-      const varData = await saveVariant(ProductID, v, isVarEdit);
-      const variantId = varData.VariantID || v.VariantID;
+      const saved = await saveVariant(ProductID, v, isVarEdit);
+
+      const variantId = saved.VariantID || v.VariantID;
+
       if (v.images?.length && variantId) {
         for (const img of v.images) {
           if (typeof img === "string" && img.startsWith("data:image")) {
@@ -91,8 +101,9 @@ export default function ProductManagement() {
         }
       }
     }
-    setDialogOpen(false);
+
     setSelectedProduct(null);
+    setDialogOpen(false);
     fetchProducts();
   };
 
@@ -109,12 +120,18 @@ export default function ProductManagement() {
 
   const handleDeleteVariant = async (variantId, index, product, setProduct) => {
     if (variantId) await deleteVariant(variantId);
+
     const updated = [...product.variants];
     updated.splice(index, 1);
+
     setProduct({ ...product, variants: updated });
   };
 
-  /** ============ CRUD ATTRIBUTE ============ */
+  const handleDeleteImage = async (variantId, imageId) => {
+    await deleteImage(imageId);
+  };
+
+  /* ================= CRUD ATTRIBUTE ================= */
   const handleAddAttribute = async () => {
     if (!newAttrName.trim()) return;
     await createAttribute(newAttrName);
@@ -143,53 +160,52 @@ export default function ProductManagement() {
     fetchAttributes();
   };
 
-  const handleDeleteImage = async (variantId, imageId) => {
-    await deleteImage(imageId);
-  };
-
-  /** ============ SEARCH ============ */
+  /* ================= SEARCH ================= */
   const filteredProducts = products.filter((p) => {
-    const keyword = search.toLowerCase().trim();
+    const s = search.toLowerCase();
     return (
-      p.ProductName?.toLowerCase().includes(keyword) ||
-      p.ProductCode?.toLowerCase().includes(keyword) ||
-      p.CategoryName?.toLowerCase().includes(keyword)
+      p.ProductName?.toLowerCase().includes(s) ||
+      p.ProductCode?.toLowerCase().includes(s) ||
+      p.CategoryName?.toLowerCase().includes(s)
     );
   });
-
   return (
-    <div className="flex min-h-screen bg-[#EDEDED]">
+    <div className="flex min-h-screen bg-[#F5F5F5]">
       <Sidebar />
-      <div className="flex-1 sm:p-6 lg:p-8 p-6 min-w-0">
-        {/* HEADER */}
+
+      <div className="flex-1 ml-64 p-6 lg:p-8">
+        {/* ================= HEADER ================= */}
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-teal-700 text-center md:text-left">
+          <h1 className="text-2xl font-semibold text-teal-700 tracking-tight">
             Quản Lý Sản Phẩm
           </h1>
         </header>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 
-          {/* SEARCH LEFT */}
+        {/* ================= SEARCH + BUTTONS ================= */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          {/* Search */}
           <div className="relative w-full sm:w-80">
             <Search
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
             />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm theo tên, ProductCode hoặc danh mục…"
-              className="w-full pl-9 pr-3 py-2 rounded-lg border shadow-sm focus:ring-2 focus:ring-teal-500 outline-none bg-white text-sm"
+              placeholder="Tìm tên, mã sản phẩm hoặc danh mục…"
+              className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm
+                         focus:ring-2 focus:ring-teal-500 outline-none text-sm"
             />
           </div>
 
-          {/* BUTTONS RIGHT */}
+          {/* Buttons */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setAttrDialogOpen(true)}
-              className="flex items-center bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 shadow-md text-sm sm:text-base"
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 
+                         text-white px-4 py-2 rounded-xl shadow-md text-sm"
             >
-              <Settings size={18} className="mr-2" /> Thuộc tính
+              <Settings size={18} /> Thuộc tính
             </button>
 
             <button
@@ -197,15 +213,16 @@ export default function ProductManagement() {
                 setSelectedProduct(null);
                 setDialogOpen(true);
               }}
-              className="flex items-center bg-teal-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-teal-700 shadow-md text-sm sm:text-base"
+              className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 
+                         text-white px-4 py-2 rounded-xl shadow-md text-sm"
             >
-              <Plus size={18} className="mr-2" /> Thêm sản phẩm
+              <Plus size={18} /> Thêm sản phẩm
             </button>
           </div>
-
         </div>
 
-        <div className="overflow-x-auto min-w-0">
+        {/* ================= PRODUCT TABLE ================= */}
+        <div className="overflow-x-auto">
           <ProductTable
             products={filteredProducts}
             loading={loading}
@@ -214,6 +231,7 @@ export default function ProductManagement() {
           />
         </div>
 
+        {/* ================= PRODUCT DIALOG ================= */}
         <ProductDialog
           isOpen={isDialogOpen}
           onClose={() => {
@@ -228,45 +246,48 @@ export default function ProductManagement() {
           onDeleteVariant={handleDeleteVariant}
         />
 
-        {/* ATTRIBUTE DIALOG */}
+        {/* ================= ATTRIBUTE DIALOG ================= */}
         {isAttrDialogOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-2 sm:px-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[700px] max-h-[85vh] overflow-y-auto p-4 sm:p-6 relative">
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[700px] max-h-[90vh] overflow-y-auto p-6 relative animate-scaleIn">
+
               <button
                 onClick={() => setAttrDialogOpen(false)}
-                className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-3 text-slate-500 hover:text-red-500"
               >
                 ✕
               </button>
 
-              <h2 className="text-lg sm:text-xl font-bold text-indigo-600 mb-4 text-center sm:text-left">
+              <h2 className="text-xl font-bold text-indigo-600 mb-4">
                 Quản lý thuộc tính
               </h2>
 
-              <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              {/* Add Attribute */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-5">
                 <input
-                  className="flex-1 border rounded-lg px-3 py-2 text-sm sm:text-base"
+                  className="flex-1 border rounded-lg px-3 py-2 text-sm"
                   placeholder="Nhập tên thuộc tính mới"
                   value={newAttrName}
                   onChange={(e) => setNewAttrName(e.target.value)}
                 />
                 <button
                   onClick={handleAddAttribute}
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm sm:text-base"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm"
                 >
                   + Thêm
                 </button>
               </div>
 
+              {/* Attributes List */}
               {attributes.map((a) => (
                 <div
                   key={a.AttributeID}
-                  className="border-b pb-3 mb-4 last:border-none last:pb-0"
+                  className="border-b pb-4 mb-4 last:border-none"
                 >
                   <div className="flex justify-between items-center mb-2">
                     {editingAttr === a.AttributeID ? (
                       <input
-                        className="border px-2 py-1 rounded-md flex-1 text-sm sm:text-base"
+                        className="border px-3 py-1 rounded-md flex-1"
                         defaultValue={a.AttributeName}
                         onBlur={(e) =>
                           handleUpdateAttr(a.AttributeID, e.target.value)
@@ -274,12 +295,12 @@ export default function ProductManagement() {
                         autoFocus
                       />
                     ) : (
-                      <h3 className="font-semibold text-gray-800 text-sm sm:text-base">
+                      <h3 className="font-semibold text-slate-800">
                         {a.AttributeName}
                       </h3>
                     )}
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <button
                         onClick={() => setEditingAttr(a.AttributeID)}
                         className="text-yellow-600 hover:text-yellow-800"
@@ -295,11 +316,12 @@ export default function ProductManagement() {
                     </div>
                   </div>
 
-                  <div className="ml-2 sm:ml-4 space-y-1">
+                  {/* Attribute Values */}
+                  <div className="ml-3 space-y-2">
                     {a.values?.map((v) => (
                       <div
                         key={v.AttributeValueID}
-                        className="flex justify-between bg-gray-50 px-3 py-1 rounded-md text-sm sm:text-base"
+                        className="flex justify-between items-center bg-slate-50 px-3 py-1 rounded-md"
                       >
                         <span>{v.Value}</span>
                         <button
@@ -311,29 +333,33 @@ export default function ProductManagement() {
                       </div>
                     ))}
 
+                    {/* Add new value */}
                     <div className="flex gap-2 mt-2">
                       <input
                         ref={(el) => (a.inputRef = el)}
-                        className="flex-1 border rounded px-3 py-1 text-sm"
-                        placeholder="Thêm giá trị mới"
+                        className="flex-1 border rounded px-3 py-1 text-sm outline-none"
+                        placeholder="Thêm giá trị…"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
-                            handleAddValue(a.AttributeID, e.target.value);
-                            e.target.value = "";
+                            const val = e.target.value.trim();
+                            if (val) {
+                              handleAddValue(a.AttributeID, val);
+                              e.target.value = "";
+                            }
                           }
                         }}
                       />
+
                       <button
-                        onClick={(e) => {
-                          const val =
-                            e.target.previousSibling?.value?.trim() || "";
+                        onClick={() => {
+                          const val = a.inputRef?.value?.trim();
                           if (val) {
                             handleAddValue(a.AttributeID, val);
                             a.inputRef.value = "";
                           }
                         }}
-                        className="bg-teal-600 text-white px-3 py-1 rounded-md hover:bg-teal-700 text-sm"
+                        className="bg-teal-600 text-white px-3 py-1 rounded-lg hover:bg-teal-700 text-sm"
                       >
                         + Giá trị
                       </button>
@@ -344,7 +370,7 @@ export default function ProductManagement() {
 
               <button
                 onClick={() => setAttrDialogOpen(false)}
-                className="w-full mt-4 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 text-sm sm:text-base"
+                className="w-full mt-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
               >
                 Đóng
               </button>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { X } from "lucide-react";
 
 export default function AddVoucherModal({ onSubmit, onClose }) {
   const [data, setData] = useState({
@@ -13,130 +14,147 @@ export default function AddVoucherModal({ onSubmit, onClose }) {
     Status: 1,
   });
 
-  const input = "border p-2 rounded w-full";
+  const inputClass =
+    "w-full p-2 rounded-xl border border-slate-300 bg-white shadow-sm focus:ring-2 focus:ring-teal-500 outline-none";
 
-  const updateField = (key, val) => {
-    setData((prev) => ({ ...prev, [key]: val }));
-  };
+  const update = (k, v) => setData({ ...data, [k]: v });
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50 animate-fadeIn">
       <form
-        className="bg-white p-6 rounded-xl w-[460px]"
+        className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl animate-scaleIn relative"
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit(data);
         }}
       >
-        <h2 className="text-lg font-bold mb-4">Thêm Voucher</h2>
+        {/* Close */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 text-slate-500 hover:text-red-500 transition"
+        >
+          <X size={22} />
+        </button>
 
-        <label>Mã voucher</label>
-        <input
-          className={input}
-          value={data.Code}
-          onChange={(e) => updateField("Code", e.target.value)}
-        />
+        <h2 className="text-xl font-semibold text-teal-700 mb-4">
+          Thêm Voucher
+        </h2>
 
-        <div className="grid grid-cols-2 gap-3 mt-3">
+        <div className="space-y-3">
           <div>
-            <label>Loại</label>
-            <select
-              className={input}
-              value={data.Type}
-              onChange={(e) => updateField("Type", e.target.value)}
-            >
-              <option value="percent">Phần trăm</option>
-              <option value="fixed">Số tiền</option>
-            </select>
-          </div>
-
-          <div>
-            <label>Giá trị</label>
+            <label className="text-sm">Mã voucher</label>
             <input
-              type="number"
-              className={input}
-              value={data.DiscountValue}
-              onChange={(e) => updateField("DiscountValue", Number(e.target.value))}
+              className={inputClass}
+              value={data.Code}
+              onChange={(e) => update("Code", e.target.value)}
             />
           </div>
 
-          <div>
-            <label>Đơn tối thiểu</label>
-            <input
-              type="number"
-              className={input}
-              value={data.MinOrder}
-              onChange={(e) => updateField("MinOrder", Number(e.target.value))}
-            />
-          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm">Loại</label>
+              <select
+                className={inputClass}
+                value={data.Type}
+                onChange={(e) => update("Type", e.target.value)}
+              >
+                <option value="percent">Phần trăm</option>
+                <option value="fixed">Số tiền</option>
+              </select>
+            </div>
 
-          <div>
-            <label>Giảm tối đa</label>
-            <input
-              type="number"
-              disabled={data.Type === "fixed"}
-              className={`${input} ${
-                data.Type === "fixed" ? "bg-gray-200 cursor-not-allowed" : ""
-              }`}
-              value={data.Type === "fixed" ? 0 : data.MaxDiscount}
-              onChange={(e) =>
-                updateField("MaxDiscount", Number(e.target.value))
-              }
-            />
-          </div>
+            <div>
+              <label className="text-sm">Giá trị</label>
+              <input
+                type="number"
+                className={inputClass}
+                value={data.DiscountValue}
+                onChange={(e) => update("DiscountValue", Number(e.target.value))}
+              />
+            </div>
 
-          <div>
-            <label>Lượt sử dụng</label>
-            <input
-              type="number"
-              className={input}
-              value={data.Quantity}
-              onChange={(e) => updateField("Quantity", Number(e.target.value))}
-            />
-          </div>
+            <div>
+              <label className="text-sm">Đơn tối thiểu</label>
+              <input
+                type="number"
+                className={inputClass}
+                value={data.MinOrder}
+                onChange={(e) => update("MinOrder", Number(e.target.value))}
+              />
+            </div>
 
-          <div>
-            <label>Ngày bắt đầu</label>
-            <input
-              type="date"
-              className={input}
-              value={data.StartDate}
-              onChange={(e) => updateField("StartDate", e.target.value)}
-            />
-          </div>
+            <div>
+              <label className="text-sm">Giảm tối đa</label>
+              <input
+                type="number"
+                disabled={data.Type === "fixed"}
+                className={`${inputClass} ${
+                  data.Type === "fixed"
+                    ? "bg-slate-200 cursor-not-allowed"
+                    : ""
+                }`}
+                value={data.Type === "fixed" ? 0 : data.MaxDiscount}
+                onChange={(e) =>
+                  update("MaxDiscount", Number(e.target.value))
+                }
+              />
+            </div>
 
-          <div>
-            <label>Ngày kết thúc</label>
-            <input
-              type="date"
-              className={input}
-              value={data.EndDate}
-              onChange={(e) => updateField("EndDate", e.target.value)}
-            />
-          </div>
+            <div>
+              <label className="text-sm">Lượt sử dụng</label>
+              <input
+                type="number"
+                className={inputClass}
+                value={data.Quantity}
+                onChange={(e) => update("Quantity", Number(e.target.value))}
+              />
+            </div>
 
-          <div className="col-span-2">
-            <label>Trạng thái</label>
-            <select
-              className={input}
-              value={data.Status}
-              onChange={(e) => updateField("Status", Number(e.target.value))}
-            >
-              <option value={1}>Hoạt động</option>
-              <option value={0}>Khoá</option>
-            </select>
+            <div>
+              <label className="text-sm">Bắt đầu</label>
+              <input
+                type="date"
+                className={inputClass}
+                value={data.StartDate}
+                onChange={(e) => update("StartDate", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm">Kết thúc</label>
+              <input
+                type="date"
+                className={inputClass}
+                value={data.EndDate}
+                onChange={(e) => update("EndDate", e.target.value)}
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="text-sm">Trạng thái</label>
+              <select
+                className={inputClass}
+                value={data.Status}
+                onChange={(e) => update("Status", Number(e.target.value))}
+              >
+                <option value={1}>Hoạt động</option>
+                <option value={0}>Khoá</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-5">
+        <div className="mt-5 flex justify-end gap-2">
           <button
-            onClick={onClose}
             type="button"
-            className="px-4 py-2 bg-gray-200 rounded"
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-200 rounded-xl hover:bg-slate-300"
           >
             Hủy
           </button>
-          <button className="px-4 py-2 bg-teal-600 text-white rounded">
+
+          <button className="px-5 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 shadow">
             Thêm
           </button>
         </div>

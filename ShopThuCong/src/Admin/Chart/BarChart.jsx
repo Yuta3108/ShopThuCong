@@ -1,24 +1,40 @@
 import React from "react";
 import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+} from "chart.js";
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 export default function BarChart() {
   const data = {
-    labels: ["M","T","W","T","F","S","S"],
+    labels: ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov"],
     datasets: [
       {
-        label: "Website Views",
-        data: [45, 20, 12, 18, 40, 32, 36],
-        backgroundColor: "#3b82f6",
-        borderRadius: 4,
+        label: "Visitors",
+        data: [500, 640, 720, 590, 880, 760, 820, 900],
+        backgroundColor: "#10b981",
+        borderRadius: 8,
       },
     ],
   };
+
   return (
-    <div>
-      <h4 className="text-sm text-black mb-2">Website Views</h4>
-      <Bar data={data} options={{ responsive: true, plugins: { legend: { display: false }}}} />
-    </div>
+    <Bar
+      data={data}
+      options={{
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: "#475569" }, grid: { display: false } },
+          y: { ticks: { color: "#475569" }, grid: { color: "#e5e7eb" } },
+        },
+      }}
+    />
   );
 }

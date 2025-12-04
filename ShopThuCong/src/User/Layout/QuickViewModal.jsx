@@ -138,7 +138,7 @@ export default function QuickViewModal({ product, onClose }) {
                     details.ImageURL) ??
                   "https://placehold.co/500x500"
                 }
-                className="w-full h-[320px] md:h-[360px] object-cover"
+                className="w-full h-[360px] md:h-[360px] object-cover"
                 alt={details.ProductName}
               />
             </div>
@@ -208,7 +208,6 @@ export default function QuickViewModal({ product, onClose }) {
               Tình trạng:{" "}
               {stock > 0 ? (
                 <span className="font-medium text-emerald-600 line-through decoration-transparent">
-                  {/* để tránh dùng xanh, đổi luôn nè */}
                   <span className="font-medium text-rose-500">
                     Còn hàng ({stock})
                   </span>

@@ -92,9 +92,11 @@ export default function Header() {
             to="/"
             className="flex items-center gap-2 group whitespace-nowrap"
           >
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-teal-500 via-teal-400 to-emerald-400 shadow-[0_10px_25px_rgba(45,212,191,0.55)] flex items-center justify-center text-white font-bold text-lg group-hover:scale-[1.03] transition-transform">
-              TF
-            </div>
+            <img
+              src="/LogoHinh.png"   // ảnh bỏ trong public/logo.png
+              alt="Logo"
+              className="w-10 h-10 rounded-2xl object-cover group-hover:scale-[1.05] transition-all"
+            ></img>
             <div className="flex flex-col leading-tight">
               <span className="text-base md:text-lg font-semibold tracking-wide text-slate-900">
                 ThenFong Store
