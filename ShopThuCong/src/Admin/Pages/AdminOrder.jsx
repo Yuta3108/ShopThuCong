@@ -32,7 +32,9 @@ export default function AdminOrderPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [removing, setRemoving] = useState(null);
-
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleSidebar = (state) =>
+    setIsOpen(state !== undefined ? state : !isOpen);
   // Popup trạng thái
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -44,7 +46,7 @@ export default function AdminOrderPage() {
 
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Protect route
+  // PROTECT ROUTE
   if (!user || user.role !== "admin") {
     return (
       <div className="flex justify-center items-center h-screen text-red-600 font-semibold">
@@ -53,7 +55,7 @@ export default function AdminOrderPage() {
     );
   }
 
-  // Fetch orders
+  // FETCH ORDERS
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -66,7 +68,7 @@ export default function AdminOrderPage() {
     fetchOrders();
   }, []);
 
-  // Delete order
+  // DELETE
   const handleDelete = async (id) => {
     if (!window.confirm("Xoá đơn hàng này?")) return;
 
@@ -78,7 +80,7 @@ export default function AdminOrderPage() {
     }, 200);
   };
 
-  // Update status
+  // UPDATE STATUS
   const handleUpdateStatus = async (e) => {
     e.preventDefault();
     try {
@@ -100,7 +102,7 @@ export default function AdminOrderPage() {
     }
   };
 
-  // View detail
+  // VIEW DETAIL
   const handleViewDetail = async (id) => {
     try {
       setLoadingDetail(true);
@@ -112,7 +114,7 @@ export default function AdminOrderPage() {
     }
   };
 
-  // Status color UI
+  // STATUS COLOR
   const statusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "pending":
@@ -128,7 +130,7 @@ export default function AdminOrderPage() {
     }
   };
 
-  // Filter search
+  // FILTER
   const filtered = orders.filter((o) => {
     const s = search.toLowerCase();
     return (
@@ -140,17 +142,18 @@ export default function AdminOrderPage() {
 
   return (
     <div className="flex bg-[#F5F5F5] min-h-screen">
-      <Sidebar />
+      <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
-      <div className="flex-1 ml-64 p-6">
+      {/* CONTENT */}
+      <div className="flex-1 md:ml-64 p-4 sm:p-6">
 
         {/* HEADER */}
         <h1 className="text-2xl font-semibold text-slate-800 tracking-tight mb-6">
           Quản Lý Đơn Hàng
         </h1>
 
-        {/* SEARCH BAR */}
-        <div className="flex flex-col sm:flex-row sm:justify-between mb-5 gap-3">
+        {/* SEARCH */}
+        <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-6">
           <div className="relative w-full sm:w-80">
             <Search
               size={18}
@@ -160,106 +163,153 @@ export default function AdminOrderPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm theo mã đơn / tên / SĐT..."
-              className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm 
+              className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm
                          focus:ring-2 focus:ring-teal-500 outline-none text-sm"
             />
           </div>
         </div>
 
-        {/* TABLE */}
-        {loading ? (
-          <p className="text-center text-slate-500 py-10">Đang tải...</p>
-        ) : (
-          <div className="overflow-x-auto bg-white rounded-2xl shadow-md border">
-            <table className="min-w-full text-[13px] text-slate-700">
+        {/* ================= MOBILE LIST ================= */}
+        <div className="grid grid-cols-1 md:hidden gap-4">
+          {filtered.map((o) => (
+            <div
+              key={o.OrderID}
+              className="bg-white border p-4 rounded-xl shadow hover:shadow-md transition"
+            >
+              {/* Info */}
+              <div className="flex justify-between">
+                <span className="font-semibold text-slate-800">
+                  Đơn #{o.OrderID}
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor(
+                    o.Status
+                  )}`}
+                >
+                  {o.Status}
+                </span>
+              </div>
 
-              {/* TABLE HEADER */}
-              <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
-                <tr>
-                  <th className="p-3 text-left rounded-tl-2xl">ID</th>
-                  <th classname="p-3 text-left">Người nhận</th>
-                  <th className="p-3 text-left">SĐT</th>
-                  <th className="p-3 text-left">Email</th>
-                  <th className="p-3 text-left">Thanh toán</th>
-                  <th className="p-3 text-left">Tổng</th>
-                  <th className="p-3 text-left">Trạng thái</th>
-                  <th className="p-3 text-center rounded-tr-2xl">Hành động</th>
-                </tr>
-              </thead>
+              <p className="text-sm text-slate-600 mt-1">{o.ReceiverName}</p>
+              <p className="text-xs text-slate-500">{o.Phone}</p>
 
-              {/* TABLE BODY */}
-              <tbody>
-                {filtered.map((o, i) => (
-                  <tr
-                    key={o.OrderID}
-                    className={`border-b transition-all ${
-                      i % 2 === 0 ? "bg-slate-50" : "bg-white"
-                    } hover:bg-teal-50/60 ${
-                      removing === o.OrderID ? "opacity-0 scale-[.98]" : ""
-                    }`}
-                  >
-                    <td className="p-3 font-medium">{o.OrderID}</td>
-                    <td className="p-3 font-medium">{o.ReceiverName}</td>
-                    <td className="p-3">{o.Phone}</td>
-                    <td className="p-3">{o.Email}</td>
+              <p className="text-sm text-teal-700 font-semibold mt-2">
+                {formatMoney(o.Total)}₫
+              </p>
 
-                    <td className="p-3 uppercase font-semibold text-slate-700">
-                      {o.PaymentMethod}
-                    </td>
+              {/* ACTIONS */}
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    setEditData(o);
+                    setShowEdit(true);
+                  }}
+                  className="flex-1 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600"
+                >
+                  Sửa
+                </button>
 
-                    <td className="p-3 font-bold text-teal-700">
-                      {formatMoney(o.Total)}₫
-                    </td>
+                <button
+                  onClick={() => handleViewDetail(o.OrderID)}
+                  className="flex-1 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  Chi tiết
+                </button>
 
-                    <td className="p-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${statusColor(
-                          o.Status
-                        )}`}
+                <button
+                  onClick={() => handleDelete(o.OrderID)}
+                  className="flex-1 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                >
+                  Xoá
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ================= DESKTOP TABLE ================= */}
+        <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-md border">
+          <table className="min-w-full text-[13px] text-slate-700">
+
+            <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
+              <tr>
+                <th className="p-3 text-left rounded-tl-2xl">ID</th>
+                <th className="p-3 text-left">Người nhận</th>
+                <th className="p-3 text-left">SĐT</th>
+                <th className="p-3 text-left">Email</th>
+                <th className="p-3 text-left">Thanh toán</th>
+                <th className="p-3 text-left">Tổng</th>
+                <th className="p-3 text-left">Trạng thái</th>
+                <th className="p-3 text-center rounded-tr-2xl">Hành động</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filtered.map((o, i) => (
+                <tr
+                  key={o.OrderID}
+                  className={`border-b transition-all ${
+                    i % 2 === 0 ? "bg-slate-50" : "bg-white"
+                  } hover:bg-teal-50/60 ${
+                    removing === o.OrderID ? "opacity-0 scale-[.98]" : ""
+                  }`}
+                >
+                  <td className="p-3 font-medium">{o.OrderID}</td>
+                  <td className="p-3 font-medium">{o.ReceiverName}</td>
+                  <td className="p-3">{o.Phone}</td>
+                  <td className="p-3">{o.Email}</td>
+
+                  <td className="p-3 uppercase font-semibold text-slate-700">
+                    {o.PaymentMethod}
+                  </td>
+
+                  <td className="p-3 font-bold text-teal-700">
+                    {formatMoney(o.Total)}₫
+                  </td>
+
+                  <td className="p-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${statusColor(
+                        o.Status
+                      )}`}
+                    >
+                      {o.Status}
+                    </span>
+                  </td>
+
+                  <td className="p-3">
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => {
+                          setEditData(o);
+                          setShowEdit(true);
+                        }}
+                        className="p-2 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-yellow-700 shadow-sm transition"
                       >
-                        {o.Status}
-                      </span>
-                    </td>
+                        <Pencil size={18} />
+                      </button>
 
-                    <td className="p-3">
-                      <div className="flex justify-center gap-3">
-                        
-                        {/* EDIT */}
-                        <button
-                          onClick={() => {
-                            setEditData(o);
-                            setShowEdit(true);
-                          }}
-                          className="p-2 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-yellow-700 shadow-sm transition"
-                        >
-                          <Pencil size={18} />
-                        </button>
+                      <button
+                        onClick={() => handleViewDetail(o.OrderID)}
+                        className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-600 shadow-sm transition"
+                      >
+                        <Eye size={18} />
+                      </button>
 
-                        {/* DETAILS */}
-                        <button
-                          onClick={() => handleViewDetail(o.OrderID)}
-                          className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-600 shadow-sm transition"
-                        >
-                          <Eye size={18} />
-                        </button>
+                      <button
+                        onClick={() => handleDelete(o.OrderID)}
+                        className="p-2 bg-red-50 hover:bg-red-100 rounded-lg text-red-600 shadow-sm transition"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
 
-                        {/* DELETE */}
-                        <button
-                          onClick={() => handleDelete(o.OrderID)}
-                          className="p-2 bg-red-50 hover:bg-red-100 rounded-lg text-red-600 shadow-sm transition"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-
-            </table>
-          </div>
-        )}
+          </table>
+        </div>
 
         {/* POPUP DETAIL */}
         <OrderDetailModal
@@ -276,6 +326,7 @@ export default function AdminOrderPage() {
           setEditData={setEditData}
           onSubmit={handleUpdateStatus}
         />
+
       </div>
     </div>
   );

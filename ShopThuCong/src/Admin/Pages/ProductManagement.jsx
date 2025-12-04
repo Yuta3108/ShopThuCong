@@ -17,8 +17,11 @@ import {
   createAttributeValue,
   deleteAttributeValue,
 } from "../Pages/Products/productService";
+
 import axios from "axios";
+
 const API = "https://backend-eta-ivory-29.vercel.app/api";
+
 export default function ProductManagement() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -27,6 +30,7 @@ export default function ProductManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  // Dialogs
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
@@ -37,7 +41,12 @@ export default function ProductManagement() {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  /* ================= Axios Client ================= */
+  // ================= Sidebar Mobile =================
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleSidebar = (state) =>
+    setIsOpen(state !== undefined ? state : !isOpen);
+
+  // ================= Axios Client =================
   const axiosClient = axios.create({
     baseURL: API,
     headers: { "Content-Type": "application/json" },
@@ -48,7 +57,7 @@ export default function ProductManagement() {
     return config;
   });
 
-  /* ================= Check Admin ================= */
+  // ================= Check Admin =================
   if (!user || user.role !== "admin") {
     return (
       <div className="flex justify-center items-center h-screen text-red-600 font-semibold p-6 text-center">
@@ -57,7 +66,7 @@ export default function ProductManagement() {
     );
   }
 
-  /* ================= FETCH ================= */
+  // ================= FETCH =================
   const fetchCategories = async () => {
     const { data } = await axios.get(`${API}/categories`);
     setCategories(data.data || data);
@@ -78,7 +87,7 @@ export default function ProductManagement() {
     Promise.all([fetchCategories(), fetchProducts(), fetchAttributes()]);
   }, []);
 
-  /* ================= CRUD PRODUCT ================= */
+  // ================= CRUD PRODUCT =================
   const handleAddOrEdit = async (prod) => {
     if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
 
@@ -107,12 +116,14 @@ export default function ProductManagement() {
     fetchProducts();
   };
 
+  // EDIT
   const handleEdit = async (id) => {
     const { data } = await axios.get(`${API}/products/${id}`);
     setSelectedProduct(data);
     setDialogOpen(true);
   };
 
+  // DELETE
   const handleDelete = async (id) => {
     await deleteProduct(id);
     setProducts((prev) => prev.filter((p) => p.ProductID !== id));
@@ -131,7 +142,7 @@ export default function ProductManagement() {
     await deleteImage(imageId);
   };
 
-  /* ================= CRUD ATTRIBUTE ================= */
+  // ================= CRUD ATTRIBUTE =================
   const handleAddAttribute = async () => {
     if (!newAttrName.trim()) return;
     await createAttribute(newAttrName);
@@ -160,7 +171,7 @@ export default function ProductManagement() {
     fetchAttributes();
   };
 
-  /* ================= SEARCH ================= */
+  // ================= SEARCH =================
   const filteredProducts = products.filter((p) => {
     const s = search.toLowerCase();
     return (
@@ -169,20 +180,34 @@ export default function ProductManagement() {
       p.CategoryName?.toLowerCase().includes(s)
     );
   });
+
   return (
     <div className="flex min-h-screen bg-[#F5F5F5]">
-      <Sidebar />
 
-      <div className="flex-1 ml-64 p-6 lg:p-8">
-        {/* ================= HEADER ================= */}
+      {/* SIDEBAR */}
+      <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
+
+      {/* MOBILE OVERLAY */}
+      {isOpen && (
+        <div
+          onClick={() => toggleSidebar(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden"
+        />
+      )}
+
+      {/* CONTENT */}
+      <div className="flex-1 md:ml-64 p-4 sm:p-6 lg:p-8">
+
+        {/* HEADER */}
         <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <h1 className="text-2xl font-semibold text-teal-700 tracking-tight">
             Quản Lý Sản Phẩm
           </h1>
         </header>
 
-        {/* ================= SEARCH + BUTTONS ================= */}
+        {/* SEARCH + BUTTONS */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+
           {/* Search */}
           <div className="relative w-full sm:w-80">
             <Search
@@ -221,7 +246,7 @@ export default function ProductManagement() {
           </div>
         </div>
 
-        {/* ================= PRODUCT TABLE ================= */}
+        {/* PRODUCT TABLE */}
         <div className="overflow-x-auto">
           <ProductTable
             products={filteredProducts}
@@ -231,7 +256,7 @@ export default function ProductManagement() {
           />
         </div>
 
-        {/* ================= PRODUCT DIALOG ================= */}
+        {/* PRODUCT DIALOG */}
         <ProductDialog
           isOpen={isDialogOpen}
           onClose={() => {
@@ -246,10 +271,10 @@ export default function ProductManagement() {
           onDeleteVariant={handleDeleteVariant}
         />
 
-        {/* ================= ATTRIBUTE DIALOG ================= */}
+        {/* ATTRIBUTE DIALOG */}
         {isAttrDialogOpen && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[700px] max-h-[90vh] overflow-y-auto p-6 relative animate-scaleIn">
+            <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[700px] max-h-[90vh] overflow-y-auto p-6 relative">
 
               <button
                 onClick={() => setAttrDialogOpen(false)}
@@ -333,7 +358,7 @@ export default function ProductManagement() {
                       </div>
                     ))}
 
-                    {/* Add new value */}
+                    {/* Add Value */}
                     <div className="flex gap-2 mt-2">
                       <input
                         ref={(el) => (a.inputRef = el)}

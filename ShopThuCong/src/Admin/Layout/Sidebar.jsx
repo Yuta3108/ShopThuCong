@@ -35,8 +35,8 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
     <>
       {/* MOBILE BUTTON */}
       <button
-        onClick={toggleSidebar}
-        className="md:hidden fixed top-3 left-3 z-50 bg-white/90 backdrop-blur 
+        onClick={() => toggleSidebar()}
+        className="md:hidden fixed top-3 left-3 z-[9999] bg-white/90 backdrop-blur 
                    border border-slate-200 shadow-md rounded-xl p-2 active:scale-95 transition-all"
       >
         <LayoutDashboard size={20} />
