@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import { useNavigate } from "react-router-dom";
 
 import BarChart from "../Chart/BarChart";
 import LineChart from "../Chart/LineChart";
@@ -9,6 +10,26 @@ import KPIcard from "../Chart/KPIcard";
 export default function Dashboard() {
   const [isOpen, setIsOpen] = useState(false);
   const toggleSidebar = () => setIsOpen(!isOpen);
+
+  const navigate = useNavigate();
+
+  // ================= CHECK TOKEN =================
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      // test decode xem token có hợp lệ không
+      JSON.parse(atob(token.split(".")[1]));
+    } catch (e) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  }, []);
 
   const KPIS = [
     { title: "Tổng doanh thu", value: "32.5M", badge: "+12% so với tháng trước" },
@@ -21,7 +42,6 @@ export default function Dashboard() {
     <div className="flex bg-[#F5F5F5] min-h-screen">
       <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
-      {/* FIX CHỖ LỆCH: CHỈ CẦN ml-64 */}
       <div className="flex-1 ml-64 flex flex-col">
         <Topbar />
 

@@ -1,5 +1,5 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -12,6 +12,15 @@ import {
 
 export default function Sidebar({ isOpen, toggleSidebar }) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const [showLogout, setShowLogout] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setShowLogout(false);
+    navigate("/");
+  };
 
   const menu = [
     { name: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
@@ -33,7 +42,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
         <LayoutDashboard size={20} />
       </button>
 
-      {/* SIDEBAR FIXED CHUẨN */}
+      {/* SIDEBAR */}
       <div
         className={`
           fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 shadow-lg
@@ -82,6 +91,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
 
           {/* LOGOUT */}
           <button
+            onClick={() => setShowLogout(true)}
             className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 
                        hover:bg-slate-100 hover:text-slate-900 mt-4"
           >
@@ -90,6 +100,33 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
           </button>
         </div>
       </div>
+
+      {/* LOGOUT MODAL */}
+      {showLogout && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-72 text-center">
+            <p className="font-semibold text-slate-700 mb-4">
+              Đăng xuất khỏi hệ thống?
+            </p>
+
+            <div className="flex justify-between gap-3">
+              <button
+                onClick={() => setShowLogout(false)}
+                className="flex-1 py-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 transition"
+              >
+                Hủy
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="flex-1 py-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

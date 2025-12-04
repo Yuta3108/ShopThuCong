@@ -1,21 +1,29 @@
 import React, { useState } from "react";
 import { Search, Bell, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Topbar() {
   const [openMenu, setOpenMenu] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
 
   return (
     <header className="sticky top-0 z-40 px-4 md:px-6 py-4">
       {/* FLOATING CARD */}
-      <div className="
+      <div
+        className="
         max-w-6xl mx-auto
         bg-white/70 backdrop-blur-xl
         border border-slate-200/70 shadow-[0_4px_20px_rgba(0,0,0,0.05)]
         rounded-2xl px-5 py-3
         flex items-center justify-between
         transition-all
-      ">
-        
+      "
+      >
         {/* LEFT BRAND */}
         <div className="flex items-center gap-2">
           <span className="text-lg font-semibold text-slate-900 tracking-tight">
@@ -25,14 +33,15 @@ export default function Topbar() {
 
         {/* RIGHT OPTIONS */}
         <div className="flex items-center gap-3 md:gap-4">
-          
           {/* SEARCH BAR */}
-          <div className="
+          <div
+            className="
             hidden md:flex items-center
             bg-slate-100 hover:bg-slate-200
             px-3 py-2 rounded-2xl w-64
             transition shadow-inner active:scale-[0.98]
-          ">
+          "
+          >
             <Search size={18} className="text-slate-500 mr-2" />
             <input
               type="text"
@@ -42,10 +51,12 @@ export default function Topbar() {
           </div>
 
           {/* NOTIFICATION */}
-          <button className="
+          <button
+            className="
             relative hover:bg-slate-200/60
             p-2 rounded-xl transition shadow-sm active:scale-95
-          ">
+          "
+          >
             <Bell size={20} className="text-slate-700" />
             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full shadow" />
           </button>
@@ -66,12 +77,16 @@ export default function Topbar() {
                 alt="Avatar"
               />
               <div className="hidden sm:flex flex-col text-left leading-tight">
-                <span className="font-semibold text-sm text-slate-900">Admin</span>
+                <span className="font-semibold text-sm text-slate-900">
+                  Admin
+                </span>
                 <span className="text-xs text-slate-500">Quản trị viên</span>
               </div>
               <ChevronDown
                 size={18}
-                className={`text-slate-600 transition ${openMenu ? "rotate-180" : ""}`}
+                className={`text-slate-600 transition ${
+                  openMenu ? "rotate-180" : ""
+                }`}
               />
             </button>
 
@@ -93,7 +108,12 @@ export default function Topbar() {
                   Cài đặt
                 </button>
                 <div className="h-px bg-slate-200 my-1" />
-                <button className="w-full text-left px-4 py-2 text-rose-600 hover:bg-rose-50 rounded-lg transition">
+
+                {/* LOGOUT */}
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                >
                   Đăng xuất
                 </button>
               </div>

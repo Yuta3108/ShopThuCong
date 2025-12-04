@@ -7,15 +7,16 @@ const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 // ================= AXIOS CLIENT =================
 const axiosClient = axios.create({
-    baseURL: API,
-    headers: { "Content-Type": "application/json" },
+  baseURL: API,
+  headers: { "Content-Type": "application/json" },
 });
 
 axiosClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
+  const tk = localStorage.getItem("token");
+  if (tk) config.headers.Authorization = `Bearer ${tk}`;
+  return config;
 });
+
 
 // ================= MAIN COMPONENT =================
 export default function AdminCategories() {
@@ -32,7 +33,15 @@ export default function AdminCategories() {
         Slug: "",
         Description: "",
     });
-
+    const user = JSON.parse(localStorage.getItem("user"));
+     
+    if (!user || user.role !== "admin") {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-600 font-semibold">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
+  }
     // ================= FETCH DATA =================
     useEffect(() => {
         const fetchData = async () => {
@@ -194,7 +203,7 @@ export default function AdminCategories() {
                             {/* DESKTOP TABLE */}
                             <div className="hidden md:block overflow-x-auto bg-white rounded-xl shadow border">
                                 <table className="min-w-full text-sm">
-                                    <thead className="bg-teal-600 text-white">
+                                    <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
                                         <tr>
                                             <th className="p-3 text-left">ID</th>
                                             <th className="p-3 text-left">Tên danh mục</th>

@@ -25,7 +25,16 @@ export default function AdminVoucher() {
   const [showAdd, setShowAdd] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState(null);
-
+  const user = JSON.parse(localStorage.getItem("user"));
+     
+    
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-600 font-semibold">
+        Bạn không có quyền truy cập trang này.
+      </div>
+    );
+  }
   // FETCH
   const fetchVouchers = async () => {
     const res = await axiosClient.get("/vouchers");

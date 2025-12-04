@@ -6,6 +6,13 @@ import Footer from "../../Layout/Footer";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
+// ================= FORMAT MONEY =================
+const formatMoney = (value) =>
+  new Intl.NumberFormat("vi-VN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+
 export default function CheckoutPage() {
   const navigate = useNavigate();
 
@@ -13,13 +20,11 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // New states
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [voucherCode, setVoucherCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [note, setNote] = useState("");
 
-  // LẤY USER + CART
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -57,6 +62,7 @@ export default function CheckoutPage() {
         <p className="text-center py-10 text-slate-500">Đang tải…</p>
       </div>
     );
+
   if (!user)
     return (
       <div className="bg-[#F5F5F5] min-h-screen">
@@ -72,7 +78,7 @@ export default function CheckoutPage() {
     0
   );
 
-  // ÁP DỤNG VOUCHER
+  // ================= APPLY VOUCHER =================
   const applyVoucher = async () => {
     const code = voucherCode.trim().toUpperCase();
     if (!code) return alert("Vui lòng nhập mã voucher!");
@@ -84,7 +90,7 @@ export default function CheckoutPage() {
       });
 
       if (res.data.success) {
-        setDiscount(res.data.discount);
+        setDiscount(Number(res.data.discount));
         alert("Áp dụng thành công!");
       } else {
         alert(res.data.message || "Mã không hợp lệ!");
@@ -95,7 +101,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // ĐẶT HÀNG
+  // ================= ORDER =================
   const handleOrder = async () => {
     const token = localStorage.getItem("token");
 
@@ -125,41 +131,32 @@ export default function CheckoutPage() {
 
   const total = Math.max(0, subtotal - discount);
 
-  // UI
+  // ================= UI =================
   return (
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
 
       {/* BREADCRUMB */}
-<div className="w-full bg-transparent">
-  <div className="max-w-6xl mx-auto px-4 md:px-6 py-4">
-    <nav className="flex items-center gap-2 text-sm text-slate-600">
-      <Link to="/" className="hover:text-rose-500">
-        Trang chủ
-      </Link>
-
-      <span className="text-slate-400">›</span>
-
-      <Link to="/cart" className="hover:text-rose-500">
-        Giỏ hàng
-      </Link>
-
-      <span className="text-slate-400">›</span>
-
-      <span className="text-rose-500 font-medium">Thanh toán</span>
-    </nav>
-  </div>
-</div>
+      <div className="w-full bg-transparent">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4">
+          <nav className="flex items-center gap-2 text-sm text-slate-600">
+            <Link to="/" className="hover:text-rose-500">Trang chủ</Link>
+            <span className="text-slate-400">›</span>
+            <Link to="/cart" className="hover:text-rose-500">Giỏ hàng</Link>
+            <span className="text-slate-400">›</span>
+            <span className="text-rose-500 font-medium">Thanh toán</span>
+          </nav>
+        </div>
+      </div>
 
       {/* MAIN */}
       <main className="flex-1 max-w-6xl mx-auto px-4 md:px-6 pb-20 grid grid-cols-1 md:grid-cols-[1.25fr,0.95fr] gap-8">
-        {/* LEFT – THÔNG TIN GIAO HÀNG & THANH TOÁN */}
+        
+        {/* LEFT */}
         <div className="space-y-6">
-          {/* THÔNG TIN GIAO HÀNG */}
+          {/* SHIPPING */}
           <section className="bg-white p-6 rounded-3xl shadow-md border border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900 mb-4">
-              Thông tin giao hàng
-            </h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Thông tin giao hàng</h2>
 
             <div className="space-y-4 text-sm">
               <div>
@@ -195,52 +192,30 @@ export default function CheckoutPage() {
                 <label className="text-slate-600">Địa chỉ</label>
                 <input
                   value={user.Address}
-                  onChange={(e) =>
-                    setUser({ ...user, Address: e.target.value })
-                  }
+                  onChange={(e) => setUser({ ...user, Address: e.target.value })}
                   className="w-full p-2.5 mt-1 border rounded-lg bg-white text-slate-800 focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
                 />
               </div>
             </div>
           </section>
 
-          {/* PHƯƠNG THỨC THANH TOÁN */}
+          {/* PAYMENT METHOD */}
           <section className="bg-white p-6 rounded-3xl shadow-md border border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900 mb-3">
-              Phương thức thanh toán
-            </h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-3">Phương thức thanh toán</h2>
 
             <div className="space-y-3 text-sm text-slate-800">
               <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  value="cod"
-                  checked={paymentMethod === "cod"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="accent-rose-500"
-                />
+                <input type="radio" value="cod" checked={paymentMethod === "cod"} onChange={(e)=>setPaymentMethod(e.target.value)} className="accent-rose-500"/>
                 <span className="font-medium">Thanh toán khi nhận hàng (COD)</span>
               </label>
 
               <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  value="banking"
-                  checked={paymentMethod === "banking"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="accent-rose-500"
-                />
+                <input type="radio" value="banking" checked={paymentMethod==="banking"} onChange={(e)=>setPaymentMethod(e.target.value)} className="accent-rose-500"/>
                 <span>Chuyển khoản ngân hàng</span>
               </label>
 
               <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="radio"
-                  value="momo"
-                  checked={paymentMethod === "momo"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="accent-rose-500"
-                />
+                <input type="radio" value="momo" checked={paymentMethod==="momo"} onChange={(e)=>setPaymentMethod(e.target.value)} className="accent-rose-500"/>
                 <span>Thanh toán qua Momo</span>
               </label>
             </div>
@@ -248,9 +223,7 @@ export default function CheckoutPage() {
 
           {/* NOTE */}
           <section className="bg-white p-6 rounded-3xl shadow-md border border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900 mb-2">
-              Ghi chú đơn hàng
-            </h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">Ghi chú đơn hàng</h2>
 
             <textarea
               className="w-full border p-3 rounded-xl h-24 text-sm text-slate-800 focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
@@ -261,44 +234,35 @@ export default function CheckoutPage() {
           </section>
         </div>
 
-        {/* RIGHT – TÓM TẮT ĐƠN HÀNG */}
+        {/* RIGHT - SUMMARY */}
         <aside className="md:sticky md:top-24 h-fit">
           <section className="bg-white p-6 rounded-3xl shadow-md border border-slate-200">
-            <h2 className="text-xl font-semibold mb-4 text-slate-900">
-              Tóm tắt đơn hàng
-            </h2>
+            <h2 className="text-xl font-semibold mb-4 text-slate-900">Tóm tắt đơn hàng</h2>
 
             <div className="space-y-3 text-sm text-slate-800">
               {cart.map((item) => (
-                <div
-                  key={item.CartItemID}
-                  className="flex justify-between gap-3"
-                >
+                <div key={item.CartItemID} className="flex justify-between gap-3">
                   <span className="flex-1">
                     {item.ProductName} × {item.Quantity}
                   </span>
                   <span className="font-semibold">
-                    {(item.UnitPrice * item.Quantity).toLocaleString()}₫
+                    {formatMoney(item.UnitPrice * item.Quantity)}₫
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Voucher */}
-            <div className="border-t border-slate-200 my-4" />
+            {/* VOUCHER */}
+            <div className="border-t border-slate-200 my-4"></div>
 
-            <h3 className="text-sm font-semibold mb-2 text-slate-900">
-              Mã giảm giá
-            </h3>
+            <h3 className="text-sm font-semibold mb-2 text-slate-900">Mã giảm giá</h3>
 
             <div className="flex gap-2">
               <input
                 className="flex-1 border rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
                 placeholder="Nhập mã voucher..."
                 value={voucherCode}
-                onChange={(e) =>
-                  setVoucherCode(e.target.value.toUpperCase())
-                }
+                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
               />
               <button
                 onClick={applyVoucher}
@@ -310,22 +274,20 @@ export default function CheckoutPage() {
 
             {discount > 0 && (
               <p className="text-emerald-600 mt-2 text-sm font-semibold">
-                Đã giảm {discount.toLocaleString()}₫
+                Đã giảm {formatMoney(discount)}₫
               </p>
             )}
 
-            <div className="border-t border-slate-200 my-4" />
+            <div className="border-t border-slate-200 my-4"></div>
 
             <div className="flex justify-between text-sm text-slate-700 mb-1">
               <span>Tạm tính</span>
-              <span>{subtotal.toLocaleString()}₫</span>
+              <span>{formatMoney(subtotal)}₫</span>
             </div>
 
             <div className="flex justify-between text-sm text-slate-700 mb-1">
               <span>Giảm giá</span>
-              <span className="text-emerald-600">
-                -{discount.toLocaleString()}₫
-              </span>
+              <span className="text-emerald-600">-{formatMoney(discount)}₫</span>
             </div>
 
             <div className="flex justify-between text-sm text-slate-700 mb-3">
@@ -334,11 +296,9 @@ export default function CheckoutPage() {
             </div>
 
             <div className="flex justify-between items-baseline mt-2">
-              <span className="text-sm font-semibold text-slate-900">
-                Tổng cộng
-              </span>
+              <span className="text-sm font-semibold text-slate-900">Tổng cộng</span>
               <span className="text-2xl font-bold text-rose-500">
-                {total.toLocaleString()}₫
+                {formatMoney(total)}₫
               </span>
             </div>
 

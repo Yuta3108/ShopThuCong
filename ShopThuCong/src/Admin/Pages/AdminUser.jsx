@@ -154,7 +154,7 @@ export default function AdminUserPage() {
         ) : (
           <div className="overflow-x-auto bg-white rounded-xl shadow border">
             <table className="min-w-full text-sm">
-              <thead className="bg-teal-600 text-white">
+              <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
                 <tr>
                   <th className="p-3 text-left">ID</th>
                   <th className="p-3 text-left">Họ Tên</th>
