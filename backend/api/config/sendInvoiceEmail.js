@@ -62,7 +62,7 @@ export const sendInvoiceEmail = async (order) => {
       </div>
 
       <div style="background:#e8f4ff;padding:15px;text-align:center;color:#666;font-size:14px;">
-        © 2025 Then Fong Store – Cảm ơn bạn đã ủng hộ 💙
+        © 2025 Then Fong Store – Cảm ơn bạn đã ủng hộ chúng tôi!
       </div>
 
     </div>
