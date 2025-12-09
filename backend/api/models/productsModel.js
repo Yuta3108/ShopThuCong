@@ -109,3 +109,4 @@ export const deleteProduct = async (id) => {
   const [res] = await db.query(`DELETE FROM products WHERE ProductID = ?`, [id]);
   return res.affectedRows > 0;
 };
+

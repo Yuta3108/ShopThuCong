@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { Eye, EyeOff } from "lucide-react";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
 
@@ -149,21 +150,23 @@ function DangKy() {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Mật khẩu"
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm 
-                           focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
-                value={matKhau}
-                onChange={(e) => setMatKhau(e.target.value)}
-                required
+                className="w-full p-3 pr-12 border rounded-xl focus:ring-2 focus:ring-rose-400 outline-none"
+                placeholder="Nhập mật khẩu"
               />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500"
+                className="absolute right-3 top-1/2 -translate-y-1/2 
+                              p-1 rounded-full bg-white/80 backdrop-blur border 
+                              shadow-sm hover:shadow-md hover:border-rose-400 
+                              transition-all duration-200"
               >
-                <span className="text-xl select-none">
-                  {showPassword ? "🙈" : "👁️"}
-                </span>
+                {showPassword ? (
+                  <EyeOff size={18} className="text-slate-600" />
+                ) : (
+                  <Eye size={18} className="text-slate-600" />
+                )}
               </button>
             </div>
 

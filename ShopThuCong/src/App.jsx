@@ -1,6 +1,6 @@
+import { Routes, Route } from "react-router-dom";
 import TrangChu from './User/TrangChu'
 import DangNhap from './User/ChucNang/Auth/DangNhap';
-import { Routes, Route } from "react-router-dom";
 import DangKy from './User/ChucNang/Auth/DangKy';
 import LienHe from './User/Layout/Lienhe';
 import QuenMatKhau from './User/ChucNang/Auth/QuenMK';

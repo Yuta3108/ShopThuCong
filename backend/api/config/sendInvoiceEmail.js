@@ -22,9 +22,10 @@ export const sendInvoiceEmail = async (order) => {
       <div style="padding:20px;">
         <h3 style="color:#1A94FF;">Thông tin giao hàng</h3>
         <p><strong>Họ tên:</strong> ${order.receiverName}</p>
-        <p><strong>Email:</strong> ${order.email}</p>
-        <p><strong>SĐT:</strong> ${order.phone}</p>
-        <p><strong>Địa chỉ:</strong> ${order.address}</p>
+          <p><strong>Email:</strong> ${order.email}</p>
+          <p><strong>SĐT:</strong> ${order.phone}</p>
+          <p><strong>Địa chỉ:</strong> ${order.address}</p>
+          <p><strong>Phương thức thanh toán:</strong> ${order.paymentMethod}</p>
       </div>
 
       <div style="padding:20px;">

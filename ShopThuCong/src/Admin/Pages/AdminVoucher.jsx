@@ -219,13 +219,20 @@ export default function AdminVoucher() {
             vouchers={filtered}
             loading={loading}
             onEdit={(item) => {
-              setEditData({
-                ...item,
-                StartDate: item.StartDate?.slice(0, 10),
-                EndDate: item.EndDate?.slice(0, 10),
-              });
-              setShowEdit(true);
-            }}
+                setEditData({
+                  ...item,
+                  DiscountValue: Number(item.DiscountValue),
+                  MinOrder: Number(item.MinOrder),
+                  MaxDiscount: Number(item.MaxDiscount),
+                  Quantity: Number(item.Quantity),
+                  Status: Number(item.Status),
+
+                  StartDate: item.StartDate?.slice(0, 10),
+                  EndDate: item.EndDate?.slice(0, 10),
+                });
+
+                setShowEdit(true);
+}}
             onDelete={handleDelete}
           />
         </div>

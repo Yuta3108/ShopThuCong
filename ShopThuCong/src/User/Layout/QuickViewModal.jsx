@@ -170,7 +170,7 @@ export default function QuickViewModal({ product, onClose }) {
             {/* VARIANTS */}
             <div className="mt-6">
               <p className="text-sm font-medium text-slate-800 mb-2">
-                Biến thể
+                Thuộc tính
               </p>
               <div className="flex flex-wrap gap-2">
                 {details.variants.map((v) => {
@@ -209,7 +209,7 @@ export default function QuickViewModal({ product, onClose }) {
               {stock > 0 ? (
                 <span className="font-medium text-emerald-600 line-through decoration-transparent">
                   <span className="font-medium text-rose-500">
-                    Còn hàng ({stock})
+                    Còn hàng
                   </span>
                 </span>
               ) : (

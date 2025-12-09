@@ -1,5 +1,15 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Info } from "lucide-react";
+
+// ========= FORMAT MONEY ==========
+const formatMoney = (value) =>
+  new Intl.NumberFormat("vi-VN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+
+const parseMoneyInput = (value) =>
+  Number(String(value).replace(/[^\d]/g, "")) || 0;
 
 export default function ProductDialog({
   isOpen,
@@ -13,6 +23,7 @@ export default function ProductDialog({
 }) {
   const [isSaving, setIsSaving] = useState(false);
   const isEdit = !!initialData;
+
   const [product, setProduct] = useState(
     initialData || {
       CategoryID: "",
@@ -34,13 +45,11 @@ export default function ProductDialog({
       ],
     }
   );
-  useEffect(() => {
-    if (!initialData) {
-      resetForm();
-    }
-  }, [initialData,isOpen]);
 
-  // Cập nhật variant khi edit
+  useEffect(() => {
+    if (!initialData) resetForm();
+  }, [initialData, isOpen]);
+
   useEffect(() => {
     if (initialData) {
       const updatedVariants = (initialData.variants || []).map((v) => {
@@ -58,15 +67,16 @@ export default function ProductDialog({
             }
           }
         }
-        return { 
-        ...v, 
-        images: v.images || [], 
-        attributeValueIds: attrValueIds 
-      };
+
+        return {
+          ...v,
+          images: v.images || [],
+          attributeValueIds: attrValueIds,
+        };
       });
+
       setProduct({ ...initialData, variants: updatedVariants });
     }
-    
   }, [initialData, attributes]);
 
   const handleVariantChange = (i, key, value) => {
@@ -109,26 +119,33 @@ export default function ProductDialog({
     reader.readAsDataURL(file);
   };
 
-  const handleSelectDropdown = (variantIndex, attr, selectedId) => {
+  const handleSelectDropdown = (i, attr, value) => {
     const updated = [...product.variants];
-    const currentIds = updated[variantIndex].attributeValueIds || [];
+    const currentIds = updated[i].attributeValueIds || [];
+
     const filteredIds = currentIds.filter(
       (id) => !attr.values.some((v) => v.AttributeValueID === id)
     );
-    if (selectedId) filteredIds.push(Number(selectedId));
-    updated[variantIndex].attributeValueIds = filteredIds;
+
+    if (value) filteredIds.push(Number(value));
+
+    updated[i].attributeValueIds = filteredIds;
     setProduct({ ...product, variants: updated });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSaving) return;
+
     setIsSaving(true);
+
     const cleanVariants = product.variants.map((v) => ({
       ...v,
       attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
     }));
+
     await onSubmit({ ...product, variants: cleanVariants });
+
     resetForm();
     setIsSaving(false);
   };
@@ -160,7 +177,7 @@ export default function ProductDialog({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-2 sm:px-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[720px] max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
-        {/* Nút đóng */}
+        {/* CLOSE */}
         <button
           onClick={onClose}
           className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
@@ -168,15 +185,14 @@ export default function ProductDialog({
           <X size={22} />
         </button>
 
-        {/* Tiêu đề */}
         <h2 className="text-lg sm:text-xl font-bold text-teal-600 mb-4 mt-1 text-center sm:text-left">
           {isEdit ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ===== Thông tin sản phẩm ===== */}
+          {/* ===== BASIC INFO ===== */}
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
+            className="w-full border rounded-lg px-3 py-2"
             placeholder="Tên sản phẩm"
             value={product.ProductName}
             onChange={(e) =>
@@ -185,7 +201,7 @@ export default function ProductDialog({
           />
 
           <select
-            className="w-full border rounded-lg px-3 py-2 bg-white text-sm sm:text-base"
+            className="w-full border rounded-lg px-3 py-2 bg-white"
             value={product.CategoryID || ""}
             onChange={(e) =>
               setProduct({
@@ -203,15 +219,15 @@ export default function ProductDialog({
           </select>
 
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
-            placeholder="Mã ProductCode sản phẩm"
+            className="w-full border rounded-lg px-3 py-2"
+            placeholder="Mã ProductCode"
             value={product.ProductCode}
-            onChange={(e) => setProduct({ ...product, ProductCode: e.target.value })}
+            onChange={(e) =>
+              setProduct({ ...product, ProductCode: e.target.value })
+            }
           />
-          <p className="text-xs text-gray-500 italic -mt-2">
-            ProductCode sản phẩm phải duy nhất trong toàn hệ thống.
-          </p>
-            {/* ===== Ảnh đại diện sản phẩm ===== */}
+
+          {/* ===== ẢNH ĐẠI DIỆN ===== */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Ảnh đại diện
@@ -221,7 +237,6 @@ export default function ProductDialog({
                 <div className="relative w-24 h-24 border rounded-lg overflow-hidden">
                   <img
                     src={product.ImageURL}
-                    alt="Ảnh đại diện"
                     className="w-full h-full object-cover"
                   />
                   <button
@@ -233,15 +248,17 @@ export default function ProductDialog({
                   </button>
                 </div>
               )}
+
               <label className="w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
                 <span className="text-2xl">＋</span>
                 <input
                   type="file"
-                  accept="image/*"
                   className="hidden"
+                  accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+
                     const reader = new FileReader();
                     reader.onload = () =>
                       setProduct({ ...product, ImageURL: reader.result });
@@ -251,10 +268,11 @@ export default function ProductDialog({
               </label>
             </div>
           </div>
+
           <textarea
-            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
-            placeholder="Mô tả ngắn"
+            className="w-full border rounded-lg px-3 py-2"
             rows={2}
+            placeholder="Mô tả ngắn"
             value={product.ShortDescription}
             onChange={(e) =>
               setProduct({ ...product, ShortDescription: e.target.value })
@@ -262,32 +280,32 @@ export default function ProductDialog({
           />
 
           <input
-            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
+            className="w-full border rounded-lg px-3 py-2"
             placeholder="Chất liệu"
             value={product.Material}
-            onChange={(e) => setProduct({ ...product, Material: e.target.value })}
+            onChange={(e) =>
+              setProduct({ ...product, Material: e.target.value })
+            }
           />
 
           <textarea
-            className="w-full border rounded-lg px-3 py-2 text-sm sm:text-base"
-            placeholder="Mô tả chi tiết"
+            className="w-full border rounded-lg px-3 py-2"
             rows={3}
+            placeholder="Mô tả chi tiết"
             value={product.Description}
             onChange={(e) =>
               setProduct({ ...product, Description: e.target.value })
             }
           />
 
-          {/* ===== Tình trạng ===== */}
+          {/* ===== STATUS ===== */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tình trạng
-            </label>
+            <label className="text-sm font-medium">Tình trạng</label>
             <select
-              className="w-full border rounded-lg px-3 py-2 bg-white text-sm sm:text-base"
+              className="w-full border rounded-lg px-3 py-2 bg-white"
               value={product.IsActive}
               onChange={(e) =>
-                setProduct({ ...product, IsActive: parseInt(e.target.value) })
+                setProduct({ ...product, IsActive: Number(e.target.value) })
               }
             >
               <option value={1}>Đang bán</option>
@@ -295,16 +313,17 @@ export default function ProductDialog({
             </select>
           </div>
 
-          {/* ===== Biến thể sản phẩm ===== */}
+          {/* ======================================================= */}
+          {/* ===============  BIẾN THỂ SẢN PHẨM  ==================== */}
+          {/* ======================================================= */}
           <div className="pt-4 border-t">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-              <h3 className="text-base sm:text-lg font-semibold">
-                Biến thể sản phẩm
-              </h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold">Biến thể sản phẩm</h3>
+
               <button
                 type="button"
                 onClick={addVariant}
-                className="text-teal-600 font-medium hover:underline text-sm sm:text-base"
+                className="text-teal-600 hover:underline text-sm"
               >
                 + Thêm biến thể
               </button>
@@ -313,40 +332,34 @@ export default function ProductDialog({
             {product.variants.map((v, i) => (
               <div
                 key={i}
-                className="bg-gray-50 border rounded-xl p-3 sm:p-4 mb-3 space-y-3"
+                className="bg-gray-50 border rounded-xl p-4 mb-3 space-y-3"
               >
-                {isEdit && v.ProductCode && (
-                  <p className="text-sm text-teal-700 font-semibold">
-                    ProductCode: <span className="text-gray-700">{v.ProductCode}</span>
-                    <Info
-                      size={14}
-                      className="inline ml-1 text-gray-400"
-                      title="ProductCode tự động được sinh bởi hệ thống"
-                    />
-                  </p>
-                )}
-
-                {/* Giá & Tồn kho */}
+                {/* ===== PRICE + STOCK ===== */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* ==== PRICE (ĐÃ FORMAT MONEY) ==== */}
                   <div>
                     <label className="text-sm text-gray-600">Giá</label>
                     <input
-                      type="number"
-                      min="0"
-                      className="w-full border rounded px-3 py-2 text-right text-sm sm:text-base"
+                      className="w-full border rounded px-3 py-2 text-right"
                       placeholder="Giá"
-                      value={v.Price}
+                      value={formatMoney(v.Price)}
                       onChange={(e) =>
-                        handleVariantChange(i, "Price", Number(e.target.value))
+                        handleVariantChange(
+                          i,
+                          "Price",
+                          parseMoneyInput(e.target.value)
+                        )
                       }
                     />
                   </div>
+
+                  {/* ==== STOCK ==== */}
                   <div>
                     <label className="text-sm text-gray-600">Tồn kho</label>
                     <input
                       type="number"
                       min="0"
-                      className="w-full border rounded px-3 py-2 text-right text-sm sm:text-base"
+                      className="w-full border rounded px-3 py-2 text-right"
                       placeholder="Số lượng"
                       value={v.StockQuantity}
                       onChange={(e) =>
@@ -360,25 +373,25 @@ export default function ProductDialog({
                   </div>
                 </div>
 
-                {/* Thuộc tính */}
-                <div className="pt-2">
-                  <h4 className="text-sm font-semibold mb-1 text-gray-700">
-                    Thuộc tính
-                  </h4>
+                {/* ====== ATTRIBUTE SELECT ===== */}
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Thuộc tính</h4>
+
                   {attributes.map((attr) => {
-                    const currentValue =
-                      attr.values?.find((val) =>
-                        v.attributeValueIds?.includes(val.AttributeValueID)
+                    const selected =
+                      attr.values.find((x) =>
+                        v.attributeValueIds?.includes(x.AttributeValueID)
                       )?.AttributeValueID || "";
 
                     return (
                       <div key={attr.AttributeID} className="mb-3">
-                        <label className="block text-sm text-gray-600 mb-1">
+                        <label className="text-sm text-gray-600">
                           {attr.AttributeName}
                         </label>
+
                         <select
-                          className="w-full border rounded-lg px-3 py-2 bg-white text-sm sm:text-base"
-                          value={currentValue}
+                          className="w-full border rounded-lg px-3 py-2 bg-white mt-1"
+                          value={selected}
                           onChange={(e) =>
                             handleSelectDropdown(
                               i,
@@ -390,7 +403,8 @@ export default function ProductDialog({
                           <option value="">
                             -- Chọn {attr.AttributeName} --
                           </option>
-                          {attr.values?.map((val) => (
+
+                          {attr.values.map((val) => (
                             <option
                               key={val.AttributeValueID}
                               value={val.AttributeValueID}
@@ -404,46 +418,37 @@ export default function ProductDialog({
                   })}
                 </div>
 
-                {/* Ảnh biến thể */}
-                <div className="pt-2">
+                {/* ===== IMAGE PREVIEW + UPLOAD ===== */}
+                <div>
                   <h4 className="text-sm font-semibold mb-1">Ảnh biến thể</h4>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {v.images?.map((img, idx) => (
+
+                  <div className="flex flex-wrap gap-3">
+                    {v.images.map((img, idx) => (
                       <div
                         key={idx}
-                        className="relative w-20 h-20 sm:w-24 sm:h-24 border rounded-lg overflow-hidden"
+                        className="relative w-20 h-20 border rounded-lg overflow-hidden"
                       >
                         <img
                           src={typeof img === "string" ? img : img.ImageURL}
-                          alt=""
                           className="w-full h-full object-cover"
                         />
+
                         <button
                           type="button"
                           onClick={() => {
-                            const isDB =
-                              typeof img !== "string" && img.ImageID;
-                            if (isDB) {
-                              onDeleteImage?.(v.VariantID, img.ImageID).then(() => {
-                                const arr = [...product.variants];
-                                arr[i].images = arr[i].images.filter((im, k) => k !== idx);
-                                setProduct({ ...product, variants: arr });
-                              });
-                            }
-                            else {
-                              const arr = [...product.variants];
-                              arr[i].images.splice(idx, 1);
-                              setProduct({ ...product, variants: arr });
-                            }
+                            const arr = [...product.variants];
+                            arr[i].images.splice(idx, 1);
+                            setProduct({ ...product, variants: arr });
                           }}
-                          className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                          className="absolute top-1 right-1 bg-black/50 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs"
                         >
                           ✕
                         </button>
                       </div>
                     ))}
-                    <label className="w-20 h-20 sm:w-24 sm:h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
-                      <span className="text-2xl sm:text-3xl">＋</span>
+
+                    <label className="w-20 h-20 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
+                      <span className="text-2xl">＋</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -456,23 +461,27 @@ export default function ProductDialog({
                   </div>
                 </div>
 
+                {/* ===== REMOVE VARIANT ===== */}
                 <button
                   type="button"
-                  onClick={() => v.VariantID
-                     ? onDeleteVariant(v.VariantID, i, product, setProduct)
-                    : removeVariant(i)}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-red-50 hover:bg-red-200 text-red-600 font-medium text-sm sm:text-base"
+                  onClick={() =>
+                    v.VariantID
+                      ? onDeleteVariant(v.VariantID, i, product, setProduct)
+                      : removeVariant(i)
+                  }
+                  className="w-full sm:w-auto px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium"
                 >
-                  Xoá biến thể
+                  Xóa biến thể
                 </button>
               </div>
             ))}
           </div>
 
+          {/* SUBMIT */}
           <button
             type="submit"
             disabled={isSaving}
-            className={`w-full py-2 rounded-lg text-white transition text-sm sm:text-base ${
+            className={`w-full py-2 rounded-lg text-white transition ${
               isSaving
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-teal-600 hover:bg-teal-700"

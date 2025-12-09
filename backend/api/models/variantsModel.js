@@ -107,3 +107,19 @@ export const setVariantAttributes = async (variantId, attributeValueIds = []) =>
   const vals = [...new Set(attributeValueIds)].map(v => [variantId, v]);
   await db.query(`INSERT IGNORE INTO variant_attribute_values (VariantID, AttributeValueID) VALUES ?`, [vals]);
 };
+
+export const decreaseStockProduct = async (variantId, quantityToReduce) => {
+  await db.query(
+    `UPDATE product_variants 
+     SET StockQuantity = StockQuantity - ? 
+     WHERE VariantID = ?`,
+    [quantityToReduce, variantId]
+  );
+};
+export const CheckStockProduct = async (variantId) => {
+  const [[row]] = await db.query(
+    `SELECT StockQuantity FROM product_variants WHERE VariantID = ?`, 
+    [variantId]
+  );
+  return row ? row.StockQuantity : null;
+};

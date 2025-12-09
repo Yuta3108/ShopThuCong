@@ -15,7 +15,7 @@ const router = express.Router();
 router.post("/apply", applyVoucherController);
 
 // ADMIN: quản lý voucher
-router.get("/", authMiddleware, adminMiddleware, getVouchersController);
+router.get("/", authMiddleware, getVouchersController);
 router.post("/", authMiddleware, adminMiddleware, createVoucherController);
 router.put("/:id", authMiddleware, adminMiddleware, updateVoucherController);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteVoucherController);

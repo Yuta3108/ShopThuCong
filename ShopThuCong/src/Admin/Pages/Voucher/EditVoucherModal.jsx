@@ -1,6 +1,17 @@
 import React from "react";
 import { X } from "lucide-react";
 
+// Format tiền chuẩn
+const formatMoney = (value) =>
+  new Intl.NumberFormat("vi-VN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+
+// Convert input → số sạch
+const parseMoneyInput = (value) =>
+  Number(String(value).replace(/[^\d]/g, "")) || 0;
+
 export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
   const inputClass =
     "w-full p-2 rounded-xl border border-slate-300 bg-white shadow-sm focus:ring-2 focus:ring-teal-500 outline-none";
@@ -30,6 +41,7 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
         </h2>
 
         <div className="space-y-3">
+          {/* CODE */}
           <div>
             <label className="text-sm">Mã voucher</label>
             <input
@@ -40,6 +52,7 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
+            {/* TYPE */}
             <div>
               <label className="text-sm">Loại</label>
               <select
@@ -52,41 +65,56 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
               </select>
             </div>
 
+            {/* DISCOUNT VALUE */}
             <div>
               <label className="text-sm">Giá trị</label>
               <input
-                type="number"
                 className={inputClass}
-                value={data.DiscountValue}
-                onChange={(e) => update("DiscountValue", Number(e.target.value))}
+                value={
+                  data.Type === "percent"
+                    ? data.DiscountValue
+                    : formatMoney(data.DiscountValue)
+                }
+                onChange={(e) =>
+                  update("DiscountValue", parseMoneyInput(e.target.value))
+                }
               />
             </div>
 
+            {/* MIN ORDER */}
             <div>
               <label className="text-sm">Đơn tối thiểu</label>
               <input
-                type="number"
                 className={inputClass}
-                value={data.MinOrder}
-                onChange={(e) => update("MinOrder", Number(e.target.value))}
+                value={formatMoney(data.MinOrder)}
+                onChange={(e) =>
+                  update("MinOrder", parseMoneyInput(e.target.value))
+                }
               />
             </div>
 
+            {/* MAX DISCOUNT */}
             <div>
               <label className="text-sm">Giảm tối đa</label>
               <input
-                type="number"
                 disabled={data.Type === "fixed"}
                 className={`${inputClass} ${
                   data.Type === "fixed"
                     ? "bg-slate-200 cursor-not-allowed"
                     : ""
                 }`}
-                value={data.Type === "fixed" ? 0 : data.MaxDiscount}
-                onChange={(e) => update("MaxDiscount", Number(e.target.value))}
+                value={
+                  data.Type === "fixed"
+                    ? ""
+                    : formatMoney(data.MaxDiscount)
+                }
+                onChange={(e) =>
+                  update("MaxDiscount", parseMoneyInput(e.target.value))
+                }
               />
             </div>
 
+            {/* QUANTITY */}
             <div>
               <label className="text-sm">Lượt sử dụng</label>
               <input
@@ -97,6 +125,7 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
               />
             </div>
 
+            {/* START DATE */}
             <div>
               <label className="text-sm">Bắt đầu</label>
               <input
@@ -107,6 +136,7 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
               />
             </div>
 
+            {/* END DATE */}
             <div>
               <label className="text-sm">Kết thúc</label>
               <input
@@ -117,6 +147,7 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
               />
             </div>
 
+            {/* STATUS */}
             <div className="col-span-2">
               <label className="text-sm">Trạng thái</label>
               <select
@@ -131,6 +162,7 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
           </div>
         </div>
 
+        {/* BUTTONS */}
         <div className="mt-5 flex justify-end gap-2">
           <button
             type="button"

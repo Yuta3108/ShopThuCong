@@ -13,7 +13,8 @@ import {
   getVoucherByCode,
   decreaseVoucherQuantity,
 } from "../models/VoucherModel.js";
-
+import { decreaseStockProduct, CheckStockProduct } from "../models/variantsModel.js";
+import { } from "../models/CartModel.js";
 // 
 import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
 
@@ -41,7 +42,17 @@ export const createOrderFromCart = async (req, res) => {
     // Lấy item trong giỏ
     const [items] = await CartItem.getCartItems(cartId);
     if (!items.length) return res.status(400).json({});
-
+    // Kiểm tra tồn kho
+    for (const item of items) {
+      const stock = await CheckStockProduct(item.VariantID);
+      if (stock < item.Quantity) {
+        return res.status(400).json({
+          message: `Sản phẩm '${item.ProductName}' chỉ còn ${stock} cái.`,
+          variantId: item.VariantID,
+          stockAvailable: stock
+        });
+      }
+    }
     // Tổng tiền
     const total =
       items.reduce((sum, item) => sum + item.UnitPrice * item.Quantity, 0) -
@@ -66,7 +77,10 @@ export const createOrderFromCart = async (req, res) => {
 
     // Chi tiết đơn hàng
     await createOrderItemsModel(orderId, items);
-
+    // Giảm số lượng sản phẩm
+    for (const item of items) {
+      await decreaseStockProduct(item.VariantID, item.Quantity);
+    }
     // Giảm lượt voucher
     if (voucherCode) {
       try {
@@ -91,6 +105,7 @@ export const createOrderFromCart = async (req, res) => {
       email,
       address,
       total,
+      paymentMethod,
       items: items.map((i) => ({
         ProductName: i.ProductName,
         Qty: i.Quantity,

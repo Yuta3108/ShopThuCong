@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import Swal from "sweetalert2";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
@@ -51,7 +52,7 @@ function DangNhap() {
         const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
         await fetch(
-          `https://backend-eta-ivory-29.vercel.app/api/cart/merge`,
+          `https://backend-eta-ivory-29.vercel.app/cart/merge`,
           {
             method: "POST",
             headers: {
@@ -127,25 +128,27 @@ function DangNhap() {
               required
             />
 
-            <div className="relative mb-4">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Mật khẩu"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm 
-                           focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none transition-all"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-              >
-                <span className="text-xl select-none">
-                  {showPassword ? "🙈" : "👁️"}
-                </span>
-              </button>
+            <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="w-full p-3 pr-12 border rounded-xl focus:ring-2 focus:ring-rose-400 outline-none"
+                    placeholder="Nhập mật khẩu"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 
+                              p-1 rounded-full bg-white/80 backdrop-blur border 
+                              shadow-sm hover:shadow-md hover:border-rose-400 
+                              transition-all duration-200"
+                  >
+                    {showPassword ? (
+                      <EyeOff size={18} className="text-slate-600" />
+                    ) : (
+                      <Eye size={18} className="text-slate-600" />
+                    )}
+                  </button>
             </div>
 
             <div className="flex justify-between items-center mb-6 text-sm">

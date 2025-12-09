@@ -3,14 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { Trash2, Plus, Minus, ArrowLeft } from "lucide-react";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
+import Swal from "sweetalert2";
+import VoucherModal from "./VoucherModal";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openVoucher, setOpenVoucher] = useState(false);
   const navigate = useNavigate();
-
   const isDB =
     localStorage.getItem("cartMode") === "db" &&
     !!localStorage.getItem("token");
@@ -59,8 +61,7 @@ export default function CartPage() {
 
           setCart(normalized);
         }
-      } catch (err) {
-        console.log("Lỗi cart:", err);
+      } catch {
         setCart([]);
       }
       setLoading(false);
@@ -68,15 +69,13 @@ export default function CartPage() {
 
     loadDBCart();
   }, []);
-
-  // LƯU LOCAL CART
+  // LOCAL SAVE
   const saveLocalCart = (newCart) => {
     setCart(newCart);
     localStorage.setItem("cart", JSON.stringify(newCart));
     window.dispatchEvent(new Event("updateCart"));
   };
-
-  // TĂNG SỐ LƯỢNG
+  // INCREASE
   const increaseQty = async (item) => {
     if (!isDB) {
       saveLocalCart(
@@ -104,8 +103,7 @@ export default function CartPage() {
 
     window.dispatchEvent(new Event("updateCart"));
   };
-
-  // GIẢM SỐ LƯỢNG
+  // DECREASE
   const decreaseQty = async (item) => {
     if (item.quantity <= 1) return;
 
@@ -135,12 +133,31 @@ export default function CartPage() {
 
     window.dispatchEvent(new Event("updateCart"));
   };
-
-  // XOÁ ITEM
+  // REMOVE ITEM
   const removeItem = async (item) => {
+    const confirm = await Swal.fire({
+      icon: "warning",
+      title: "Xoá sản phẩm?",
+      text: `Bạn muốn xoá '${item.ProductName}' khỏi giỏ hàng?`,
+      showCancelButton: true,
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Xoá",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     if (!isDB) {
       const newCart = cart.filter((i) => i.key !== item.key);
       saveLocalCart(newCart);
+
+      Swal.fire({
+        icon: "success",
+        title: "Đã xoá sản phẩm",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+
       return;
     }
 
@@ -154,33 +171,41 @@ export default function CartPage() {
 
       setCart((prev) => prev.filter((i) => i.key !== item.key));
       window.dispatchEvent(new Event("updateCart"));
+
+      Swal.fire({
+        icon: "success",
+        title: "Đã xoá sản phẩm",
+        timer: 1200,
+        showConfirmButton: false,
+      });
     } catch {}
   };
-
-  // TỔNG TIỀN
+  // TOTAL
   const total = cart.reduce(
     (sum, i) => sum + Number(i.price) * Number(i.quantity),
     0
   );
 
-  // ĐI TỚI CHECKOUT
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Vui lòng đăng nhập để thanh toán!");
-      return navigate("/login");
+      Swal.fire({
+        icon: "warning",
+        title: "Bạn chưa đăng nhập",
+        text: "Đăng nhập để tiếp tục thanh toán",
+      }).then(() => navigate("/login"));
+      return;
     }
 
     navigate("/checkout");
   };
-
+  // UI
   return (
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 max-w-6xl mx-auto px-4 md:px-6 pt-8 pb-16">
-        {/* Back link */}
+      <main className="flex-1 w-full max-w-6xl mx-auto px-6 pt-10 pb-20">
         <Link
           to="/"
           className="inline-flex items-center text-slate-500 hover:text-rose-500 mb-6 text-sm"
@@ -203,7 +228,7 @@ export default function CartPage() {
               Giỏ hàng đang trống
             </p>
             <p className="text-sm text-slate-500 mb-6">
-              Bắt đầu thêm vài món xinh xinh vào nhé ✨
+              Bắt đầu thêm vài món xinh xinh vào nhé 
             </p>
             <Link
               to="/san-pham"
@@ -213,27 +238,27 @@ export default function CartPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[1.6fr,0.9fr] gap-8">
-            {/* LIST ITEMS */}
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-10">
+            {/* ================= PRODUCT LIST ================= */}
             <div className="space-y-4">
               {cart.map((item) => (
                 <div
                   key={item.key}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all flex gap-4 p-4"
+                  className="bg-white rounded-2xl p-4 flex gap-4 border shadow-sm"
                 >
                   <img
                     src={item.ImageURL}
                     alt={item.ProductName}
-                    className="w-24 h-24 md:w-28 md:h-28 object-cover rounded-xl border border-slate-200"
+                    className="w-24 h-24 object-cover rounded-xl border"
                   />
 
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="font-semibold text-slate-900 text-sm md:text-base line-clamp-2">
+                      <h3 className="font-semibold text-slate-900">
                         {item.ProductName}
                       </h3>
 
-                      <p className="text-rose-500 font-bold text-base mt-2">
+                      <p className="text-rose-500 font-bold mt-2">
                         {Number(item.price).toLocaleString()}₫
                       </p>
                     </div>
@@ -241,18 +266,18 @@ export default function CartPage() {
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => decreaseQty(item)}
-                        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center transition-all"
+                        className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"
                       >
                         <Minus size={16} />
                       </button>
 
-                      <span className="w-10 text-center font-semibold text-slate-900">
+                      <span className="w-10 text-center font-semibold">
                         {item.quantity}
                       </span>
 
                       <button
                         onClick={() => increaseQty(item)}
-                        className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center transition-all"
+                        className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"
                       >
                         <Plus size={16} />
                       </button>
@@ -261,8 +286,7 @@ export default function CartPage() {
 
                   <button
                     onClick={() => removeItem(item)}
-                    className="text-slate-400 hover:text-rose-500 hover:scale-110 transition-all self-start"
-                    aria-label="Xoá sản phẩm"
+                    className="text-slate-400 hover:text-rose-500"
                   >
                     <Trash2 size={20} />
                   </button>
@@ -270,29 +294,35 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* SUMMARY */}
+            {/* ================= SUMMARY ================= */}
             <aside className="lg:sticky lg:top-24 h-fit">
-              <div className="bg-white p-6 rounded-2xl shadow-md border border-slate-200">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">
+              <div className="bg-white p-6 rounded-2xl border shadow">
+                <h2 className="text-lg font-semibold mb-4">
                   Tóm tắt đơn hàng
                 </h2>
 
-                <div className="flex justify-between mb-2 text-sm text-slate-600">
+                <div className="flex justify-between mb-2 text-sm">
                   <span>Tạm tính</span>
                   <span>{total.toLocaleString()}₫</span>
                 </div>
 
-                <div className="flex justify-between text-sm text-slate-600 mb-4">
+                <div className="flex justify-between text-sm mb-4">
                   <span>Phí vận chuyển</span>
                   <span className="text-slate-400">Tính ở bước sau</span>
                 </div>
 
                 <hr className="my-3" />
 
+                {/* BUTTON MỞ POPUP VOUCHER */}
+                <button
+                  onClick={() => setOpenVoucher(true)}
+                  className="w-full py-2 bg-slate-100 border border-slate-300 rounded-xl text-sm mb-4 hover:bg-slate-200"
+                >
+                  Chọn mã giảm giá
+                </button>
+
                 <div className="flex justify-between items-baseline mb-4">
-                  <span className="text-sm font-medium text-slate-800">
-                    Tổng tiền
-                  </span>
+                  <span className="font-medium">Tổng tiền</span>
                   <span className="text-xl font-bold text-rose-500">
                     {total.toLocaleString()}₫
                   </span>
@@ -300,21 +330,21 @@ export default function CartPage() {
 
                 <button
                   onClick={handleCheckout}
-                  className="w-full py-3 mt-2 bg-rose-500 hover:bg-rose-600 text-white rounded-full text-sm font-semibold shadow-md hover:shadow-lg transition-all"
+                  className="w-full py-3 bg-rose-500 text-white rounded-full font-semibold hover:bg-rose-600"
                 >
                   Thanh toán
                 </button>
-
-                <p className="mt-3 text-xs text-slate-500 text-center">
-                  Bạn có thể nhập mã giảm giá ở bước thanh toán tiếp theo.
-                </p>
               </div>
             </aside>
           </div>
         )}
       </main>
-
       <Footer />
+      {/* POPUP */}
+      <VoucherModal
+        isOpen={openVoucher}
+        onClose={() => setOpenVoucher(false)}
+      />
     </div>
   );
 }
