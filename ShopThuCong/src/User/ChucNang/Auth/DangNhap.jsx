@@ -52,7 +52,7 @@ function DangNhap() {
         const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
         await fetch(
-          `https://backend-eta-ivory-29.vercel.app/cart/merge`,
+          `https://backend-eta-ivory-29.vercel.app/api/cart/merge`,
           {
             method: "POST",
             headers: {
@@ -133,6 +133,9 @@ function DangNhap() {
                     type={showPassword ? "text" : "password"}
                     className="w-full p-3 pr-12 border rounded-xl focus:ring-2 focus:ring-rose-400 outline-none"
                     placeholder="Nhập mật khẩu"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
 
                   <button
