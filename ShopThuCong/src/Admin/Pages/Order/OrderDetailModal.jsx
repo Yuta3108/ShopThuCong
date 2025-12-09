@@ -31,6 +31,9 @@ export default function OrderDetailModal({ open, onClose, data }) {
           <p><b>Ngày tạo:</b> {new Date(order.CreatedAt).toLocaleString()}</p>
           <p><b>Thanh toán:</b> {order.PaymentMethod}</p>
           <p><b>Trạng thái:</b> {order.Status}</p>
+          {order.Note && (
+            <p><b>Ghi chú:</b> {order.Note}</p>
+          )}
         </div>
 
         {/* ITEMS TABLE */}

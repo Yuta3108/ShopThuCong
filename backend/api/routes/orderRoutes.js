@@ -12,12 +12,12 @@ import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js
 const router = express.Router();
 
 // USER
-router.get("/user", authMiddleware, getMyOrders);
+router.get("/user/:id", authMiddleware, getMyOrders);
 router.post("/", authMiddleware, createOrderFromCart);
 
 // ADMIN
 router.get("/", authMiddleware, adminMiddleware, getAllOrders);
-router.get("/:id", authMiddleware, adminMiddleware, getOrderDetail);
+router.get("/:id", authMiddleware, getOrderDetail);
 router.put("/:id", authMiddleware, adminMiddleware, updateOrderStatus);
 router.delete("/:id", authMiddleware, adminMiddleware, deleteOrder);
 
