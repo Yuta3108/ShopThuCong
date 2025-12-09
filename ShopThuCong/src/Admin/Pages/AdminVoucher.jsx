@@ -27,12 +27,12 @@ export default function AdminVoucher() {
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState(null);
 
-  // ================= SIDEBAR RESPONSIVE =================
+  //  SIDEBAR RESPONSIVE 
   const [isOpen, setIsOpen] = useState(false);
   const toggleSidebar = (state) =>
     setIsOpen(state !== undefined ? state : !isOpen);
 
-  // ================= AUTH =================
+  //  AUTH 
   const user = JSON.parse(localStorage.getItem("user"));
   if (!user || user.role !== "admin") {
     return (
@@ -42,7 +42,7 @@ export default function AdminVoucher() {
     );
   }
 
-  // ================= FETCH =================
+  //  FETCH 
   const fetchVouchers = async () => {
     const res = await axiosClient.get("/vouchers");
     setVouchers(res.data);
@@ -54,7 +54,7 @@ export default function AdminVoucher() {
     fetchVouchers();
   }, []);
 
-  // ================= SEARCH FILTER =================
+  //  SEARCH FILTER 
   useEffect(() => {
     const keyword = search.toLowerCase();
     setFiltered(
@@ -75,7 +75,7 @@ export default function AdminVoucher() {
     );
   }, [search, vouchers]);
 
-  // ================= CRUD =================
+  //  CRUD 
   const handleAdd = async (payload) => {
     await axiosClient.post("/vouchers", payload);
     fetchVouchers();
@@ -141,7 +141,7 @@ export default function AdminVoucher() {
           </button>
         </div>
 
-        {/* ================= MOBILE CARD LIST ================= */}
+        {/*  MOBILE CARD LIST  */}
         <div className="grid grid-cols-1 md:hidden gap-4">
           {filtered.map((v) => (
             <div
@@ -213,7 +213,7 @@ export default function AdminVoucher() {
           ))}
         </div>
 
-        {/* ================= DESKTOP TABLE ================= */}
+        {/*  DESKTOP TABLE  */}
         <div className="hidden md:block">
           <VoucherTable
             vouchers={filtered}
@@ -237,7 +237,7 @@ export default function AdminVoucher() {
           />
         </div>
 
-        {/* ================= MODALS ================= */}
+        {/*  MODALS  */}
         {showAdd && (
           <AddVoucherModal
             onSubmit={handleAdd}

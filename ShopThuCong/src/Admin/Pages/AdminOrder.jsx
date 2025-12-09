@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../Layout/Sidebar";
 import axios from "axios";
 import { Search, Pencil, Trash2, Eye } from "lucide-react";
-
 import OrderDetailModal from "../Pages/Order/OrderDetailModal";
 import OrderStatusModal from "../Pages/Order/OrderStatusModal";
+import { orderStatusText, orderStatusColor } from "../../utils/orderStatus";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
-// Format tiền chuẩn VND
+// Format tiền
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 0,
@@ -33,20 +33,26 @@ export default function AdminOrderPage() {
   const [search, setSearch] = useState("");
   const [removing, setRemoving] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+
   const toggleSidebar = (state) =>
     setIsOpen(state !== undefined ? state : !isOpen);
-  // Popup trạng thái
+
+  // Popup Edit Status
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState(null);
 
-  // Popup chi tiết
+  // Popup Detail
   const [showDetail, setShowDetail] = useState(false);
   const [detailData, setDetailData] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
+  // Phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // PROTECT ROUTE
+  // PROTECT ADMIN
   if (!user || user.role !== "admin") {
     return (
       <div className="flex justify-center items-center h-screen text-red-600 font-semibold">
@@ -68,11 +74,12 @@ export default function AdminOrderPage() {
     fetchOrders();
   }, []);
 
-  // DELETE
+  // DELETE ORDER
   const handleDelete = async (id) => {
     if (!window.confirm("Xoá đơn hàng này?")) return;
 
     setRemoving(id);
+
     setTimeout(async () => {
       await axiosClient.delete(`/orders/${id}`);
       setOrders((prev) => prev.filter((o) => o.OrderID !== id));
@@ -114,22 +121,6 @@ export default function AdminOrderPage() {
     }
   };
 
-  // STATUS COLOR
-  const statusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-700 border border-yellow-200";
-      case "processing":
-        return "bg-blue-100 text-blue-700 border border-blue-200";
-      case "completed":
-        return "bg-green-100 text-green-700 border border-green-200";
-      case "cancelled":
-        return "bg-red-100 text-red-700 border border-red-200";
-      default:
-        return "bg-gray-100 text-gray-700 border border-gray-200";
-    }
-  };
-
   // FILTER
   const filtered = orders.filter((o) => {
     const s = search.toLowerCase();
@@ -140,14 +131,18 @@ export default function AdminOrderPage() {
     );
   });
 
+  // PAGINATION
+  const last = currentPage * itemsPerPage;
+  const first = last - itemsPerPage;
+  const currentItems = filtered.slice(first, last);
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
   return (
     <div className="flex bg-[#F5F5F5] min-h-screen">
       <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
       {/* CONTENT */}
       <div className="flex-1 md:ml-64 p-4 sm:p-6">
-
-        {/* HEADER */}
         <h1 className="text-2xl font-semibold text-slate-800 tracking-tight mb-6">
           Quản Lý Đơn Hàng
         </h1>
@@ -169,24 +164,23 @@ export default function AdminOrderPage() {
           </div>
         </div>
 
-        {/* ================= MOBILE LIST ================= */}
+        {/*  MOBILE  */}
         <div className="grid grid-cols-1 md:hidden gap-4">
-          {filtered.map((o) => (
+          {currentItems.map((o) => (
             <div
               key={o.OrderID}
               className="bg-white border p-4 rounded-xl shadow hover:shadow-md transition"
             >
-              {/* Info */}
               <div className="flex justify-between">
                 <span className="font-semibold text-slate-800">
-                  Đơn #{o.OrderID}
+                  #{o.OrderID}
                 </span>
+
+                {/* STATUS BADGE MỚI */}
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor(
-                    o.Status
-                  )}`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${orderStatusColor[o.Status]}`}
                 >
-                  {o.Status}
+                  {orderStatusText[o.Status]}
                 </span>
               </div>
 
@@ -197,28 +191,27 @@ export default function AdminOrderPage() {
                 {formatMoney(o.Total)}₫
               </p>
 
-              {/* ACTIONS */}
               <div className="flex gap-2 mt-4">
                 <button
                   onClick={() => {
                     setEditData(o);
                     setShowEdit(true);
                   }}
-                  className="flex-1 py-2 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600"
+                  className="flex-1 py-2 rounded-lg bg-yellow-500 text-white"
                 >
                   Sửa
                 </button>
 
                 <button
                   onClick={() => handleViewDetail(o.OrderID)}
-                  className="flex-1 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+                  className="flex-1 py-2 rounded-lg bg-blue-500 text-white"
                 >
                   Chi tiết
                 </button>
 
                 <button
                   onClick={() => handleDelete(o.OrderID)}
-                  className="flex-1 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                  className="flex-1 py-2 rounded-lg bg-red-500 text-white"
                 >
                   Xoá
                 </button>
@@ -227,10 +220,9 @@ export default function AdminOrderPage() {
           ))}
         </div>
 
-        {/* ================= DESKTOP TABLE ================= */}
+        {/*  DESKTOP TABLE  */}
         <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-md border">
           <table className="min-w-full text-[13px] text-slate-700">
-
             <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
               <tr>
                 <th className="p-3 text-left rounded-tl-2xl">ID</th>
@@ -245,7 +237,7 @@ export default function AdminOrderPage() {
             </thead>
 
             <tbody>
-              {filtered.map((o, i) => (
+              {currentItems.map((o, i) => (
                 <tr
                   key={o.OrderID}
                   className={`border-b transition-all ${
@@ -258,22 +250,18 @@ export default function AdminOrderPage() {
                   <td className="p-3 font-medium">{o.ReceiverName}</td>
                   <td className="p-3">{o.Phone}</td>
                   <td className="p-3">{o.Email}</td>
-
-                  <td className="p-3 uppercase font-semibold text-slate-700">
-                    {o.PaymentMethod}
-                  </td>
+                  <td className="p-3 uppercase font-semibold">{o.PaymentMethod}</td>
 
                   <td className="p-3 font-bold text-teal-700">
                     {formatMoney(o.Total)}₫
                   </td>
 
                   <td className="p-3">
+                    {/* STATUS BADGE MỚI */}
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${statusColor(
-                        o.Status
-                      )}`}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${orderStatusColor[o.Status]}`}
                     >
-                      {o.Status}
+                      {orderStatusText[o.Status]}
                     </span>
                   </td>
 
@@ -307,8 +295,40 @@ export default function AdminOrderPage() {
                 </tr>
               ))}
             </tbody>
-
           </table>
+
+          {/* PAGINATION  */}
+          <div className="flex justify-center mt-4 mb-6 gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="px-3 py-1 bg-gray-100 rounded-md disabled:opacity-50"
+            >
+              Trước
+            </button>
+
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded-md ${
+                  currentPage === i + 1
+                    ? "bg-teal-600 text-white"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="px-3 py-1 bg-gray-100 rounded-md disabled:opacity-50"
+            >
+              Sau
+            </button>
+          </div>
         </div>
 
         {/* POPUP DETAIL */}
@@ -326,7 +346,6 @@ export default function AdminOrderPage() {
           setEditData={setEditData}
           onSubmit={handleUpdateStatus}
         />
-
       </div>
     </div>
   );

@@ -2,15 +2,10 @@ import React, { useEffect, useState } from "react";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
 import Swal from "sweetalert2";
-import OrderDetailModal from "../../../Admin/Pages/Order/OrderDetailModal"; 
+import OrderDetailModal from "../../../Admin/Pages/Order/OrderDetailModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 
-const statusText = {
-  pending: "Chờ xử lý",
-  processing: "Đang xử lý",
-  completed: "Hoàn tất",
-  cancelled: "Đã hủy",
-};
+import { orderStatusText, orderStatusColor } from "../../../utils/orderStatus";
 
 export default function UserProfile() {
   const [user, setUser] = useState(null);
@@ -18,7 +13,7 @@ export default function UserProfile() {
   const [activeTab, setActiveTab] = useState("info");
   const [orders, setOrders] = useState([]);
   const [resetOpen, setResetOpen] = useState(false);
-  // modal chi tiết đơn
+
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -33,8 +28,8 @@ export default function UserProfile() {
     Phone: "",
     Address: "",
   });
-  const token = localStorage.getItem("token");
 
+  const token = localStorage.getItem("token");
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userId = storedUser?.UserID || storedUser?.id;
 
@@ -42,15 +37,14 @@ export default function UserProfile() {
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId || !token) return;
+
       try {
         const res = await fetch(
           `https://backend-eta-ivory-29.vercel.app/api/users/${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        const data = await res.json();
 
+        const data = await res.json();
         if (res.ok) {
           setUser(data);
           setForm({
@@ -60,34 +54,24 @@ export default function UserProfile() {
             Address: data.Address || "",
           });
         } else {
-          Swal.fire({
-            icon: "error",
-            title: "Lỗi tải thông tin",
-            text: data.message || "Không thể tải thông tin người dùng.",
-          });
+          Swal.fire("Lỗi tải thông tin", data.message, "error");
         }
-      } catch (err) {
-        Swal.fire({
-          icon: "error",
-          title: "Lỗi kết nối máy chủ",
-          text: "Vui lòng thử lại sau.",
-        });
+      } catch {
+        Swal.fire("Lỗi kết nối", "Vui lòng thử lại", "error");
       }
     };
 
     const fetchOrders = async () => {
-      if (!userId || !token) return;
       try {
         const res = await fetch(
           `https://backend-eta-ivory-29.vercel.app/api/orders/user/${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+
         const data = await res.json();
         setOrders(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.log("Fetch orders failed:", err);
+      } catch {
+        console.log("Fetch orders failed");
       }
     };
 
@@ -95,36 +79,24 @@ export default function UserProfile() {
     fetchOrders();
   }, [userId, token]);
 
-  //  VALIDATE FORM  
+  //  VALIDATE 
   const validateForm = () => {
     if (!form.FullName.trim() || !form.Phone.trim() || !form.Address.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Thiếu thông tin!",
-        text: "Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ.",
-        confirmButtonColor: "#fb7185",
-      });
+      Swal.fire("Thiếu thông tin!", "Điền đủ họ tên, số điện thoại, địa chỉ", "warning");
       return false;
     }
 
-    const phoneRegex = /^[0-9]{10,11}$/;
-    if (!phoneRegex.test(form.Phone)) {
-      Swal.fire({
-        icon: "warning",
-        title: "Số điện thoại không hợp lệ!",
-        text: "Số điện thoại chỉ được chứa số và phải có 10–11 chữ số.",
-        confirmButtonColor: "#fb7185",
-      });
+    if (!/^[0-9]{10,11}$/.test(form.Phone)) {
+      Swal.fire("Lỗi", "Số điện thoại không hợp lệ!", "warning");
       return false;
     }
 
     return true;
   };
 
-  //  CẬP NHẬT THÔNG TIN  
+  //  UPDATE INFO 
   const handleUpdate = async () => {
-    if (!user) return;
-    if (!validateForm()) return;
+    if (!user || !validateForm()) return;
 
     try {
       const res = await fetch(
@@ -147,80 +119,65 @@ export default function UserProfile() {
       if (res.ok) {
         setUser({ ...user, ...form });
         setEditMode(false);
-        Swal.fire({
-          icon: "success",
-          title: "Cập nhật thành công!",
-          text: "Thông tin tài khoản của bạn đã được lưu.",
-          showConfirmButton: false,
-          timer: 1500,
-        });
+        Swal.fire("Thành công", "Cập nhật thành công!", "success");
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Cập nhật thất bại",
-          text: data.message || "Không thể cập nhật thông tin.",
-        });
+        Swal.fire("Lỗi", data.message, "error");
       }
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi máy chủ",
-        text: "Vui lòng thử lại sau.",
-      });
+    } catch {
+      Swal.fire("Lỗi server", "Vui lòng thử lại sau", "error");
     }
   };
 
-  //  ĐỔI MẬT KHẨU  
+  //  ĐỔI MẬT KHẨU 
   const submitResetPassword = async (oldPass, newPass) => {
-  if (!oldPass || !newPass) {
-    Swal.fire("Thiếu thông tin!", "Vui lòng điền đầy đủ.", "warning");
-    return;
-  }
-
-  if (!/[a-zA-Z]/.test(newPass) || newPass.length < 8) {
-    Swal.fire("Mật khẩu yếu!", "Phải ≥ 8 ký tự và có chữ cái!", "warning");
-    return;
-  }
-
-  try {
-    const res = await fetch(
-      `https://backend-eta-ivory-29.vercel.app/api/${user.UserID}/password`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          oldPassword: oldPass,
-          newPassword: newPass,
-        }),
-      }
-    );
-
-    const data = await res.json();
-
-    if (res.ok) {
-      Swal.fire("Thành công!", "Đổi mật khẩu thành công!", "success");
-      setResetOpen(false);
-    } else {
-      Swal.fire("Lỗi!", data.message, "error");
+    if (!oldPass || !newPass) {
+      Swal.fire("Thiếu thông tin!", "Vui lòng nhập đủ.", "warning");
+      return;
     }
-  } catch (err) {
-    Swal.fire("Lỗi server!", "Không kết nối được.", "error");
-  }
-};
 
+    if (newPass.length < 8 || !/[a-zA-Z]/.test(newPass)) {
+      Swal.fire("Mật khẩu yếu!", "Mật khẩu phải ≥8 ký tự và có chữ cái!", "warning");
+      return;
+    }
 
-  //  HUỶ ĐƠN HÀNG 
+    try {
+      const res = await fetch(
+        `https://backend-eta-ivory-29.vercel.app/api/${user.UserID}/password`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            oldPassword: oldPass,
+            newPassword: newPass,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (res.ok) {
+        Swal.fire("Thành công!", "Đổi mật khẩu thành công!", "success");
+        setResetOpen(false);
+      } else {
+        Swal.fire("Lỗi!", data.message, "error");
+      }
+    } catch {
+      Swal.fire("Lỗi server!", "Không kết nối được", "error");
+    }
+  };
+
+  //  HUỶ ĐƠN 
   const cancelOrder = async (orderId) => {
     const confirm = await Swal.fire({
-      title: "Huỷ đơn này?",
-      text: "Bạn chắc chắn muốn huỷ?",
+      title: "Huỷ đơn?",
+      text: "Bạn chắc chắn muốn huỷ đơn này?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#e11d48",
-      confirmButtonText: "Huỷ đơn",
+      confirmButtonText: "Xác nhận",
     });
 
     if (!confirm.isConfirmed) return;
@@ -228,176 +185,174 @@ export default function UserProfile() {
     try {
       const res = await fetch(
         `https://backend-eta-ivory-29.vercel.app/api/orders/${orderId}/cancel`,
-        {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { method: "PUT", headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (res.ok) {
         Swal.fire("Đã huỷ!", "Đơn hàng đã được huỷ.", "success");
+
         setOrders((prev) =>
           prev.map((o) =>
             o.OrderID === orderId ? { ...o, Status: "cancelled" } : o
           )
         );
-      } else {
-        Swal.fire("Lỗi!", "Không thể huỷ đơn.", "error");
       }
-    } catch (err) {
-      Swal.fire("Lỗi server!", "Không thể kết nối.", "error");
+    } catch {
+      Swal.fire("Lỗi server!", "Không thể kết nối", "error");
     }
   };
 
-  //  XEM CHI TIẾT ĐƠN (MỞ MODAL) 
+  //  XEM CHI TIẾT ĐƠN 
   const handleViewDetail = async (orderId) => {
     setLoadingDetail(true);
+
     try {
-      // chỉnh lại endpoint nếu BE của anh khác
       const res = await fetch(
         `https://backend-eta-ivory-29.vercel.app/api/orders/${orderId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+
       const data = await res.json();
 
-      if (res.ok && data) {
-        // giả định BE trả dạng { order, items }
+      if (res.ok) {
         setDetailData(data);
         setDetailOpen(true);
       } else {
-        Swal.fire("Lỗi", data.message || "Không lấy được chi tiết đơn.");
+        Swal.fire("Lỗi", data.message, "error");
       }
-    } catch (err) {
-      Swal.fire("Lỗi server!", "Không thể kết nối.", "error");
-    } finally {
-      setLoadingDetail(false);
+    } catch {
+      Swal.fire("Lỗi server!", "Không thể kết nối", "error");
     }
+
+    setLoadingDetail(false);
   };
 
-  //  TÍNH PHÂN TRANG 
-  const indexOfLastOrder = currentPage * itemsPerPage;
-  const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
-  const totalPages = Math.max(1, Math.ceil(orders.length / itemsPerPage));
+  //  PHÂN TRANG 
+  const last = currentPage * itemsPerPage;
+  const first = last - itemsPerPage;
+  const currentOrders = orders.slice(first, last);
+  const totalPages = Math.ceil(orders.length / itemsPerPage);
 
   if (!user)
     return (
-      <div className="bg-[#F5F5F5] min-h-screen flex items-center justify-center text-slate-600">
-        Đang tải thông tin người dùng...
+      <div className="min-h-screen flex items-center justify-center text-slate-600">
+        Đang tải thông tin...
       </div>
     );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+    <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
       <Header />
 
-      <main className="flex-grow flex justify-center items-center px-4 py-10 animate-fadeIn">
-        <div className="bg-white shadow-[0_18px_45px_rgba(15,23,42,0.12)] p-8 rounded-3xl w-full max-w-lg border border-slate-200 transition-all duration-500 hover:-translate-y-1">
+      <main className="flex-grow px-4 py-10 flex justify-center">
+        <div className="bg-white shadow-xl p-8 rounded-3xl w-full max-w-lg border">
 
-          {/* TABS */}
+          {/*  TABS  */}
           <div className="flex justify-center gap-3 mb-6">
             <button
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
+              onClick={() => setActiveTab("info")}
+              className={`px-5 py-2 rounded-full text-sm font-semibold ${
                 activeTab === "info"
                   ? "bg-rose-500 text-white"
                   : "bg-slate-100 text-slate-600"
               }`}
-              onClick={() => setActiveTab("info")}
             >
               Thông tin tài khoản
             </button>
 
             <button
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
+              onClick={() => setActiveTab("orders")}
+              className={`px-5 py-2 rounded-full text-sm font-semibold ${
                 activeTab === "orders"
                   ? "bg-rose-500 text-white"
                   : "bg-slate-100 text-slate-600"
               }`}
-              onClick={() => setActiveTab("orders")}
             >
               Lịch sử đơn hàng
             </button>
           </div>
 
-          {/* TAB: THÔNG TIN (giữ nguyên UI cũ) */}
+          {/*  TAB INFO  */}
           {activeTab === "info" && (
             <>
-              <h2 className="text-2xl md:text-3xl font-bold text-center text-rose-500 mb-6">
+              <h2 className="text-2xl font-bold text-center text-rose-500 mb-6">
                 Thông tin tài khoản
               </h2>
 
+              {/* INPUTS */}
               <div className="space-y-4 text-sm">
+                {/* Name */}
                 <div>
-                  <label className="text-slate-600 font-medium">Họ tên</label>
+                  <label className="font-medium text-slate-600">Họ tên</label>
                   <input
                     type="text"
-                    className={`w-full px-4 py-2 border rounded-lg mt-1 text-sm ${
-                      editMode
-                        ? "bg-white focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
-                        : "bg-slate-100 text-slate-500 border-slate-200"
-                    }`}
                     value={form.FullName}
                     disabled={!editMode}
                     onChange={(e) =>
                       setForm({ ...form, FullName: e.target.value })
                     }
+                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${
+                      editMode
+                        ? "bg-white focus:ring-2 focus:ring-rose-200"
+                        : "bg-slate-100"
+                    }`}
                   />
                 </div>
 
+                {/* Email */}
                 <div>
-                  <label className="text-slate-600 font-medium">Email</label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-2 border rounded-lg mt-1 bg-slate-100 text-slate-500 border-slate-200 text-sm"
-                    value={form.Email}
-                    disabled
-                  />
-                </div>
-
-                <div>
-                  <label className="text-slate-600 font-medium">
-                    Số điện thoại
-                  </label>
+                  <label className="font-medium text-slate-600">Email</label>
                   <input
                     type="text"
-                    className={`w-full px-4 py-2 border rounded-lg mt-1 text-sm ${
-                      editMode
-                        ? "bg-white focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
-                        : "bg-slate-100 text-slate-500 border-slate-200"
-                    }`}
+                    disabled
+                    value={form.Email}
+                    className="w-full px-4 py-2 border rounded-lg mt-1 bg-slate-100"
+                  />
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="font-medium text-slate-600">Số điện thoại</label>
+                  <input
+                    type="text"
                     value={form.Phone}
                     disabled={!editMode}
                     onChange={(e) =>
                       setForm({ ...form, Phone: e.target.value })
                     }
+                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${
+                      editMode
+                        ? "bg-white focus:ring-2 focus:ring-rose-200"
+                        : "bg-slate-100"
+                    }`}
                   />
                 </div>
 
+                {/* Address */}
                 <div>
-                  <label className="text-slate-600 font-medium">Địa chỉ</label>
+                  <label className="font-medium text-slate-600">Địa chỉ</label>
                   <input
                     type="text"
-                    className={`w-full px-4 py-2 border rounded-lg mt-1 text-sm ${
-                      editMode
-                        ? "bg-white focus:ring-2 focus:ring-rose-200 focus:border-rose-400 outline-none"
-                        : "bg-slate-100 text-slate-500 border-slate-200"
-                    }`}
                     value={form.Address}
                     disabled={!editMode}
                     onChange={(e) =>
                       setForm({ ...form, Address: e.target.value })
                     }
+                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${
+                      editMode
+                        ? "bg-white focus:ring-2 focus:ring-rose-200"
+                        : "bg-slate-100"
+                    }`}
                   />
                 </div>
 
-                <div className="flex justify-between mt-6 gap-3">
+                {/* BUTTONS */}
+                <div className="flex gap-3 mt-4">
                   {editMode ? (
                     <>
                       <button
                         onClick={handleUpdate}
-                        className="w-1/2 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-semibold text-sm shadow-md"
+                        className="w-1/2 py-2 bg-rose-500 text-white rounded-full"
                       >
                         Lưu thay đổi
                       </button>
@@ -405,13 +360,13 @@ export default function UserProfile() {
                         onClick={() => {
                           setEditMode(false);
                           setForm({
-                            FullName: user.FullName || "",
-                            Email: user.Email || "",
-                            Phone: user.Phone || "",
-                            Address: user.Address || "",
+                            FullName: user.FullName,
+                            Email: user.Email,
+                            Phone: user.Phone,
+                            Address: user.Address,
                           });
                         }}
-                        className="w-1/2 py-2.5 bg-slate-100 text-slate-700 rounded-full font-semibold text-sm hover:bg-slate-200 border border-slate-200"
+                        className="w-1/2 py-2 bg-slate-200 rounded-full"
                       >
                         Hủy
                       </button>
@@ -419,7 +374,7 @@ export default function UserProfile() {
                   ) : (
                     <button
                       onClick={() => setEditMode(true)}
-                      className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-semibold text-sm shadow-md"
+                      className="w-full py-2 bg-rose-500 text-white rounded-full"
                     >
                       Chỉnh sửa thông tin
                     </button>
@@ -427,10 +382,11 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              <div className="text-center mt-6">
+              {/* RESET PASSWORD */}
+              <div className="text-center mt-5">
                 <button
                   onClick={() => setResetOpen(true)}
-                  className="text-rose-500 font-medium hover:underline text-sm"
+                  className="text-rose-500 font-medium hover:underline"
                 >
                   Đặt lại mật khẩu
                 </button>
@@ -438,17 +394,15 @@ export default function UserProfile() {
             </>
           )}
 
-          {/* TAB: LỊCH SỬ ĐƠN HÀNG */}
+          {/*  TAB ORDERS  */}
           {activeTab === "orders" && (
-            <div className="animate-fadeIn">
+            <div>
               <h2 className="text-2xl font-bold text-center text-rose-500 mb-4">
                 Lịch sử đơn hàng
               </h2>
 
               {orders.length === 0 ? (
-                <p className="text-center text-slate-500">
-                  Không có đơn hàng nào
-                </p>
+                <p className="text-center text-slate-500">Không có đơn hàng nào</p>
               ) : (
                 <>
                   <div className="space-y-4">
@@ -457,33 +411,20 @@ export default function UserProfile() {
                         key={order.OrderID}
                         className="p-5 border rounded-xl shadow bg-white"
                       >
-                        <div className="flex justify-between mb-1">
-                          <p className="font-semibold text-slate-800">
-                            Mã đơn: #{order.OrderID}
-                          </p>
+                        <div className="flex justify-between">
+                          <p className="font-semibold">Mã đơn: #{order.OrderID}</p>
 
+                          {/* Badge trạng thái  */}
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold 
-                              ${
-                                order.Status === "pending"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : order.Status === "processing"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : order.Status === "completed"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }
-                            `}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${orderStatusColor[order.Status]}`}
                           >
-                            {statusText[order.Status] || order.Status}
+                            {orderStatusText[order.Status]}
                           </span>
                         </div>
 
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-slate-500 mt-1">
                           Ngày đặt:{" "}
-                          {new Date(order.CreatedAt).toLocaleDateString(
-                            "vi-VN"
-                          )}
+                          {new Date(order.CreatedAt).toLocaleDateString("vi-VN")}
                         </p>
 
                         <p className="mt-1 text-sm">
@@ -493,23 +434,21 @@ export default function UserProfile() {
                           </span>
                         </p>
 
-                        <div className="mt-4 flex justify-end gap-3">
+                        <div className="flex justify-end gap-3 mt-4">
+                          {/* Xem chi tiết */}
                           <button
                             onClick={() => handleViewDetail(order.OrderID)}
                             disabled={loadingDetail}
-                            className="px-4 py-1.5 rounded-lg text-sm font-semibold
-                                       bg-rose-500 text-white hover:bg-rose-600 
-                                       transition-all shadow-sm disabled:opacity-60"
+                            className="px-4 py-1.5 bg-rose-500 text-white rounded-lg text-sm shadow"
                           >
                             {loadingDetail ? "Đang tải..." : "Xem chi tiết"}
                           </button>
 
+                          {/* Hủy đơn */}
                           {order.Status === "pending" && (
                             <button
                               onClick={() => cancelOrder(order.OrderID)}
-                              className="px-4 py-1.5 rounded-lg text-sm font-semibold
-                                         border border-red-400 text-red-500 bg-red-50
-                                         hover:bg-red-100 transition-all shadow-sm"
+                              className="px-4 py-1.5 border border-red-400 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg text-sm"
                             >
                               Huỷ đơn
                             </button>
@@ -525,7 +464,7 @@ export default function UserProfile() {
                       <button
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage((p) => p - 1)}
-                        className="px-3 py-1 rounded-md text-sm bg-slate-100 disabled:opacity-50"
+                        className="px-3 py-1 text-sm bg-slate-100 rounded-md disabled:opacity-50"
                       >
                         Trước
                       </button>
@@ -534,7 +473,7 @@ export default function UserProfile() {
                         <button
                           key={i}
                           onClick={() => setCurrentPage(i + 1)}
-                          className={`px-3 py-1 rounded-md text-sm ${
+                          className={`px-3 py-1 text-sm rounded-md ${
                             currentPage === i + 1
                               ? "bg-rose-500 text-white"
                               : "bg-slate-100 text-slate-700"
@@ -547,7 +486,7 @@ export default function UserProfile() {
                       <button
                         disabled={currentPage === totalPages}
                         onClick={() => setCurrentPage((p) => p + 1)}
-                        className="px-3 py-1 rounded-md text-sm bg-slate-100 disabled:opacity-50"
+                        className="px-3 py-1 text-sm bg-slate-100 rounded-md disabled:opacity-50"
                       >
                         Sau
                       </button>
@@ -560,17 +499,16 @@ export default function UserProfile() {
         </div>
       </main>
 
-      {/* MODAL CHI TIẾT ĐƠN */}
-      <OrderDetailModal
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        data={detailData}
-      />
-      {/* MODAL ĐỔI MẬT KHẨU */}
+      {/* Popup Đổi mật khẩu */}
       <ResetPasswordModal
         open={resetOpen}
         onClose={() => setResetOpen(false)}
         onSubmit={submitResetPassword}
+      />
+      <OrderDetailModal
+        open={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        data={detailData}
       />
 
       <Footer />
