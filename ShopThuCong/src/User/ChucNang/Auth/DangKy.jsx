@@ -150,8 +150,12 @@ function DangKy() {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                className="w-full p-3 pr-12 border rounded-xl focus:ring-2 focus:ring-rose-400 outline-none"
-                placeholder="Nhập mật khẩu"
+                placeholder="Mật khẩu"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm 
+                           focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
+                value={matKhau}
+                onChange={(e) => setMatKhau(e.target.value)}
+                required
               />
 
               <button
