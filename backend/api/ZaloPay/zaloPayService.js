@@ -45,13 +45,7 @@ export const createZaloPayOrderService = async (amount, orderId) => {
     const response = await axios.post(ZaloPayConfig.endpoint, null, {
       params: order,
     });
-   console.log("AppID:", ZaloPayConfig.app_id);
-    console.log("KEY1:", ZaloPayConfig.key1);
-    console.log("KEY2:", ZaloPayConfig.key2);
-    console.log("ENDPOINT:", ZaloPayConfig.endpoint);
-    console.log("Zalo trả về:", response.data);
     return response.data;
-
   } catch (err) {
     console.error("Lỗi service:", err.response?.data || err);
     throw err;

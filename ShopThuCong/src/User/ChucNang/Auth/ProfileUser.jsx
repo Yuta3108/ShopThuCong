@@ -185,7 +185,7 @@ export default function UserProfile() {
     try {
       const res = await fetch(
         `https://backend-eta-ivory-29.vercel.app/api/orders/${orderId}/cancel`,
-        { method: "PUT", headers: { Authorization: `Bearer ${token}` } }
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (res.ok) {

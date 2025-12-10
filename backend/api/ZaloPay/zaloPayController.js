@@ -15,7 +15,7 @@ export const createZaloPayOrder = async (req, res) => {
     if (!orderId)
       return res.status(400).json({ message: "Thiếu orderId" });
 
-    // Gọi service (đúng thông số)
+    // Gọi service 
     const zaloRes = await createZaloPayOrderService(amount, orderId);
 
     console.log("ZaloPay trả:", zaloRes); 
@@ -48,7 +48,7 @@ export const zaloPayCallback = async (req, res) => {
 
     const parsed = JSON.parse(data);
     const embed = JSON.parse(parsed.embed_data || "{}");
-    const orderId = embed.orderId; // 💖 FIX: lấy đúng orderId
+    const orderId = embed.orderId;
 
     if (!orderId) {
       console.log("Không tìm thấy orderId trong callback:", parsed);
