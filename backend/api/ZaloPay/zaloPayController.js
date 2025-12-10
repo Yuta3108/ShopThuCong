@@ -18,7 +18,7 @@ export const createZaloPayOrder = async (req, res) => {
     // Gọi service (đúng thông số)
     const zaloRes = await createZaloPayOrderService(amount, orderId);
 
-    console.log("ZaloPay trả:", zaloRes); // debug thật
+    console.log("ZaloPay trả:", zaloRes); 
 
     // Trả về cho FE
     return res.json({
@@ -41,36 +41,29 @@ export const zaloPayCallback = async (req, res) => {
   try {
     const { data, mac } = req.body;
 
-    // verify MAC
     const isValid = verifyCallbackService(data, mac);
     if (!isValid) {
-      return res.json({
-        return_code: -1,
-        return_message: "MAC không hợp lệ"
-      });
+      return res.json({ return_code: -1, return_message: "MAC không hợp lệ" });
     }
 
     const parsed = JSON.parse(data);
-    const orderId = parsed.orderId; // lấy ID đơn hàng
+    const embed = JSON.parse(parsed.embed_data || "{}");
+    const orderId = embed.orderId; // 💖 FIX: lấy đúng orderId
 
-    // cập nhật đơn hàng
+    if (!orderId) {
+      console.log("Không tìm thấy orderId trong callback:", parsed);
+      return res.json({ return_code: -1, return_message: "Thiếu orderId" });
+    }
+
     await db.query(
       "UPDATE orders SET IsPaid=1, Status='processing' WHERE OrderID=?",
       [orderId]
     );
 
-    // trả lời bắt buộc
-    return res.json({
-      return_code: 1,
-      return_message: "success"
-    });
-
+    return res.json({ return_code: 1, return_message: "success" });
   } catch (err) {
     console.error("Zalo callback error:", err);
-
-    return res.json({
-      return_code: 0,
-      return_message: "error"
-    });
+    return res.json({ return_code: 0, return_message: "error" });
   }
 };
+
