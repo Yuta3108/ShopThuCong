@@ -173,14 +173,11 @@ export default function CheckoutPage() {
       if (paymentMethod === "zalopay") {
         const zaloRes = await axios.post(
           `${API}/payment/zalopay`,
-          {
-            amount: total,
-            orderId,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { amount: total, orderId },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        console.log("ZaloPay trả về FE:", zaloRes.data);
 
         const { order_url } = zaloRes.data;
 
@@ -188,7 +185,8 @@ export default function CheckoutPage() {
           return Swal.fire("Lỗi", "Không tạo được đơn ZaloPay", "error");
         }
 
-        window.location.href = order_url;
+        // Redirect chuẩn
+        window.location.assign(order_url);
         return;
       }
 
