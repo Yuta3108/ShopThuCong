@@ -9,7 +9,6 @@ export const CartItem = {
           pv.Price AS VariantPrice,
           pv.ProductID,
           pv.ProductCode,
-          pv.VariantName,
           p.ProductName,
           img.ImageURL
        FROM cart_items ci
