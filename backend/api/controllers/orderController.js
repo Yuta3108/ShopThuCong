@@ -7,6 +7,10 @@ import {
   getOrderDetailModel,
   updateOrderStatusModel,
   deleteOrderModel,
+  getOrderItemsModel,
+  restoreStockModel,
+  restoreVoucherModel,
+  cancelOrderModel
 } from "../models/orderModel.js";
 import { createOrderItemsModel } from "../models/orderItemModel.js";
 import {
@@ -182,5 +186,29 @@ export const deleteOrder = async (req, res) => {
   } catch (err) {
     console.error("Lỗi deleteOrder:", err);
     res.status(500).json({ message: "Lỗi server" });
+  }
+};
+export const cancelOrder = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+
+    // Lấy thông tin đơn hàng
+    const order = await getOrderDetailModel(orderId);
+    if (!order)
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    // Lấy item
+    const items = await getOrderItemsModel(orderId);
+    // Hoàn kho
+    await restoreStockModel(items);
+    // Hoàn voucher
+    if (order.VoucherCode) {
+      await restoreVoucherModel(order.VoucherCode);
+    }
+    // Hủy đơn
+    await cancelOrderModel(orderId);
+    res.json({ success: true, message: "Hủy đơn hàng thành công" });
+  } catch (err) {
+    console.error("Lỗi cancelOrder:", err);
+    res.status(500).json({ message: "Lỗi server khi hủy đơn" });
   }
 };

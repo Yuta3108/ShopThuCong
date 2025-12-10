@@ -64,3 +64,37 @@ export const deleteOrderModel = async (orderId) => {
   await db.query(`DELETE FROM order_items WHERE OrderID = ?`, [orderId]);
   await db.query(`DELETE FROM orders WHERE OrderID = ?`, [orderId]);
 };
+export const getOrderItemsModel = async (orderId) => {
+  const [rows] = await db.query(
+    "SELECT * FROM order_items WHERE OrderID = ?",
+    [orderId]
+  );
+  return rows;
+};
+
+// Hoàn lại tồn kho
+export const restoreStockModel = async (items) => {
+  for (const item of items) {
+    await db.query(
+      "UPDATE variants SET Stock = Stock + ? WHERE VariantID = ?",
+      [item.Quantity, item.VariantID]
+    );
+  }
+};
+
+// Hoàn lại lượt voucher
+export const restoreVoucherModel = async (voucherCode) => {
+  await db.query(
+    "UPDATE voucher SET soluong = soluong + 1 WHERE magiamgia = ?",
+    [voucherCode]
+  );
+};
+
+// Model cập nhật trạng thái hủy đơn
+export const cancelOrderModel = async (orderId) => {
+  const [result] = await db.query(
+    "UPDATE orders SET Status = 'cancelled', UpdatedAt = NOW() WHERE OrderID = ?",
+    [orderId]
+  );
+  return result;
+};

@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
@@ -22,9 +22,7 @@ export default function CheckoutPage() {
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
 
-  // ============================
   // APPLY VOUCHER (MANUAL)
-  // ============================
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
       Swal.fire({
@@ -72,9 +70,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // ============================
   // APPLY VOUCHER AUTO
-  // ============================
   const applyVoucherAuto = async (code) => {
     try {
       const subtotal = cart.reduce(
@@ -99,9 +95,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // ============================
   // LOAD USER + CART
-  // ============================
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -141,9 +135,7 @@ export default function CheckoutPage() {
     fetchData();
   }, [navigate]);
 
-  // ============================
   // AUTO APPLY VOUCHER WHEN CART LOADED
-  // ============================
   useEffect(() => {
     if (voucherCode && cart.length > 0) {
       applyVoucherAuto(voucherCode);
@@ -172,9 +164,7 @@ export default function CheckoutPage() {
   );
   const total = Math.max(0, subtotal - discount);
 
-  // ============================
   // SUBMIT ORDER
-  // ============================
   const handleOrder = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -196,7 +186,7 @@ export default function CheckoutPage() {
 
       Swal.fire({
         icon: "success",
-        title: "Đặt hàng thành công 🎉",
+        title: "Đặt hàng thành công ",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -212,9 +202,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // ============================
-  // UI
-  // ============================
+
   return (
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
