@@ -164,11 +164,11 @@ export default function CheckoutPage() {
   );
   const total = Math.max(0, subtotal - discount);
 
-  // SUBMIT ORDER
   const handleOrder = async () => {
     try {
       const token = localStorage.getItem("token");
 
+      // TẠO ĐƠN HÀNG 
       const res = await axios.post(
         `${API}/orders`,
         {
@@ -184,6 +184,29 @@ export default function CheckoutPage() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      const orderId = res.data.orderId; // cần BE trả orderId
+
+      // THANH TOÁN QUA ZALOPAY
+      if (paymentMethod === "zalopay") {
+        const zaloRes = await axios.post(
+          `${API}/payment/zalopay`,
+          {
+            amount: total,
+            orderId,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const { order_url } = zaloRes.data;
+
+        // CHUYỂN ĐẾN TRANG THANH TOÁN CỦA ZALOPAY
+        window.location.href = order_url;
+        return;
+      }
+
+      //  CASE COD / BANKING → giữ nguyên
       Swal.fire({
         icon: "success",
         title: "Đặt hàng thành công ",
@@ -358,11 +381,11 @@ export default function CheckoutPage() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
-                value="momo"
-                checked={paymentMethod === "momo"}
+                value="zalopay"
+                checked={paymentMethod === "zalopay"}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               />
-              Ví MoMo
+              Thanh toán qua ZaloPay
             </label>
           </div>
 

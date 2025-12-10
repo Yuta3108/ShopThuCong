@@ -10,6 +10,6 @@ const router = express.Router();
 router.post("/zalopay",authMiddleware, createZaloPayOrder);
 
 // Callback từ ZaloPay
-router.post("/zalo-callback",authMiddleware, zaloPayCallback);
+router.post("/zalo-callback", zaloPayCallback);
 
 export default router;
