@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-export const createVariant = async ({ ProductID, ProductCode, Price, StockQuantity = 0, Weight = null, IsActive = 1, attributeValueIds = [] }) => {
+export const createVariant = async ({ ProductID, ProductCode, Price, StockQuantity = 0, Weight = 0, IsActive = 1, attributeValueIds = [] }) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
