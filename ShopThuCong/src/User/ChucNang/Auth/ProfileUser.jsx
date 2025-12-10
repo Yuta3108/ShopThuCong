@@ -16,7 +16,7 @@ export default function UserProfile() {
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailData, setDetailData] = useState(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [loadingOrderId, setLoadingOrderId] = useState(null);
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -204,7 +204,7 @@ export default function UserProfile() {
 
   //  XEM CHI TIẾT ĐƠN 
   const handleViewDetail = async (orderId) => {
-    setLoadingDetail(true);
+    setLoadingOrderId(orderId);
 
     try {
       const res = await fetch(
@@ -224,7 +224,7 @@ export default function UserProfile() {
       Swal.fire("Lỗi server!", "Không thể kết nối", "error");
     }
 
-    setLoadingDetail(false);
+    setLoadingOrderId(null); // reset lại
   };
 
   //  PHÂN TRANG 
@@ -251,22 +251,20 @@ export default function UserProfile() {
           <div className="flex justify-center gap-3 mb-6">
             <button
               onClick={() => setActiveTab("info")}
-              className={`px-5 py-2 rounded-full text-sm font-semibold ${
-                activeTab === "info"
+              className={`px-5 py-2 rounded-full text-sm font-semibold ${activeTab === "info"
                   ? "bg-rose-500 text-white"
                   : "bg-slate-100 text-slate-600"
-              }`}
+                }`}
             >
               Thông tin tài khoản
             </button>
 
             <button
               onClick={() => setActiveTab("orders")}
-              className={`px-5 py-2 rounded-full text-sm font-semibold ${
-                activeTab === "orders"
+              className={`px-5 py-2 rounded-full text-sm font-semibold ${activeTab === "orders"
                   ? "bg-rose-500 text-white"
                   : "bg-slate-100 text-slate-600"
-              }`}
+                }`}
             >
               Lịch sử đơn hàng
             </button>
@@ -291,11 +289,10 @@ export default function UserProfile() {
                     onChange={(e) =>
                       setForm({ ...form, FullName: e.target.value })
                     }
-                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${
-                      editMode
+                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${editMode
                         ? "bg-white focus:ring-2 focus:ring-rose-200"
                         : "bg-slate-100"
-                    }`}
+                      }`}
                   />
                 </div>
 
@@ -320,11 +317,10 @@ export default function UserProfile() {
                     onChange={(e) =>
                       setForm({ ...form, Phone: e.target.value })
                     }
-                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${
-                      editMode
+                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${editMode
                         ? "bg-white focus:ring-2 focus:ring-rose-200"
                         : "bg-slate-100"
-                    }`}
+                      }`}
                   />
                 </div>
 
@@ -338,11 +334,10 @@ export default function UserProfile() {
                     onChange={(e) =>
                       setForm({ ...form, Address: e.target.value })
                     }
-                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${
-                      editMode
+                    className={`w-full px-4 py-2 border rounded-lg mt-1 ${editMode
                         ? "bg-white focus:ring-2 focus:ring-rose-200"
                         : "bg-slate-100"
-                    }`}
+                      }`}
                   />
                 </div>
 
@@ -438,10 +433,10 @@ export default function UserProfile() {
                           {/* Xem chi tiết */}
                           <button
                             onClick={() => handleViewDetail(order.OrderID)}
-                            disabled={loadingDetail}
+                            disabled={loadingOrderId === order.OrderID}
                             className="px-4 py-1.5 bg-rose-500 text-white rounded-lg text-sm shadow"
                           >
-                            {loadingDetail ? "Đang tải..." : "Xem chi tiết"}
+                            {loadingOrderId === order.OrderID ? "Đang tải..." : "Xem chi tiết"}
                           </button>
 
                           {/* Hủy đơn */}
@@ -473,11 +468,10 @@ export default function UserProfile() {
                         <button
                           key={i}
                           onClick={() => setCurrentPage(i + 1)}
-                          className={`px-3 py-1 text-sm rounded-md ${
-                            currentPage === i + 1
+                          className={`px-3 py-1 text-sm rounded-md ${currentPage === i + 1
                               ? "bg-rose-500 text-white"
                               : "bg-slate-100 text-slate-700"
-                          }`}
+                            }`}
                         >
                           {i + 1}
                         </button>
