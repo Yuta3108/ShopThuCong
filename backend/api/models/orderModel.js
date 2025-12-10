@@ -76,7 +76,7 @@ export const getOrderItemsModel = async (orderId) => {
 export const restoreStockModel = async (items) => {
   for (const item of items) {
     await db.query(
-      "UPDATE variants SET Stock = Stock + ? WHERE VariantID = ?",
+      "UPDATE product_variants SET Stock = Stock + ? WHERE VariantID = ?",
       [item.Quantity, item.VariantID]
     );
   }
@@ -85,7 +85,7 @@ export const restoreStockModel = async (items) => {
 // Hoàn lại lượt voucher
 export const restoreVoucherModel = async (voucherCode) => {
   await db.query(
-    "UPDATE voucher SET soluong = soluong + 1 WHERE magiamgia = ?",
+    "UPDATE voucher SET Stock = Stock + 1 WHERE Voucher = ?",
     [voucherCode]
   );
 };
