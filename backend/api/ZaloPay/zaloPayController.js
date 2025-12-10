@@ -1,8 +1,3 @@
-import {
-  createZaloPayOrderService,
-  verifyCallbackService,
-} from "./zaloPayService.js";
-import db from "../config/db.js"; 
 
 import {
   createZaloPayOrderService,
