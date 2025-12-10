@@ -76,7 +76,7 @@ export const getOrderItemsModel = async (orderId) => {
 export const restoreStockModel = async (items) => {
   for (const item of items) {
     await db.query(
-      "UPDATE product_variants SET Stock = Stock + ? WHERE VariantID = ?",
+      "UPDATE product_variants SET StockQuantity = StockQuantity + ? WHERE VariantID = ?",
       [item.Quantity, item.VariantID]
     );
   }
