@@ -22,7 +22,13 @@ export default function CheckoutPage() {
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
 
-  // APPLY VOUCHER (MANUAL)
+  const subtotal = cart.reduce(
+    (sum, item) => sum + item.UnitPrice * item.Quantity,
+    0
+  );
+  const total = Math.max(0, subtotal - discount);
+
+  // --- APPLY VOUCHER ---
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
       Swal.fire({
@@ -34,11 +40,6 @@ export default function CheckoutPage() {
     }
 
     try {
-      const subtotal = cart.reduce(
-        (sum, item) => sum + item.UnitPrice * item.Quantity,
-        0
-      );
-
       const res = await axios.post(`${API}/vouchers/apply`, {
         code: voucherCode.trim().toUpperCase(),
         subtotal,
@@ -46,10 +47,11 @@ export default function CheckoutPage() {
 
       if (res.data.success) {
         setDiscount(Number(res.data.discount));
+
         Swal.fire({
           icon: "success",
           title: "Áp dụng thành công!",
-          text: `Bạn được giảm ${formatMoney(res.data.discount)}₫`,
+          text: `Đã giảm ${formatMoney(res.data.discount)}₫`,
           timer: 1500,
           showConfirmButton: false,
         });
@@ -70,14 +72,9 @@ export default function CheckoutPage() {
     }
   };
 
-  // APPLY VOUCHER AUTO
+  // --- AUTO APPLY ---
   const applyVoucherAuto = async (code) => {
     try {
-      const subtotal = cart.reduce(
-        (sum, item) => sum + item.UnitPrice * item.Quantity,
-        0
-      );
-
       if (subtotal <= 0) return;
 
       const res = await axios.post(`${API}/vouchers/apply`, {
@@ -95,7 +92,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // LOAD USER + CART
+  // --- LOAD USER + CART ---
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -110,17 +107,18 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (savedVoucher && savedVoucher !== "undefined" && savedVoucher !== "null") {
+    if (savedVoucher && savedVoucher !== "undefined" && savedVoucher !== "null")
       setVoucherCode(savedVoucher);
-    }
 
     const fetchData = async () => {
       try {
+        // USER
         const userRes = await axios.get(`${API}/users/${storedUser.UserID}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(userRes.data);
 
+        // CART
         const cartRes = await axios.get(`${API}/cart`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -135,12 +133,83 @@ export default function CheckoutPage() {
     fetchData();
   }, [navigate]);
 
-  // AUTO APPLY VOUCHER WHEN CART LOADED
+  // Auto apply voucher once cart loaded
   useEffect(() => {
     if (voucherCode && cart.length > 0) {
       applyVoucherAuto(voucherCode);
     }
   }, [voucherCode, cart]);
+
+  // --- HANDLE ORDER ---
+  const handleOrder = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      //  Tạo đơn hàng
+      const res = await axios.post(
+        `${API}/orders`,
+        {
+          receiverName: user.FullName,
+          phone: user.Phone,
+          email: user.Email,
+          address: user.Address,
+          paymentMethod,
+          voucherCode,
+          discount,
+          note,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const orderId = res.data.orderId;
+
+      if (!orderId) {
+        return Swal.fire("Lỗi", "Không tạo được đơn hàng!", "error");
+      }
+
+      // 
+      if (paymentMethod === "zalopay") {
+        const zaloRes = await axios.post(
+          `${API}/payment/zalopay`,
+          {
+            amount: total,
+            orderId,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        const { order_url } = zaloRes.data;
+
+        if (!order_url) {
+          return Swal.fire("Lỗi", "Không tạo được đơn ZaloPay", "error");
+        }
+
+        window.location.href = order_url;
+        return;
+      }
+
+      //
+      Swal.fire({
+        icon: "success",
+        title: "Đặt hàng thành công",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      localStorage.removeItem("selectedVoucher");
+      navigate("/");
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi đặt hàng",
+        text: err.response?.data?.message || "Không thể tạo đơn hàng",
+      });
+    }
+  };
 
   if (loading)
     return (
@@ -158,98 +227,30 @@ export default function CheckoutPage() {
       </div>
     );
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.UnitPrice * item.Quantity,
-    0
-  );
-  const total = Math.max(0, subtotal - discount);
-
-  const handleOrder = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      // TẠO ĐƠN HÀNG 
-      const res = await axios.post(
-        `${API}/orders`,
-        {
-          receiverName: user.FullName,
-          phone: user.Phone,
-          email: user.Email,
-          address: user.Address,
-          paymentMethod,
-          voucherCode,
-          discount,
-          note,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const orderId = res.data.orderId; // cần BE trả orderId
-
-      // THANH TOÁN QUA ZALOPAY
-      if (paymentMethod === "zalopay") {
-        const zaloRes = await axios.post(
-          `${API}/payment/zalopay`,
-          {
-            amount: total,
-            orderId,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        const { order_url } = zaloRes.data;
-
-        // CHUYỂN ĐẾN TRANG THANH TOÁN CỦA ZALOPAY
-        window.location.href = order_url;
-        return;
-      }
-
-      //  CASE COD / BANKING → giữ nguyên
-      Swal.fire({
-        icon: "success",
-        title: "Đặt hàng thành công ",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      localStorage.removeItem("selectedVoucher");
-      navigate("/");
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi đặt hàng",
-        text: err.response?.data?.message || "Không thể tạo đơn hàng",
-      });
-    }
-  };
-
-
   return (
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
 
-      {/* BREADCRUMB - VERSION FIXED LEFT */}
+      {/* UI KHÔNG ĐỤNG - Y NGUYÊN */}
       <div className="w-full px-6 py-4">
         <div className="max-w-[1280px] mx-auto text-left">
           <nav className="text-sm text-slate-600 flex gap-2 justify-start">
-            <Link to="/" className="hover:text-rose-500">Trang chủ</Link>
-            /
-            <Link to="/cart" className="hover:text-rose-500">Giỏ hàng</Link>
-            /
+            <Link to="/" className="hover:text-rose-500">Trang chủ</Link> /
+            <Link to="/cart" className="hover:text-rose-500">Giỏ hàng</Link> /
             <span className="text-rose-500 font-medium">Thanh toán</span>
           </nav>
         </div>
       </div>
 
+      {/* MAIN */}
       <main className="flex-1 max-w-[1280px] mx-auto px-6 pb-16 grid grid-cols-1 md:grid-cols-[1.4fr,1fr] gap-10">
 
-        {/* LEFT */}
+        {/* ===== LEFT ===== */}
         <section className="bg-white p-6 rounded-2xl border shadow">
           <h2 className="text-xl font-semibold mb-4">Thông tin giao hàng</h2>
 
           <div className="space-y-4 text-sm">
+
             <div>
               <label className="text-slate-600">Họ tên</label>
               <input
@@ -268,6 +269,7 @@ export default function CheckoutPage() {
                   value={user.Phone}
                 />
               </div>
+
               <div>
                 <label className="text-slate-600">Email</label>
                 <input
@@ -298,7 +300,7 @@ export default function CheckoutPage() {
           </div>
         </section>
 
-        {/* RIGHT */}
+        {/* ===== RIGHT ===== */}
         <section className="bg-white p-6 rounded-2xl border shadow h-fit">
           <h2 className="text-xl font-semibold mb-4">Tóm tắt đơn hàng</h2>
 
@@ -311,9 +313,10 @@ export default function CheckoutPage() {
 
           <hr className="my-4" />
 
-          {/* VOUCHER */}
+          {/* Voucher */}
           <div className="mb-4">
             <label className="text-sm font-medium">Mã giảm giá</label>
+
             <div className="flex gap-2 mt-2">
               <input
                 className="flex-1 p-2 border rounded-lg"
@@ -354,7 +357,7 @@ export default function CheckoutPage() {
             <span>{formatMoney(total)}₫</span>
           </div>
 
-          {/* PAYMENT */}
+          {/* LET METHOD */}
           <h2 className="text-lg font-semibold mb-3">Phương thức thanh toán</h2>
 
           <div className="space-y-2 text-sm">
