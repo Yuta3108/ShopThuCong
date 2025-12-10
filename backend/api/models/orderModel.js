@@ -85,7 +85,7 @@ export const restoreStockModel = async (items) => {
 // Hoàn lại lượt voucher
 export const restoreVoucherModel = async (voucherCode) => {
   await db.query(
-    "UPDATE voucher SET Stock = Stock + 1 WHERE Voucher = ?",
+    "UPDATE vouchers SET Quantity = Quantity + 1 WHERE VoucherID = ?",
     [voucherCode]
   );
 };
