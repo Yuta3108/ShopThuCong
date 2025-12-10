@@ -4,23 +4,44 @@ import {
 } from "./zaloPayService.js";
 import db from "../config/db.js"; 
 
+import {
+  createZaloPayOrderService,
+  verifyCallbackService,
+} from "./zaloPayService.js";
+import db from "../config/db.js"; 
+
 export const createZaloPayOrder = async (req, res) => {
   try {
-    const { amount } = req.body;
-    if (!amount) return res.status(400).json({ message: "Thiếu amount" });
+    const { amount, orderId } = req.body;
 
-    const zaloRes = await createZaloPayOrderService(amount);
+    if (!amount) 
+      return res.status(400).json({ message: "Thiếu amount" });
 
+    if (!orderId)
+      return res.status(400).json({ message: "Thiếu orderId" });
+
+    // Gọi service (đúng thông số)
+    const zaloRes = await createZaloPayOrderService(amount, orderId);
+
+    console.log("ZaloPay trả:", zaloRes); // debug thật
+
+    // Trả về cho FE
     return res.json({
+      success: true,
       order_url: zaloRes.order_url,
       zp_trans_token: zaloRes.zp_trans_token,
     });
+
   } catch (err) {
-    console.error("ZaloPay Error:", err.response?.data || err);
-    res.status(500).json({ message: "Lỗi tạo thanh toán ZaloPay" });
+    console.error("ZaloPay ERROR >>>", err?.response?.data || err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Không thể tạo giao dịch ZaloPay",
+      error: err?.response?.data || err?.message
+    });
   }
 };
-
 export const zaloPayCallback = async (req, res) => {
   try {
     const { data, mac } = req.body;
