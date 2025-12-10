@@ -12,6 +12,7 @@ import variantRoutes from "./api/routes/variantsRoutes.js";
 import voucherRoutes from "./api/routes/voucherRoutes.js";
 import cartRoutes from "./api/routes/cartRoutes.js";
 import orderRoutes from "./api/routes/orderRoutes.js";
+import zaloPayRoutes from "./api/ZaloPay/zaloPayRoutes.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -30,6 +31,7 @@ app.use("/api/variant-attributes", variantAttributesRoutes);
 app.use("/api/vouchers", voucherRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payment", zaloPayRoutes);
 app.get("/check", (req, res) => {
   res.send("ShopThuCong User API is running...");
 });
