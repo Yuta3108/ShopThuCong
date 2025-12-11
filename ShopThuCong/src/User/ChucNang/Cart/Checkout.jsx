@@ -79,7 +79,7 @@ export default function CheckoutPage() {
 
       const res = await axios.post(`${API}/vouchers/apply`, {
         code: code.trim().toUpperCase(),
-        subtotal,
+        subtotal: Number(subtotal),
       });
 
       if (res.data.success) {
@@ -193,7 +193,7 @@ export default function CheckoutPage() {
       //
       Swal.fire({
         icon: "success",
-        title: "Đặt hàng thành công",
+        title: "Đặt hàng thành công vui lòng check hoá đơn bên Email!",
         timer: 1500,
         showConfirmButton: false,
       });

@@ -18,6 +18,7 @@ import Checkout from './User/ChucNang/Cart/Checkout';
 import AdminOrderPage from './Admin/Pages/AdminOrder';
 import XacThucEmail from './User/ChucNang/Auth/XacThucEmail'
 import AdminCategories from './Admin/Pages/AdminCategories'
+import Paymentsuccess from './User/ChucNang/Cart/paymentsuccess';
 function App() {
   return (
     
@@ -36,6 +37,7 @@ function App() {
       <Route path="/cart" element={<CartPage />} />
       <Route path='/checkout' element={<Checkout />} />
       <Route path="/verify-email/:token" element={<XacThucEmail />} />
+      <Route path="/payment-success" element={<Paymentsuccess />} />
       //== Admin Routes ==// 
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />
