@@ -18,8 +18,7 @@ import {
   decreaseVoucherQuantity,
 } from "../models/VoucherModel.js";
 import { decreaseStockProduct, CheckStockProduct } from "../models/variantsModel.js";
-import { } from "../models/CartModel.js";
-// 
+import { autoDeactivateProductIfOutOfStock } from "../models/productsModel.js";
 import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
 
 // =========================== TẠO ĐƠN HÀNG ===============================
@@ -83,8 +82,9 @@ export const createOrderFromCart = async (req, res) => {
     await createOrderItemsModel(orderId, items);
     // Giảm số lượng sản phẩm
     for (const item of items) {
-      await decreaseStockProduct(item.VariantID, item.Quantity);
-    }
+        await decreaseStockProduct(item.VariantID, item.Quantity);
+        await autoDeactivateProductIfOutOfStock(item.ProductID);
+      }
     // Giảm lượt voucher
     if (voucherCode) {
       try {

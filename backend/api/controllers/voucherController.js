@@ -5,13 +5,14 @@ import {
   createVoucher,
   updateVoucher,
   deleteVoucher,
+  lockVoucherIfNeeded,
 } from "../models/VoucherModel.js";
 
-// ==== Helper convert số an toàn ====
+/* ------------------------- HELPERS ------------------------- */
+
 const toNumber = (val, fallback = 0) => {
   if (val === undefined || val === null || val === "") return fallback;
 
-  // "20.000,00" → "20000.00"
   if (typeof val === "string") {
     val = val.replace(/\./g, "").replace(",", ".");
   }
@@ -20,23 +21,21 @@ const toNumber = (val, fallback = 0) => {
   return Number.isNaN(n) ? fallback : n;
 };
 
-// ==== Helper chuẩn hóa ngày về MySQL YYYY-MM-DD ====
 const normalizeDate = (val) => {
   if (!val) return null;
 
-  // "31/12/2025" -> "2025-12-31"
   if (val.includes("/")) {
     const [d, m, y] = val.split("/");
     return `${y}-${m}-${d}`;
   }
 
-  // "2025-12-31T00:00:00.000Z"
   if (val.includes("T")) return val.slice(0, 10);
 
-  return val; // đã đúng yyyy-mm-dd
+  return val;
 };
 
-// ==== GET ALL ====
+/* ------------------------- GET ALL ------------------------- */
+
 export const getVouchersController = async (req, res) => {
   try {
     const rows = await getAllVouchers();
@@ -46,7 +45,8 @@ export const getVouchersController = async (req, res) => {
   }
 };
 
-// ==== CREATE ====
+/* ------------------------- CREATE ------------------------- */
+
 export const createVoucherController = async (req, res) => {
   try {
     const d = req.body;
@@ -64,35 +64,19 @@ export const createVoucherController = async (req, res) => {
     };
 
     const id = await createVoucher(payload);
-
     res.json({ VoucherID: id, ...payload });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// ==== UPDATE ====
+/* ------------------------- UPDATE ------------------------- */
+
 export const updateVoucherController = async (req, res) => {
   try {
     const id = req.params.id;
     const d = req.body;
-
-    const toNumber = (v, fb = 0) => {
-      if (v === undefined || v === null || v === "") return fb;
-      if (typeof v === "string") v = v.replace(/\./g, "").replace(",", ".");
-      const n = Number(v);
-      return Number.isNaN(n) ? fb : n;
-    };
-
-    const normalizeDate = (val) => {
-      if (!val) return null;
-      if (val.includes("/")) {
-        const [dd, mm, yy] = val.split("/");
-        return `${yy}-${mm}-${dd}`;
-      }
-      if (val.includes("T")) return val.slice(0, 10);
-      return val;
-    };
 
     const payload = {
       Code: d.Code?.trim(),
@@ -106,23 +90,23 @@ export const updateVoucherController = async (req, res) => {
       Status: d.Status === 0 || d.Status === "0" ? 0 : 1,
     };
 
-    // KIỂM TRA TRÙNG MÃ
+    // Kiểm tra trùng mã
     const existed = await getVoucherByCode(payload.Code);
     if (existed && existed.VoucherID != id) {
-      return res.status(400).json({
-        message: "Mã voucher đã tồn tại",
-      });
+      return res.status(400).json({ message: "Mã voucher đã tồn tại" });
     }
 
     await updateVoucher(id, payload);
-
     res.json({ message: "Cập nhật thành công" });
+
   } catch (err) {
     console.log("Lỗi updateVoucher:", err);
     res.status(500).json({ error: err.message });
   }
 };
-// ==== DELETE ====
+
+/* ------------------------- DELETE ------------------------- */
+
 export const deleteVoucherController = async (req, res) => {
   try {
     await deleteVoucher(req.params.id);
@@ -132,33 +116,52 @@ export const deleteVoucherController = async (req, res) => {
   }
 };
 
-// ==== APPLY (USER) ====
+/* ------------------------- APPLY (USER) ------------------------- */
+
 export const applyVoucherController = async (req, res) => {
   try {
-    const code = req.body.code?.trim().toUpperCase();
-    const total = Number(req.body.total ?? req.body.subtotal ?? 0);
+    const { code, subtotal } = req.body;
 
     const voucher = await getVoucherByCode(code);
-    if (!voucher) return res.status(404).json({ message: "Mã giảm giá không tồn tại" });
-
-    if (voucher.Quantity <= 0)
-      return res.status(400).json({ message: "Mã giảm giá đã hết lượt dùng" });
-
-    if (total < voucher.MinOrder)
-      return res.status(400).json({ message: "Đơn hàng chưa đạt giá trị tối thiểu" });
-
-    let discount = 0;
-
-    if (voucher.Type === "percent") {
-      discount = (total * voucher.DiscountValue) / 100;
-      if (voucher.MaxDiscount) discount = Math.min(discount, voucher.MaxDiscount);
-    } else {
-      discount = voucher.DiscountValue;
+    if (!voucher) {
+      return res.status(400).json({ success: false, message: "Mã voucher không tồn tại!" });
     }
 
-    return res.json({ success: true, discount, voucher });
+    // Voucher bị khóa
+    if (Number(voucher.Status) === 0) {
+      return res.status(400).json({ success: false, message: "Voucher đã bị khóa hoặc hết lượt!" });
+    }
+
+    // Voucher hết lượt
+    if (Number(voucher.Quantity) <= 0) {
+      await lockVoucherIfNeeded(voucher.VoucherID);
+      return res.status(400).json({ success: false, message: "Voucher đã hết lượt sử dụng!" });
+    }
+
+    // Chưa đạt giá trị tối thiểu
+    if (subtotal < voucher.MinOrder) {
+      return res.status(400).json({
+        success: false,
+        message: `Đơn hàng chưa đạt ${voucher.MinOrder.toLocaleString()}₫ để áp dụng`,
+      });
+    }
+
+    // Tính giảm
+    let discount = voucher.Type === "percent"
+      ? (subtotal * voucher.DiscountValue) / 100
+      : Number(voucher.DiscountValue);
+
+    if (discount > voucher.MaxDiscount) {
+      discount = voucher.MaxDiscount;
+    }
+    return res.json({
+      success: true,
+      discount,
+      message: "Áp dụng voucher thành công!"
+    });
+
   } catch (err) {
-    console.log("Voucher error:", err);
-    return res.status(500).json({ message: "Lỗi máy chủ" });
+    console.log(err);
+    res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 };

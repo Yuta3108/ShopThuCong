@@ -18,14 +18,20 @@ export default function VoucherModal({ isOpen, onClose }) {
         });
 
         const result = await res.json();
-
         const list = Array.isArray(result)
           ? result
           : Array.isArray(result.data)
           ? result.data
           : [];
 
-        setVouchers(list);
+        // ONLY SHOW VOUCHERS STILL USABLE
+        const available = list.filter(
+          (v) =>
+            v.Status === 1 &&
+            Number(v.Quantity) > 0
+        );
+
+        setVouchers(available);
       } catch {
         setVouchers([]);
       }

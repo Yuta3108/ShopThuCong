@@ -89,3 +89,11 @@ export const decreaseVoucherQuantity = async (id) => {
     [id]
   );
 };
+export const lockVoucherIfNeeded = async (id) => {
+  await db.query(
+    `UPDATE vouchers 
+     SET Status = 0 
+     WHERE VoucherID = ? AND Quantity <= 0`,
+    [id]
+  );
+};

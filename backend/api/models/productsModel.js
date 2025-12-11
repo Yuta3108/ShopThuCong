@@ -110,3 +110,20 @@ export const deleteProduct = async (id) => {
   return res.affectedRows > 0;
 };
 
+export const autoDeactivateProductIfOutOfStock = async (productId) => {
+  const [[row]] = await db.query(
+    `SELECT SUM(StockQuantity) AS totalStock 
+     FROM product_variants 
+     WHERE ProductID = ?`,
+    [productId]
+  );
+
+  if (!row?.totalStock || row.totalStock <= 0) {
+    await db.query(
+      `UPDATE products 
+       SET IsActive = 0 
+       WHERE ProductID = ?`,
+      [productId]
+    );
+  }
+};
