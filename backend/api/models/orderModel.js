@@ -85,10 +85,11 @@ export const restoreStockModel = async (items) => {
 // Hoàn lại lượt voucher
 export const restoreVoucherModel = async (voucherCode) => {
   await db.query(
-    "UPDATE vouchers SET Quantity = Quantity + 1 WHERE VoucherID = ?",
+    "UPDATE vouchers SET Quantity = Quantity + 1 WHERE Code = ?",
     [voucherCode]
   );
 };
+
 
 // Model cập nhật trạng thái hủy đơn
 export const cancelOrderModel = async (orderId) => {

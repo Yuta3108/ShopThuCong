@@ -217,7 +217,7 @@ export default function UserProfile() {
 
     try {
       const res = await fetch(
-        `${API}orders/${orderId}`,
+        `${API}/orders/${orderId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

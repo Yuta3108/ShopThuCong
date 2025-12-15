@@ -192,11 +192,17 @@ export const deleteOrder = async (req, res) => {
 export const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.orderId;
-
+    
     // Lấy thông tin đơn hàng
     const order = await getOrderDetailModel(orderId);
     if (!order)
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    // Chỉ cho huỷ khi pending
+    if (order.Status !== "pending") {
+      return res.status(400).json({
+        message: "Chỉ có thể huỷ đơn đang chờ xử lý",
+      });
+    }
     // Lấy item
     const items = await getOrderItemsModel(orderId);
     // Hoàn kho
@@ -217,24 +223,31 @@ export const cancelOrderZalo = async (req, res) => {
   try {
     const { orderId } = req.params;
 
+    const order = await getOrderDetailModel(orderId);
+    if (!order)
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+
+    if (order.IsPaid === 1) {
+      return res.status(400).json({ message: "Đơn đã thanh toán, không thể huỷ" });
+    }
+
+    const items = await getOrderItemsModel(orderId);
+
+    await restoreStockModel(items);
+
+    if (order.VoucherCode) {
+      await restoreVoucherModel(order.VoucherCode);
+    }
+
     const result = await cancelOrderZaloModel(orderId);
 
     if (result.affectedRows === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Không thể hủy đơn (đã thanh toán hoặc không phải ZaloPay)",
-      });
+      return res.status(400).json({ message: "Không thể huỷ đơn ZaloPay" });
     }
 
-    res.json({
-      success: true,
-      message: "Hủy đơn hàng ZaloPay thành công",
-    });
+    res.json({ success: true, message: "Hủy đơn hàng ZaloPay thành công" });
   } catch (err) {
     console.error("Lỗi cancelOrderZalo:", err);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server khi hủy đơn ZaloPay",
-    });
+    res.status(500).json({ message: "Lỗi server khi hủy đơn ZaloPay" });
   }
 };
