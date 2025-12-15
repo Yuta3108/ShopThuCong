@@ -14,7 +14,11 @@ export default function PaymentSuccess() {
   const cancelledRef = useRef(false);
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId) {
+    setIsPaid(false);
+    setLoading(false);
+    return;
+  }
 
     const token = localStorage.getItem("token");
 
