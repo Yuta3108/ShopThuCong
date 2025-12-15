@@ -12,9 +12,7 @@ export default function PaymentSuccess() {
   const cancelledRef = useRef(false);
 
  useEffect(() => {
-  const orderId =
-    searchParams.get("orderId") ||
-    localStorage.getItem("pendingOrderId");
+  const orderId = localStorage.getItem("pendingOrderId");
 
   if (!orderId) {
     setIsPaid(false);
@@ -24,7 +22,7 @@ export default function PaymentSuccess() {
 
   const token = localStorage.getItem("token");
 
-  const handleResult = async () => {
+  const run = async () => {
     try {
       const res = await fetch(`${API}/orders/${orderId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -32,10 +30,9 @@ export default function PaymentSuccess() {
       const data = await res.json();
 
       if (res.ok && data.IsPaid === 1) {
-        //  Thanh toán thành công
         setIsPaid(true);
       } else {
-        //  HUỶ ZALOPAY → CANCELLED LUÔN
+        //  HUỶ ZALOPAY → CANCELLED
         setIsPaid(false);
 
         await fetch(`${API}/orders/${orderId}/cancel-zalopay`, {
@@ -51,7 +48,7 @@ export default function PaymentSuccess() {
     }
   };
 
-  handleResult();
+  run();
 }, []);
 
   if (loading) {
