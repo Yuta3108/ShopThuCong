@@ -6,7 +6,7 @@ import OrderDetailModal from "../../../Admin/Pages/Order/OrderDetailModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 
 import { orderStatusText, orderStatusColor } from "../../../utils/orderStatus";
-
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -40,7 +40,7 @@ export default function UserProfile() {
 
       try {
         const res = await fetch(
-          `https://backend-eta-ivory-29.vercel.app/api/users/${userId}`,
+          `${API}/users/${userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -64,7 +64,7 @@ export default function UserProfile() {
     const fetchOrders = async () => {
       try {
         const res = await fetch(
-          `https://backend-eta-ivory-29.vercel.app/api/orders/user/${userId}`,
+          `${API}/orders/user/${userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -100,7 +100,7 @@ export default function UserProfile() {
 
     try {
       const res = await fetch(
-        `https://backend-eta-ivory-29.vercel.app/api/users/${user.UserID}`,
+        `${API}/users/${user.UserID}`,
         {
           method: "PUT",
           headers: {
@@ -142,7 +142,7 @@ export default function UserProfile() {
 
     try {
       const res = await fetch(
-        `https://backend-eta-ivory-29.vercel.app/api/${user.UserID}/password`,
+        `${API}/${user.UserID}/password`,
         {
           method: "PUT",
           headers: {
@@ -217,7 +217,7 @@ export default function UserProfile() {
 
     try {
       const res = await fetch(
-        `https://backend-eta-ivory-29.vercel.app/api/orders/${orderId}`,
+        `${API}orders/${orderId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

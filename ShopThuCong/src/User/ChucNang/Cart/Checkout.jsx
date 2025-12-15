@@ -335,14 +335,30 @@ export default function CheckoutPage() {
               <input type="radio" value="cod" checked={paymentMethod === "cod"} onChange={(e) => setPaymentMethod(e.target.value)} />
               Thanh toán khi nhận hàng (COD)
             </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="banking" checked={paymentMethod === "banking"} onChange={(e) => setPaymentMethod(e.target.value)} />
-              Chuyển khoản ngân hàng
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" value="zalopay" checked={paymentMethod === "zalopay"} onChange={(e) => setPaymentMethod(e.target.value)} />
-              Thanh toán qua ZaloPay
-            </label>
+            {/* Banking + ZaloPay chỉ hiện khi total > 0 */}
+                {total > 0 && (
+                  <>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        value="banking"
+                        checked={paymentMethod === "banking"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
+                      Chuyển khoản ngân hàng
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        value="zalopay"
+                        checked={paymentMethod === "zalopay"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                      />
+                      Thanh toán qua ZaloPay
+                    </label>
+                  </>
+                )}
           </div>
 
           <button
