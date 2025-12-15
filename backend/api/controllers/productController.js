@@ -4,7 +4,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  findProductDetailById
+  findProductDetailById,
+  findProductDetailBySlugAndCode,
 } from "../models/productsModel.js";
 import cloudinary from "../config/cloudinary.js";
 
@@ -22,6 +23,24 @@ export const getProductDetail = async (req, res) => {
     if (!product) return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
     res.json(product);
   } catch {
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+export const getProductDetailBySlugAndCode = async (req, res) => {
+  try {
+    const { categorySlug, productCode } = req.params;
+
+    const product = await findProductDetailBySlugAndCode(
+      categorySlug,
+      productCode
+    );
+
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    res.json(product);
+  } catch (err) {
     res.status(500).json({ message: "Lỗi server" });
   }
 };

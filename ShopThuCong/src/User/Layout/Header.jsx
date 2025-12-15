@@ -9,6 +9,9 @@ export default function Header() {
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [cartCount, setCartCount] = useState(0);
+  const [keyword, setKeyword] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggest, setShowSuggest] = useState(false);
   const navigate = useNavigate();
 
   // Load categories
@@ -68,7 +71,27 @@ export default function Header() {
     window.addEventListener("updateCart", updateCart);
     return () => window.removeEventListener("updateCart", updateCart);
   }, []);
+  // Tự động gợi ý khi nhập tìm kiếm
+  useEffect(() => {
+  if (!keyword.trim()) {
+    setSuggestions([]);
+    return;
+  }
+  const timer = setTimeout(async () => {
+    const res = await axios.get(
+      "https://backend-eta-ivory-29.vercel.app/api/products",
+      {
+        params: {
+          q: keyword,
+          pageSize: 5,
+        },
+      }
+    );
+    setSuggestions(res.data);
+  }, 300);
 
+  return () => clearTimeout(timer);
+}, [keyword]);
   // Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -167,10 +190,46 @@ export default function Header() {
                 <Search size={16} />
               </span>
               <input
-                type="text"
+                value={keyword}
+                onChange={(e) => {
+                  setKeyword(e.target.value);
+                  setShowSuggest(true);
+                }}
                 placeholder="Tìm sản phẩm..."
                 className="border border-white/80 bg-white/70 backdrop-blur-xl rounded-full pl-9 pr-4 py-2 text-xs md:text-sm w-44 md:w-64 focus:outline-none focus:ring-2 focus:ring-teal-400/70 shadow-[0_8px_24px_rgba(15,23,42,0.08)] placeholder:text-slate-400"
               />
+              {showSuggest && suggestions.length > 0 && (
+                  <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl z-50">
+                    {suggestions.map((p) => (
+                      <div
+                          key={p.ProductID}
+                          onClick={() => {
+                            navigate(`/san-pham/${p.ProductID}`);
+                            setShowSuggest(false);
+                            setKeyword("");
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50 cursor-pointer"
+                        >
+                          {/* ẢNH */}
+                          <img
+                            src={p.ImageURL || "/no-image.png"}
+                            alt={p.ProductName}
+                            className="w-12 h-12 rounded-lg object-cover border"
+                          />
+
+                          {/* TEXT */}
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-slate-800 line-clamp-1">
+                              {p.ProductName}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Từ {p.minPrice?.toLocaleString()}₫
+                            </p>
+                          </div>
+</div>
+                    ))}
+                  </div>
+                )}
             </div>
 
             <Link to="/cart" className="relative">

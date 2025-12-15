@@ -5,7 +5,13 @@ export const findProducts = async (filters = {}) => {
   let conditions = "WHERE 1=1";
   const params = [];
 
-  if (q) { conditions += " AND p.ProductName LIKE ?"; params.push(`%${q}%`); }
+  if (q) {
+  const keywords = q.split(" ").filter(Boolean);
+  keywords.forEach(() => {
+    conditions += " AND p.ProductName LIKE ?";
+  });
+  keywords.forEach(k => params.push(`%${k}%`));
+}
   if (categoryId) { conditions += " AND p.CategoryID = ?"; params.push(categoryId); }
   if (isActive !== undefined) { conditions += " AND p.IsActive = ?"; params.push(isActive); }
 
@@ -65,7 +71,7 @@ export const findProductDetailById = async (productId) => {
       [v.VariantID]
     );
 
-    // Lấy thuộc tính & giá trị (JOIN 3 bảng)
+    // Lấy thuộc tính & giá trị 
     const [attributes] = await db.query(`
       SELECT a.AttributeID, a.AttributeName, av.AttributeValueID, av.Value
       FROM variant_attribute_values vav
@@ -75,7 +81,51 @@ export const findProductDetailById = async (productId) => {
     `, [v.VariantID]);
 
     v.images = images;
-    v.attributes = attributes; // thêm thuộc tính vào biến thể
+    v.attributes = attributes; 
+  }
+
+  product.variants = variants;
+  return product;
+};
+// Tìm sản phẩm theo category slug và product code
+export const findProductDetailBySlugAndCode = async (categorySlug, productCode) => {
+  // Lấy sản phẩm chính
+  const [[product]] = await db.query(`
+    SELECT p.*, c.CategoryName, c.Slug AS CategorySlug,
+           MIN(v.Price) AS minPrice, MAX(v.Price) AS maxPrice
+    FROM products p
+    JOIN categories c ON p.CategoryID = c.CategoryID
+    LEFT JOIN product_variants v ON v.ProductID = p.ProductID
+    WHERE c.Slug = ? AND p.ProductCode = ?
+    GROUP BY p.ProductID
+  `, [categorySlug, productCode]);
+
+  if (!product) return null;
+
+  // Lấy variants
+  const [variants] = await db.query(
+    `SELECT * FROM product_variants WHERE ProductID = ?`,
+    [product.ProductID]
+  );
+
+  //  Lấy images + attributes cho từng variant
+  for (const v of variants) {
+    const [images] = await db.query(
+      `SELECT ImageID, ImageURL FROM images WHERE VariantID = ?`,
+      [v.VariantID]
+    );
+
+    const [attributes] = await db.query(`
+      SELECT a.AttributeID, a.AttributeName,
+             av.AttributeValueID, av.Value
+      FROM variant_attribute_values vav
+      JOIN attribute_values av ON vav.AttributeValueID = av.AttributeValueID
+      JOIN attributes a ON av.AttributeID = a.AttributeID
+      WHERE vav.VariantID = ?
+    `, [v.VariantID]);
+
+    v.images = images;
+    v.attributes = attributes;
   }
 
   product.variants = variants;

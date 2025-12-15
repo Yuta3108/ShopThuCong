@@ -20,7 +20,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const loadProduct = async () => {
       try {
-        const { data } = await axios.get(`${API}/products/${id}`);
+        const { data } = await axios.get(`${API}/products/${categorySlug}/${productCode}`);
         setProduct(data);
 
         const firstVariant = data?.variants?.[0];
@@ -47,7 +47,7 @@ export default function ProductDetailPage() {
     };
 
     loadProduct();
-  }, [id]);
+  }, [categorySlug, productCode]);
 
   if (loading)
     return (
@@ -357,7 +357,7 @@ export default function ProductDetailPage() {
                 {relatedProducts.slice(0, 4).map((rp) => (
                   <Link
                     key={rp.ProductID}
-                    to={`/chi-tiet/${rp.ProductID}`}
+                    to={`/chi-tiet/${rp.CategorySlug}/${rp.ProductCode}`}
                     className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:-translate-y-[2px] p-3"
                   >
                     <img

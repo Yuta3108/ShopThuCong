@@ -33,11 +33,11 @@ function App() {
       <Route path="/reset-password/:token" element={<DatLaiMatKhau />} />
       <Route path="/san-pham/:slug" element={<ProductCategoryPage />} />
       <Route path="/san-pham" element={<ProductAllPage />} />
-      <Route path="/chi-tiet/:id" element={<ProductDetailPage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path='/checkout' element={<Checkout />} />
       <Route path="/verify-email/:token" element={<XacThucEmail />} />
       <Route path="/payment-success" element={<Paymentsuccess />} />
+      <Route path="/chi-tiet/:categorySlug/:productCode" element={<ProductDetailPage />}/>
       //== Admin Routes ==// 
       <Route path='/admin' element={<DashBoard/>} />
       <Route path="/admin/users" element={<AdminUserPage />} />

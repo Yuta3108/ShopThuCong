@@ -17,7 +17,7 @@ export default function QuickViewModal({ product, onClose }) {
     const fetchDetail = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API}/products/${product.ProductID}`);
+        const res = await axios.get(`${API}/products/${product.CategorySlug}/${product.ProductCode}`);
         const data = res.data;
 
         setDetails(data);
@@ -258,7 +258,7 @@ export default function QuickViewModal({ product, onClose }) {
             </button>
 
             <Link
-              to={`/chi-tiet/${details.ProductID}`}
+              to={`/chi-tiet/${details.CategorySlug}/${details.ProductCode}`}
               className="mt-4 text-center text-sm text-rose-500 underline underline-offset-4 hover:text-rose-600"
             >
               Xem chi tiết sản phẩm →
