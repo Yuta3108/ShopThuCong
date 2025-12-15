@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,6 +21,8 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
+
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.UnitPrice * item.Quantity,
@@ -91,12 +93,6 @@ export default function CheckoutPage() {
   }
 };
 
-useEffect(() => {
-  if (voucherCode && subtotal > 0) {
-    applyVoucherAuto(voucherCode);
-  }
-}, [voucherCode, subtotal]);
-
   // --- LOAD USER + CART ---
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -140,6 +136,9 @@ useEffect(() => {
 
   // Auto apply voucher once cart loaded
   useEffect(() => {
+      if (!voucherCode) return;
+      if (subtotal <= 0) return;
+      if (isApplyingVoucher) return;
     if (voucherCode && cart.length > 0) {
       applyVoucherAuto(voucherCode);
     }

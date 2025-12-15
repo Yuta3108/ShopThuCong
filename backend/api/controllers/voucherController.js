@@ -120,57 +120,45 @@ export const deleteVoucherController = async (req, res) => {
 
 export const applyVoucherController = async (req, res) => {
   try {
-    const { code, subtotal } = req.body;
-    const orderTotal = Number(subtotal);
+    const { code } = req.body;
+    const orderTotal = Number(req.body.orderTotal || req.body.subtotal || 0);
 
     const voucher = await getVoucherByCode(code);
     if (!voucher) {
-      return res.status(400).json({
-        success: false,
-        message: "Mã voucher không tồn tại!"
-      });
+      return res.status(400).json({ success: false, message: "Mã voucher không tồn tại!" });
     }
 
-    // Voucher bị khóa
     if (Number(voucher.Status) === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Voucher đã bị khóa hoặc hết lượt!"
-      });
+      return res.status(400).json({ success: false, message: "Voucher đã bị khóa hoặc hết lượt!" });
     }
 
-    // Voucher hết lượt
     if (Number(voucher.Quantity) <= 0) {
       await lockVoucherIfNeeded(voucher.VoucherID);
+      return res.status(400).json({ success: false, message: "Voucher đã hết lượt sử dụng!" });
+    }
+
+    if (orderTotal < Number(voucher.MinOrder)) {
       return res.status(400).json({
         success: false,
-        message: "Voucher đã hết lượt sử dụng!"
+        message: `Đơn hàng chưa đạt ${Number(voucher.MinOrder).toLocaleString()}₫ để áp dụng`,
       });
     }
 
-    // Chưa đạt giá trị tối thiểu
-    if (orderTotal < voucher.MinOrder) {
-      return res.status(400).json({
-        success: false,
-        message: `Đơn hàng chưa đạt ${voucher.MinOrder.toLocaleString()}₫ để áp dụng`,
-      });
-    }
+    const discountValue = Number(voucher.DiscountValue || 0);
+    const maxDiscount = Number(voucher.MaxDiscount || 0);
 
-    // ===== TÍNH GIẢM ĐÚNG =====
-    let discount =
-      voucher.Type === "percent"
-        ? (orderTotal * voucher.DiscountValue) / 100
-        : Number(voucher.DiscountValue);
+    let discount = 0;
 
-    // CHỈ áp MaxDiscount cho voucher %
-    if (voucher.Type === "percent" && voucher.MaxDiscount > 0) {
-      if (discount > voucher.MaxDiscount) {
-        discount = voucher.MaxDiscount;
+    if (voucher.Type === "percent") {
+      discount = (orderTotal * discountValue) / 100;
+      if (maxDiscount > 0 && discount > maxDiscount) {
+        discount = maxDiscount;
       }
+    } else {
+      discount = discountValue;
     }
 
-    // Nếu không giảm được → fail
-    if (discount <= 0) {
+    if (!Number.isFinite(discount) || discount <= 0) {
       return res.status(400).json({
         success: false,
         discount: 0,
@@ -181,14 +169,12 @@ export const applyVoucherController = async (req, res) => {
     return res.json({
       success: true,
       discount,
-      message: "Áp dụng voucher thành công!"
+      message: "Áp dụng voucher thành công!",
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({
-      success: false,
-      message: "Lỗi server!"
-    });
+    res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 };
+
