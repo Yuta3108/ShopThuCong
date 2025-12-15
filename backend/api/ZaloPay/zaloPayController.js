@@ -56,7 +56,7 @@ export const zaloPayCallback = async (req, res) => {
     }
 
     await db.query(
-      "UPDATE orders SET IsPaid=1, Status='processing' WHERE OrderID=?",
+      "UPDATE orders SET Status='processing' WHERE OrderID=?",
       [orderId]
     );
 

@@ -1,55 +1,64 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { CheckCircle, XCircle } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function PaymentSuccess() {
-  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [isPaid, setIsPaid] = useState(false);
 
-  const cancelledRef = useRef(false);
+  useEffect(() => {
+    const orderId = localStorage.getItem("pendingOrderId");
 
- useEffect(() => {
-  const orderId = localStorage.getItem("pendingOrderId");
-
-  if (!orderId) {
-    setIsPaid(false);
-    setLoading(false);
-    return;
-  }
-
-  const token = localStorage.getItem("token");
-
-  const run = async () => {
-    try {
-      const res = await fetch(`${API}/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-
-      if (res.ok && data.IsPaid === 1) {
-        setIsPaid(true);
-      } else {
-        //  HUỶ ZALOPAY → CANCELLED
-        setIsPaid(false);
-
-        await fetch(`${API}/orders/${orderId}/cancel`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-    } catch {
+    //  Không có orderId → coi như huỷ
+    if (!orderId) {
       setIsPaid(false);
-    } finally {
       setLoading(false);
-      localStorage.removeItem("pendingOrderId");
+      return;
     }
-  };
 
-  run();
-}, []);
+    const token = localStorage.getItem("token");
+
+    const handleResult = async () => {
+      try {
+        //  Lấy trạng thái đơn hàng
+        const res = await fetch(`${API}/orders/${orderId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        //  ĐÃ THANH TOÁN THÀNH CÔNG
+        if (
+          res.ok &&
+          (data.Status === "processing" || data.Status === "completed")
+        ) {
+          setIsPaid(true);
+        } else {
+          //  HUỶ ZALOPAY → CANCELLED
+          setIsPaid(false);
+
+          await fetch(`${API}/orders/${orderId}/cancel`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Payment result error:", error);
+        setIsPaid(false);
+      } finally {
+        setLoading(false);
+        localStorage.removeItem("pendingOrderId");
+      }
+    };
+
+    handleResult();
+  }, []);
 
   if (loading) {
     return (
@@ -62,13 +71,20 @@ export default function PaymentSuccess() {
   return (
     <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center px-4">
       <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full text-center animate-fadeIn">
-
         {/* ICON */}
         <div className="flex justify-center mb-4">
           {isPaid ? (
-            <CheckCircle className="text-emerald-500" size={82} strokeWidth={1.5} />
+            <CheckCircle
+              className="text-emerald-500"
+              size={82}
+              strokeWidth={1.5}
+            />
           ) : (
-            <XCircle className="text-rose-500" size={82} strokeWidth={1.5} />
+            <XCircle
+              className="text-rose-500"
+              size={82}
+              strokeWidth={1.5}
+            />
           )}
         </div>
 
@@ -104,7 +120,6 @@ export default function PaymentSuccess() {
             Quay về trang chủ
           </Link>
         </div>
-
       </div>
     </div>
   );
