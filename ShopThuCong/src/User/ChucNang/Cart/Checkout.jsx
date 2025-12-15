@@ -33,11 +33,9 @@ export default function CheckoutPage() {
   // --- APPLY VOUCHER (CLICK) ---
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
-      Swal.fire({
-        icon: "info",
-        title: "Chưa nhập mã voucher",
-        text: "Vui lòng nhập mã giảm giá!",
-      });
+      setDiscount(0);
+      localStorage.removeItem("selectedVoucher");
+      autoAppliedRef.current = true;
       return;
     }
 
@@ -179,7 +177,7 @@ export default function CheckoutPage() {
         if (!order_url) {
           return Swal.fire("Lỗi", "Không tạo được đơn ZaloPay", "error");
         }
-
+        localStorage.setItem("pendingOrderId", orderId);
         window.location.assign(order_url);
         return;
       }

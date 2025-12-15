@@ -6,7 +6,7 @@ const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
-  const orderId = searchParams.get("orderId");
+  const orderId =searchParams.get("orderId") || localStorage.getItem("pendingOrderId");
 
   const [loading, setLoading] = useState(true);
   const [isPaid, setIsPaid] = useState(false);
