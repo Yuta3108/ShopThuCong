@@ -18,7 +18,7 @@ export default function ProductCard({ p, onQuickView }) {
 
       {/* ẢNH */}
       <Link
-        to={isActive ? `/chi-tiet/${p.ProductID}` : "#"}
+        to={isActive ? `/chi-tiet/${p.CategorySlug}/${p.ProductCode}` : "#"}
         className={isActive ? "" : "pointer-events-none opacity-70"}
       >
         <div className="rounded-2xl overflow-hidden mb-4 bg-slate-50">

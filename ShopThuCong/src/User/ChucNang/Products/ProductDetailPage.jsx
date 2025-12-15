@@ -7,48 +7,55 @@ import axios from "axios";
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
-
+  const { categorySlug, productCode } = useParams();
   const [product, setProduct] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [mainImage, setMainImage] = useState("");
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [categorySlug, setCategorySlug] = useState("");
   const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     const loadProduct = async () => {
+      setLoading(true);
       try {
-        const { data } = await axios.get(`${API}/products/${categorySlug}/${productCode}`);
+        // 1️⃣ Load product detail theo slug + code
+        const { data } = await axios.get(
+          `${API}/products/${categorySlug}/${productCode}`
+        );
+
         setProduct(data);
 
-        const firstVariant = data?.variants?.[0];
-        const firstImage = firstVariant?.images?.[0]?.ImageURL;
-        setMainImage(firstImage || data.ImageURL);
-        setSelectedVariant(firstVariant || null);
+        const firstVariant = data?.variants?.[0] || null;
+        setSelectedVariant(firstVariant);
 
-        const catRes = await axios.get(`${API}/categories`);
-        const cat = catRes.data.find((c) => c.CategoryID === data.CategoryID);
-        setCategorySlug(cat?.Slug || "");
+        const firstImage =
+          firstVariant?.images?.[0]?.ImageURL || data.ImageURL;
+        setMainImage(firstImage);
 
+        // 2️⃣ Load related products cùng category
         const relatedRes = await axios.get(
           `${API}/products?categoryId=${data.CategoryID}`
         );
+
         const filtered = relatedRes.data.filter(
           (item) => item.ProductID !== data.ProductID
         );
+
         setRelatedProducts(filtered.slice(0, 10));
       } catch (err) {
-        console.log(err);
+        console.error("Load product error:", err);
+        setProduct(null);
       } finally {
         setLoading(false);
       }
     };
 
-    loadProduct();
+    if (categorySlug && productCode) {
+      loadProduct();
+    }
   }, [categorySlug, productCode]);
-
+  
   if (loading)
     return (
       <div className="bg-[#F5F5F5] min-h-screen">

@@ -12,7 +12,7 @@ export default function QuickViewModal({ product, onClose }) {
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    if (!product?.ProductID) return;
+    if (!product?.CategorySlug || !product?.ProductCode) return;
 
     const fetchDetail = async () => {
       setLoading(true);
@@ -35,7 +35,7 @@ export default function QuickViewModal({ product, onClose }) {
     };
 
     fetchDetail();
-  }, [product?.ProductID]);
+  }, [product?.CategorySlug, product?.ProductCode]);
 
   const handleAddToCart = async () => {
     if (!selectedVariant) {
