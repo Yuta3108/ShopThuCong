@@ -18,7 +18,7 @@ export const createOrderModel = async (data) => {
     `INSERT INTO orders 
     (UserID, ReceiverName, Phone, Email, ShippingAddress, PaymentMethod,
      Total, Status, Note, VoucherCode, Discount, CreatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'pending', ?, ?, ?, NOW())`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, NOW())`,
     [
       userId,
       receiverName,
