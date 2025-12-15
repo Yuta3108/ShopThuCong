@@ -19,7 +19,7 @@ export default function ProductDetailPage() {
     const loadProduct = async () => {
       setLoading(true);
       try {
-        // 1️⃣ Load product detail theo slug + code
+        //  Load product detail theo slug + code
         const { data } = await axios.get(
           `${API}/products/${categorySlug}/${productCode}`
         );
@@ -33,7 +33,7 @@ export default function ProductDetailPage() {
           firstVariant?.images?.[0]?.ImageURL || data.ImageURL;
         setMainImage(firstImage);
 
-        // 2️⃣ Load related products cùng category
+        //  Load related products cùng category
         const relatedRes = await axios.get(
           `${API}/products?categoryId=${data.CategoryID}`
         );
@@ -55,7 +55,7 @@ export default function ProductDetailPage() {
       loadProduct();
     }
   }, [categorySlug, productCode]);
-  
+
   if (loading)
     return (
       <div className="bg-[#F5F5F5] min-h-screen">

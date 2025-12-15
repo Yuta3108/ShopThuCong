@@ -41,8 +41,8 @@ export default function CheckoutPage() {
 
     try {
       const res = await axios.post(`${API}/vouchers/apply`, {
-        code: voucherCode.trim().toUpperCase(),
-        subtotal,
+         code: voucherCode.trim().toUpperCase(),
+        orderTotal: subtotal,
       });
 
       if (res.data.success) {
@@ -74,23 +74,28 @@ export default function CheckoutPage() {
 
   // --- AUTO APPLY ---
   const applyVoucherAuto = async (code) => {
-    try {
-      if (subtotal <= 0) return;
+  try {
+    const res = await axios.post(`${API}/vouchers/apply`, {
+       code: voucherCode.trim().toUpperCase(),
+      orderTotal: subtotal,
+    });
 
-      const res = await axios.post(`${API}/vouchers/apply`, {
-        code: code.trim().toUpperCase(),
-        subtotal: Number(subtotal),
-      });
-
-      if (res.data.success) {
-        setDiscount(Number(res.data.discount));
-      } else {
-        setDiscount(0);
-      }
-    } catch {
+    if (res.data.success) {
+      setDiscount(Number(res.data.discount));
+    } else {
       setDiscount(0);
     }
-  };
+  } catch (err) {
+    console.error("Apply voucher error:", err);
+    setDiscount(0);
+  }
+};
+
+useEffect(() => {
+  if (voucherCode && subtotal > 0) {
+    applyVoucherAuto(voucherCode);
+  }
+}, [voucherCode, subtotal]);
 
   // --- LOAD USER + CART ---
   useEffect(() => {
