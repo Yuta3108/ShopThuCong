@@ -6,54 +6,53 @@ const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
-  const orderId =searchParams.get("orderId") || localStorage.getItem("pendingOrderId");
-
   const [loading, setLoading] = useState(true);
   const [isPaid, setIsPaid] = useState(false);
 
   const cancelledRef = useRef(false);
 
-  useEffect(() => {
-    if (!orderId) {
+ useEffect(() => {
+  const orderId =
+    searchParams.get("orderId") ||
+    localStorage.getItem("pendingOrderId");
+
+  if (!orderId) {
     setIsPaid(false);
     setLoading(false);
     return;
   }
 
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    const checkOrder = async () => {
-      try {
-        const res = await fetch(`${API}/orders/${orderId}`, {
+  const handleResult = async () => {
+    try {
+      const res = await fetch(`${API}/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (res.ok && data.IsPaid === 1) {
+        //  Thanh toán thành công
+        setIsPaid(true);
+      } else {
+        //  HUỶ ZALOPAY → CANCELLED LUÔN
+        setIsPaid(false);
+
+        await fetch(`${API}/orders/${orderId}/cancel-zalopay`, {
+          method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        const data = await res.json();
-
-        if (res.ok && data.IsPaid === 1) {
-          setIsPaid(true);
-        } else {
-          setIsPaid(false);
-
-          // HUỶ ZALOPAY 
-          if (!cancelledRef.current && data.PaymentMethod === "zalopay") {
-            cancelledRef.current = true;
-
-            await fetch(`${API}/orders/${orderId}/cancel-zalopay`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-          }
-        }
-      } catch {
-        setIsPaid(false);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch {
+      setIsPaid(false);
+    } finally {
+      setLoading(false);
+      localStorage.removeItem("pendingOrderId");
+    }
+  };
 
-    checkOrder();
-  }, [orderId]);
+  handleResult();
+}, []);
 
   if (loading) {
     return (
