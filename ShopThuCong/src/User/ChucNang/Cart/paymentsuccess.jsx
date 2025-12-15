@@ -3,14 +3,15 @@ import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
+const MAX_RETRY = 6; // ~12s
 
 export default function PaymentSuccess() {
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("pending"); 
+  const [status, setStatus] = useState("pending");
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     const orderId = localStorage.getItem("pendingOrderId");
-
     if (!orderId) {
       setStatus("cancelled");
       setLoading(false);
@@ -18,33 +19,47 @@ export default function PaymentSuccess() {
     }
 
     const token = localStorage.getItem("token");
+    let timer;
 
     const checkStatus = async () => {
       try {
         const res = await fetch(`${API}/orders/${orderId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await res.json();
 
         if (res.ok) {
-          setStatus(data.Status);
+          if (data.Status === "processing" || data.Status === "completed") {
+            setStatus(data.Status);
+            setLoading(false);
+            localStorage.removeItem("pendingOrderId");
+            return;
+          }
+
+          // vẫn pending → poll tiếp
+          if (retry < MAX_RETRY) {
+            setRetry((r) => r + 1);
+            timer = setTimeout(checkStatus, 2000);
+          } else {
+            // quá thời gian → giữ pending
+            setStatus("pending");
+            setLoading(false);
+            localStorage.removeItem("pendingOrderId");
+          }
         } else {
           setStatus("cancelled");
+          setLoading(false);
         }
       } catch (err) {
-        console.error("Check payment status error:", err);
+        console.error("Poll payment status error:", err);
         setStatus("pending");
-      } finally {
         setLoading(false);
-        localStorage.removeItem("pendingOrderId");
       }
     };
 
     checkStatus();
-  }, []);
+    return () => clearTimeout(timer);
+  }, [retry]);
 
   if (loading) {
     return (
@@ -59,8 +74,7 @@ export default function PaymentSuccess() {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center px-4">
-      <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full text-center animate-fadeIn">
-        {/* ICON */}
+      <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full text-center">
         <div className="flex justify-center mb-4">
           {isSuccess ? (
             <CheckCircle className="text-emerald-500" size={82} />
@@ -71,7 +85,6 @@ export default function PaymentSuccess() {
           )}
         </div>
 
-        {/* TITLE */}
         <h1 className="text-2xl font-semibold text-slate-800">
           {isSuccess
             ? "Thanh toán thành công!"
@@ -80,31 +93,24 @@ export default function PaymentSuccess() {
             : "Đang xác nhận thanh toán"}
         </h1>
 
-        {/* SUBTEXT */}
-        <p className="text-slate-500 mt-2 leading-relaxed">
+        <p className="text-slate-500 mt-2">
           {isSuccess
-            ? "Cảm ơn bạn đã mua hàng tại ThenFong Store. Hóa đơn sẽ được xử lý sớm."
+            ? "Cảm ơn bạn đã mua hàng tại ThenFong Store."
             : isCancelled
-            ? "Giao dịch chưa hoàn tất hoặc đã bị huỷ."
-            : "ZaloPay đang xác nhận giao dịch của bạn. Vui lòng kiểm tra lại đơn hàng sau ít phút."}
+            ? "Giao dịch đã bị huỷ."
+            : "ZaloPay đang xác nhận giao dịch, vui lòng đợi trong giây lát."}
         </p>
 
-        {/* BUTTONS */}
         <div className="mt-6 space-y-3">
           <Link
             to="/user"
-            className={`block w-full py-3 rounded-xl font-medium transition shadow ${
-              isSuccess
-                ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                : "bg-slate-500 text-white hover:bg-slate-600"
-            }`}
+            className="block w-full py-3 rounded-xl bg-emerald-500 text-white hover:bg-emerald-600"
           >
             Xem đơn hàng của bạn
           </Link>
-
           <Link
             to="/"
-            className="block w-full py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-100 transition"
+            className="block w-full py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100"
           >
             Quay về trang chủ
           </Link>
