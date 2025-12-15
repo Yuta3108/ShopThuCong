@@ -10,7 +10,8 @@ import {
   getOrderItemsModel,
   restoreStockModel,
   restoreVoucherModel,
-  cancelOrderModel
+  cancelOrderModel,
+  cancelOrderZaloModel,
 } from "../models/orderModel.js";
 import { createOrderItemsModel } from "../models/orderItemModel.js";
 import {
@@ -210,5 +211,30 @@ export const cancelOrder = async (req, res) => {
   } catch (err) {
     console.error("Lỗi cancelOrder:", err);
     res.status(500).json({ message: "Lỗi server khi hủy đơn" });
+  }
+};
+export const cancelOrderZalo = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const result = await cancelOrderZaloModel(orderId);
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể hủy đơn (đã thanh toán hoặc không phải ZaloPay)",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Hủy đơn hàng ZaloPay thành công",
+    });
+  } catch (err) {
+    console.error("Lỗi cancelOrderZalo:", err);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi hủy đơn ZaloPay",
+    });
   }
 };

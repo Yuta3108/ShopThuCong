@@ -170,37 +170,46 @@ export default function UserProfile() {
   };
 
   //  HUỶ ĐƠN 
-  const cancelOrder = async (orderId) => {
-    const confirm = await Swal.fire({
-      title: "Huỷ đơn?",
-      text: "Bạn chắc chắn muốn huỷ đơn này?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#e11d48",
-      confirmButtonText: "Xác nhận",
+  const cancelOrder = async (orderId, paymentMethod) => {
+  const confirm = await Swal.fire({
+    title: "Huỷ đơn?",
+    text: "Bạn chắc chắn muốn huỷ đơn này?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#e11d48",
+    confirmButtonText: "Xác nhận",
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  const url =
+    paymentMethod === "zalopay"
+      ? `${API}/orders/${orderId}/cancel-zalopay`
+      : `${API}/orders/${orderId}/cancel`;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    if (!confirm.isConfirmed) return;
+    const data = await res.json();
 
-    try {
-      const res = await fetch(
-        `https://backend-eta-ivory-29.vercel.app/api/orders/${orderId}/cancel`,
-        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+    if (res.ok) {
+      Swal.fire("Đã huỷ!", data.message || "Đơn hàng đã được huỷ.", "success");
+
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.OrderID === orderId ? { ...o, Status: "cancelled" } : o
+        )
       );
-
-      if (res.ok) {
-        Swal.fire("Đã huỷ!", "Đơn hàng đã được huỷ.", "success");
-
-        setOrders((prev) =>
-          prev.map((o) =>
-            o.OrderID === orderId ? { ...o, Status: "cancelled" } : o
-          )
-        );
-      }
-    } catch {
-      Swal.fire("Lỗi server!", "Không thể kết nối", "error");
+    } else {
+      Swal.fire("Không thể huỷ", data.message, "error");
     }
-  };
+  } catch {
+    Swal.fire("Lỗi server!", "Không thể kết nối", "error");
+  }
+};
 
   //  XEM CHI TIẾT ĐƠN 
   const handleViewDetail = async (orderId) => {
@@ -425,7 +434,7 @@ export default function UserProfile() {
                         <p className="mt-1 text-sm">
                           Tổng tiền:{" "}
                           <span className="font-bold text-rose-500">
-                            {Number(order.Total).toLocaleString()}₫
+                            {Math.max(0, Number(order.Total)).toLocaleString()}₫
                           </span>
                         </p>
 
@@ -442,7 +451,7 @@ export default function UserProfile() {
                           {/* Hủy đơn */}
                           {order.Status === "pending" && (
                             <button
-                              onClick={() => cancelOrder(order.OrderID)}
+                              onClick={() => cancelOrder(order.OrderID, order.PaymentMethod)}
                               className="px-4 py-1.5 border border-red-400 text-red-500 bg-red-50 hover:bg-red-100 rounded-lg text-sm"
                             >
                               Huỷ đơn

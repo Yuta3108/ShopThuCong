@@ -98,3 +98,10 @@ export const cancelOrderModel = async (orderId) => {
   );
   return result;
 };
+export const cancelOrderZaloModel = async (orderId) => {
+  const [result] = await db.query(
+    "UPDATE orders SET Status = 'cancelled'WHERE OrderID = ? AND IsPaid = 0 AND PaymentMethod = 'zalopay'",
+    [orderId]
+  );
+  return result;
+}

@@ -188,8 +188,8 @@ export default function AdminOrderPage() {
               <p className="text-xs text-slate-500">{o.Phone}</p>
 
               <p className="text-sm text-teal-700 font-semibold mt-2">
-                {formatMoney(o.Total)}₫
-              </p>
+              {formatMoney(Math.max(0, o.Total))}₫
+            </p>
 
               <div className="flex gap-2 mt-4">
                 <button
@@ -253,7 +253,7 @@ export default function AdminOrderPage() {
                   <td className="p-3 uppercase font-semibold">{o.PaymentMethod}</td>
 
                   <td className="p-3 font-bold text-teal-700">
-                    {formatMoney(o.Total)}₫
+                    {formatMoney(Math.max(0, o.Total))}₫
                   </td>
 
                   <td className="p-3">

@@ -6,7 +6,8 @@ import {
   getMyOrders,
   deleteOrder,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  cancelOrderZalo,
 } from "../controllers/orderController.js";
 import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js";
 
@@ -15,7 +16,8 @@ const router = express.Router();
 // USER
 router.get("/user/:id", authMiddleware, getMyOrders);
 router.post("/", authMiddleware, createOrderFromCart);
-router.post("/:orderId/cancel",authMiddleware, cancelOrder);
+router.post("/:Id/cancel",authMiddleware, cancelOrder);
+router.post("/:id/cancel-zalopay", authMiddleware, cancelOrderZalo);
 // ADMIN
 router.get("/", authMiddleware, adminMiddleware, getAllOrders);
 router.get("/:id", authMiddleware, getOrderDetail);

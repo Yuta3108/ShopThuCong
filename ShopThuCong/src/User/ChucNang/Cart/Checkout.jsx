@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,8 +21,8 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
-  const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
 
+  const autoAppliedRef = useRef(false);
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.UnitPrice * item.Quantity,
@@ -30,7 +30,7 @@ export default function CheckoutPage() {
   );
   const total = Math.max(0, subtotal - discount);
 
-  // --- APPLY VOUCHER ---
+  // --- APPLY VOUCHER (CLICK) ---
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
       Swal.fire({
@@ -43,13 +43,12 @@ export default function CheckoutPage() {
 
     try {
       const res = await axios.post(`${API}/vouchers/apply`, {
-         code: voucherCode.trim().toUpperCase(),
+        code: voucherCode.trim().toUpperCase(),
         orderTotal: subtotal,
       });
 
       if (res.data.success) {
         setDiscount(Number(res.data.discount));
-
         Swal.fire({
           icon: "success",
           title: "Áp dụng thành công!",
@@ -74,24 +73,23 @@ export default function CheckoutPage() {
     }
   };
 
-  // --- AUTO APPLY ---
+  // --- APPLY VOUCHER (AUTO – 1 LẦN) ---
   const applyVoucherAuto = async (code) => {
-  try {
-    const res = await axios.post(`${API}/vouchers/apply`, {
-       code: voucherCode.trim().toUpperCase(),
-      orderTotal: subtotal,
-    });
+    try {
+      const res = await axios.post(`${API}/vouchers/apply`, {
+        code: code.trim().toUpperCase(),
+        orderTotal: subtotal,
+      });
 
-    if (res.data.success) {
-      setDiscount(Number(res.data.discount));
-    } else {
+      if (res.data.success) {
+        setDiscount(Number(res.data.discount));
+      } else {
+        setDiscount(0);
+      }
+    } catch {
       setDiscount(0);
     }
-  } catch (err) {
-    console.error("Apply voucher error:", err);
-    setDiscount(0);
-  }
-};
+  };
 
   // --- LOAD USER + CART ---
   useEffect(() => {
@@ -108,24 +106,22 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (savedVoucher && savedVoucher !== "undefined" && savedVoucher !== "null")
+    if (savedVoucher && savedVoucher !== "undefined" && savedVoucher !== "null") {
       setVoucherCode(savedVoucher);
+    }
 
     const fetchData = async () => {
       try {
-        // USER
         const userRes = await axios.get(`${API}/users/${storedUser.UserID}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(userRes.data);
 
-        // CART
         const cartRes = await axios.get(`${API}/cart`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCart(cartRes.data.items || []);
-      } catch (err) {
-        console.log(err);
+      } catch {
       } finally {
         setLoading(false);
       }
@@ -134,22 +130,22 @@ export default function CheckoutPage() {
     fetchData();
   }, [navigate]);
 
-  // Auto apply voucher once cart loaded
+  // --- AUTO APPLY VOUCHER ONCE ---
   useEffect(() => {
-      if (!voucherCode) return;
-      if (subtotal <= 0) return;
-      if (isApplyingVoucher) return;
-    if (voucherCode && cart.length > 0) {
-      applyVoucherAuto(voucherCode);
-    }
-  }, [voucherCode, cart]);
+    if (!voucherCode) return;
+    if (cart.length === 0) return;
+    if (subtotal <= 0) return;
+    if (autoAppliedRef.current) return;
+
+    autoAppliedRef.current = true;
+    applyVoucherAuto(voucherCode);
+  }, [voucherCode, cart, subtotal]);
 
   // --- HANDLE ORDER ---
   const handleOrder = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      //  Tạo đơn hàng
       const res = await axios.post(
         `${API}/orders`,
         {
@@ -168,12 +164,10 @@ export default function CheckoutPage() {
       );
 
       const orderId = res.data.orderId;
-
       if (!orderId) {
         return Swal.fire("Lỗi", "Không tạo được đơn hàng!", "error");
       }
 
-      // 
       if (paymentMethod === "zalopay") {
         const zaloRes = await axios.post(
           `${API}/payment/zalopay`,
@@ -181,20 +175,15 @@ export default function CheckoutPage() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        console.log("ZaloPay trả về FE:", zaloRes.data);
-
         const { order_url } = zaloRes.data;
-
         if (!order_url) {
           return Swal.fire("Lỗi", "Không tạo được đơn ZaloPay", "error");
         }
 
-        // Redirect chuẩn
         window.location.assign(order_url);
         return;
       }
 
-      //
       Swal.fire({
         icon: "success",
         title: "Đặt hàng thành công vui lòng check hoá đơn bên Email!",
@@ -233,7 +222,6 @@ export default function CheckoutPage() {
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
 
-      {/* UI KHÔNG ĐỤNG - Y NGUYÊN */}
       <div className="w-full px-6 py-4">
         <div className="max-w-[1280px] mx-auto text-left">
           <nav className="text-sm text-slate-600 flex gap-2 justify-start">
@@ -244,41 +232,25 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* MAIN */}
       <main className="flex-1 max-w-[1280px] mx-auto px-6 pb-16 grid grid-cols-1 md:grid-cols-[1.4fr,1fr] gap-10">
-
-        {/* ===== LEFT ===== */}
+        {/* LEFT */}
         <section className="bg-white p-6 rounded-2xl border shadow">
           <h2 className="text-xl font-semibold mb-4">Thông tin giao hàng</h2>
 
           <div className="space-y-4 text-sm">
-
             <div>
               <label className="text-slate-600">Họ tên</label>
-              <input
-                className="w-full p-3 border rounded-xl bg-slate-100 mt-1"
-                readOnly
-                value={user.FullName}
-              />
+              <input className="w-full p-3 border rounded-xl bg-slate-100 mt-1" readOnly value={user.FullName} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-slate-600">Số điện thoại</label>
-                <input
-                  className="w-full p-3 border rounded-xl bg-slate-100 mt-1"
-                  readOnly
-                  value={user.Phone}
-                />
+                <input className="w-full p-3 border rounded-xl bg-slate-100 mt-1" readOnly value={user.Phone} />
               </div>
-
               <div>
                 <label className="text-slate-600">Email</label>
-                <input
-                  className="w-full p-3 border rounded-xl bg-slate-100 mt-1"
-                  readOnly
-                  value={user.Email}
-                />
+                <input className="w-full p-3 border rounded-xl bg-slate-100 mt-1" readOnly value={user.Email} />
               </div>
             </div>
 
@@ -302,7 +274,7 @@ export default function CheckoutPage() {
           </div>
         </section>
 
-        {/* ===== RIGHT ===== */}
+        {/* RIGHT */}
         <section className="bg-white p-6 rounded-2xl border shadow h-fit">
           <h2 className="text-xl font-semibold mb-4">Tóm tắt đơn hàng</h2>
 
@@ -315,10 +287,8 @@ export default function CheckoutPage() {
 
           <hr className="my-4" />
 
-          {/* Voucher */}
           <div className="mb-4">
             <label className="text-sm font-medium">Mã giảm giá</label>
-
             <div className="flex gap-2 mt-2">
               <input
                 className="flex-1 p-2 border rounded-lg"
@@ -326,7 +296,6 @@ export default function CheckoutPage() {
                 value={voucherCode}
                 onChange={(e) => setVoucherCode(e.target.value)}
               />
-
               <button
                 onClick={applyVoucher}
                 className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600"
@@ -359,37 +328,19 @@ export default function CheckoutPage() {
             <span>{formatMoney(total)}₫</span>
           </div>
 
-          {/* LET METHOD */}
           <h2 className="text-lg font-semibold mb-3">Phương thức thanh toán</h2>
 
           <div className="space-y-2 text-sm">
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="cod"
-                checked={paymentMethod === "cod"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
+              <input type="radio" value="cod" checked={paymentMethod === "cod"} onChange={(e) => setPaymentMethod(e.target.value)} />
               Thanh toán khi nhận hàng (COD)
             </label>
-
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="banking"
-                checked={paymentMethod === "banking"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
+              <input type="radio" value="banking" checked={paymentMethod === "banking"} onChange={(e) => setPaymentMethod(e.target.value)} />
               Chuyển khoản ngân hàng
             </label>
-
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                value="zalopay"
-                checked={paymentMethod === "zalopay"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
+              <input type="radio" value="zalopay" checked={paymentMethod === "zalopay"} onChange={(e) => setPaymentMethod(e.target.value)} />
               Thanh toán qua ZaloPay
             </label>
           </div>
