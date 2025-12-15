@@ -17,7 +17,7 @@ export const createOrderModel = async (data) => {
   const [result] = await db.query(
     `INSERT INTO orders 
     (UserID, ReceiverName, Phone, Email, ShippingAddress, PaymentMethod,
-     IsPaid, Total, Status, Note, VoucherCode, Discount, CreatedAt)
+     Total, Status, Note, VoucherCode, Discount, CreatedAt)
      VALUES (?, ?, ?, ?, ?, ?, 0, ?, 'pending', ?, ?, ?, NOW())`,
     [
       userId,
@@ -101,8 +101,8 @@ export const cancelOrderModel = async (orderId) => {
 };
 export const cancelOrderZaloModel = async (orderId) => {
   const [result] = await db.query(
-    "UPDATE orders SET Status = 'cancelled'WHERE OrderID = ? AND IsPaid = 0 AND PaymentMethod = 'zalopay'",
+    "UPDATE orders SET Status = 'cancelled', UpdatedAt = NOW() WHERE OrderID = ? AND PaymentMethod = 'zalopay'",
     [orderId]
   );
   return result;
-}
+};

@@ -35,7 +35,7 @@ export default function PaymentSuccess() {
         //  HUỶ ZALOPAY → CANCELLED
         setIsPaid(false);
 
-        await fetch(`${API}/orders/${orderId}/cancel-zalopay`, {
+        await fetch(`${API}/orders/${orderId}/cancel`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });

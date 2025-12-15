@@ -226,11 +226,11 @@ export const cancelOrderZalo = async (req, res) => {
     const order = await getOrderDetailModel(orderId);
     if (!order)
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
-
-    if (order.IsPaid === 1) {
-      return res.status(400).json({ message: "Đơn đã thanh toán, không thể huỷ" });
+    if (order.Status !== "pending") {
+      return res.status(400).json({
+        message: "Chỉ có thể huỷ đơn đang chờ xử lý",
+      });
     }
-
     const items = await getOrderItemsModel(orderId);
 
     await restoreStockModel(items);
