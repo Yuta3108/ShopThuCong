@@ -105,6 +105,7 @@ export default function ProductDetailPage() {
           ProductID: product.ProductID,
           VariantID: selectedVariant.VariantID,
           ProductName: product.ProductName,
+          ProductCode: product.ProductCode,
           ImageURL: mainImage,
           quantity,
           price: finalPrice,
@@ -334,8 +335,8 @@ export default function ProductDetailPage() {
                   </span>
                 </p>
                 <p>
-                  SKU:{" "}
-                  <span className="font-medium text-slate-800">{p.SKU}</span>
+                  ProductsCode:{" "}
+                  <span className="font-medium text-slate-800">{p.ProductCode}</span>
                 </p>
               </div>
             </div>

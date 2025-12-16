@@ -1,35 +1,37 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../Layout/Sidebar";
 import axios from "axios";
-import { Search, Pencil, Trash2, User, Mail, Phone } from "lucide-react";
+import Swal from "sweetalert2";
+import { Search, Lock, Unlock } from "lucide-react";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
-// AXIOS CLIENT
+/* ================= AXIOS CLIENT ================= */
 const axiosClient = axios.create({
   baseURL: API,
   headers: { "Content-Type": "application/json" },
 });
 
 axiosClient.interceptors.request.use((config) => {
-  const tk = localStorage.getItem("token");
-  if (tk) config.headers.Authorization = `Bearer ${tk}`;
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// MAIN
+/* ================= MAIN ================= */
 export default function AdminUser() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Sidebar mobile toggle
+  // Sidebar mobile
   const [isOpen, setIsOpen] = useState(false);
   const toggleSidebar = (state) =>
     setIsOpen(state !== undefined ? state : !isOpen);
 
   const user = JSON.parse(localStorage.getItem("user"));
 
+  /* ================= CHECK ADMIN ================= */
   if (!user || user.role !== "admin") {
     return (
       <div className="flex justify-center items-center h-screen text-red-600 font-semibold">
@@ -38,33 +40,91 @@ export default function AdminUser() {
     );
   }
 
-  // Fetch users
+  /* ================= FETCH USERS ================= */
   useEffect(() => {
-    const load = async () => {
+    const loadUsers = async () => {
       try {
         const { data } = await axiosClient.get("/users/all");
         setUsers(data);
+      } catch (err) {
+        console.error("Lỗi load users:", err);
       } finally {
         setLoading(false);
       }
     };
-    load();
+    loadUsers();
   }, []);
 
-  // Delete user
-  const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xoá tài khoản này?")) return;
+  /* ================= CHANGE ROLE ================= */
+  const handleChangeRole = async (userId, newRole) => {
+    const confirm = await Swal.fire({
+      title: "Xác nhận thay đổi vai trò",
+      text: `Bạn có chắc muốn đổi vai trò thành "${newRole}"?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Đổi",
+      cancelButtonText: "Huỷ",
+    });
+
+    if (!confirm.isConfirmed) return;
 
     try {
-      await axiosClient.delete(`/users/${id}`);
-      setUsers((prev) => prev.filter((u) => u.UserID !== id));
-    } catch {
-      alert("Không thể xoá người dùng này!");
+      await axiosClient.put(`/users/${userId}/role`, {
+        role: newRole,
+      });
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.UserID === userId ? { ...u, Role: newRole } : u
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Thành công",
+        text: "Đã cập nhật vai trò người dùng",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi",
+        text: "Không thể thay đổi vai trò người dùng",
+      });
     }
   };
 
-  // Filter
-  const filtered = users.filter((u) => {
+  /* ================= LOCK / UNLOCK USER ================= */
+  const handleToggleLock = async (id, status) => {
+    const isLocking = status === 1;
+
+    if (
+      !window.confirm(
+        isLocking
+          ? "Bạn có chắc muốn khoá tài khoản này?"
+          : "Bạn có chắc muốn mở khoá tài khoản này?"
+      )
+    )
+      return;
+
+    try {
+      await axiosClient.put(`/users/${id}/status`, {
+        Status: isLocking ? 0 : 1,
+      });
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.UserID === id ? { ...u, Status: isLocking ? 0 : 1 } : u
+        )
+      );
+    } catch {
+      alert("Không thể thay đổi trạng thái người dùng!");
+    }
+  };
+
+  /* ================= FILTER ================= */
+  const filteredUsers = users.filter((u) => {
     const s = search.toLowerCase();
     return (
       u.FullName?.toLowerCase().includes(s) ||
@@ -75,7 +135,6 @@ export default function AdminUser() {
 
   return (
     <div className="flex bg-[#F5F5F5] min-h-screen">
-
       {/* SIDEBAR */}
       <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
@@ -89,16 +148,13 @@ export default function AdminUser() {
 
       {/* CONTENT */}
       <div className="flex-1 md:ml-64 p-4 sm:p-6">
-
-        <div className="max-w-5xl mx-auto">
-
-          {/* HEADER */}
-          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight mb-6">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-2xl font-semibold text-slate-800 mb-6">
             Quản Lý Người Dùng
           </h1>
 
           {/* SEARCH */}
-          <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-6">
+          <div className="mb-6">
             <div className="relative w-full sm:w-80">
               <Search
                 size={18}
@@ -108,109 +164,114 @@ export default function AdminUser() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm theo tên, email hoặc SĐT…"
-                className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm 
+                className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm
                            focus:ring-2 focus:ring-teal-500 outline-none"
               />
             </div>
           </div>
 
-          {/* ================= MOBILE CARD LIST ================= */}
-          <div className="grid grid-cols-1 md:hidden gap-4">
-            {filtered.map((u) => (
-              <div
-                key={u.UserID}
-                className="p-4 bg-white rounded-xl border shadow hover:shadow-md transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-700">
-                    <User size={22} />
-                  </div>
+          {/* LOADING */}
+          {loading && (
+            <p className="text-center py-10 text-slate-500">
+              Đang tải danh sách người dùng…
+            </p>
+          )}
 
-                  <div>
-                    <p className="font-semibold text-slate-800">{u.FullName}</p>
-                    <p className="text-xs text-slate-500">{u.role}</p>
-                  </div>
-                </div>
-
-                <div className="mt-3 text-sm text-slate-700 space-y-1">
-                  <p className="flex items-center gap-2">
-                    <Mail size={15} className="text-slate-500" />
-                    {u.Email}
-                  </p>
-
-                  <p className="flex items-center gap-2">
-                    <Phone size={15} className="text-slate-500" />
-                    {u.Phone || "Không có SĐT"}
-                  </p>
-                </div>
-
-                <div className="flex gap-3 mt-4 text-white">
-                  <button
-                    onClick={() => alert("Tính năng sửa sẽ mở modal")}
-                    className="flex-1 py-2 bg-yellow-500 rounded-lg hover:bg-yellow-600"
-                  >
-                    Sửa
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(u.UserID)}
-                    className="flex-1 py-2 bg-red-500 rounded-lg hover:bg-red-600"
-                  >
-                    Xoá
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* ================= DESKTOP TABLE ================= */}
-          <div className="hidden md:block overflow-x-auto bg-white rounded-2xl shadow-md border">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
-                <tr>
-                  <th className="p-3 text-left rounded-tl-2xl">ID</th>
-                  <th className="p-3 text-left">Tên</th>
-                  <th className="p-3 text-left">Email</th>
-                  <th className="p-3 text-left">SĐT</th>
-                  <th className="p-3 text-left">Vai trò</th>
-                  <th className="p-3 text-center rounded-tr-2xl">Hành động</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filtered.map((u, i) => (
-                  <tr
-                    key={u.UserID}
-                    className={`border-t hover:bg-teal-50 transition ${
-                      i % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    }`}
-                  >
-                    <td className="p-3">{u.UserID}</td>
-                    <td className="p-3 font-semibold">{u.FullName}</td>
-                    <td className="p-3">{u.Email}</td>
-                    <td className="p-3">{u.Phone || "—"}</td>
-                    <td className="p-3 capitalize">{u.role}</td>
-
-                    <td className="p-3 text-center space-x-2">
-                      <button
-                        onClick={() => alert("Tính năng sửa sẽ mở modal")}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() => handleDelete(u.UserID)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
-                      >
-                        Xoá
-                      </button>
-                    </td>
+          {/* TABLE */}
+          {!loading && (
+            <div className="overflow-x-auto bg-white rounded-2xl shadow-md border">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
+                  <tr>
+                    <th className="p-3 text-left">ID</th>
+                    <th className="p-3 text-left">Tên</th>
+                    <th className="p-3 text-left">Email</th>
+                    <th className="p-3 text-left">SĐT</th>
+                    <th className="p-3 text-left">Vai trò</th>
+                    <th className="p-3 text-center">Trạng thái</th>
+                    <th className="p-3 text-center">Hành động</th>
                   </tr>
-                ))}
-              </tbody>
+                </thead>
 
-            </table>
-          </div>
+                <tbody>
+                  {filteredUsers.map((u, i) => (
+                    <tr
+                      key={u.UserID}
+                      className={`border-t transition hover:bg-teal-50 ${
+                        i % 2 === 0 ? "bg-gray-50" : "bg-white"
+                      }`}
+                    >
+                      <td className="p-3">{u.UserID}</td>
+                      <td className="p-3 font-semibold">{u.FullName}</td>
+                      <td className="p-3">{u.Email}</td>
+                      <td className="p-3">{u.Phone || "—"}</td>
+
+                      {/* ROLE EDIT INLINE */}
+                      <td className="p-3">
+                        <select
+                          value={u.Role}
+                          disabled={u.UserID === user.id}
+                          onChange={(e) =>
+                            handleChangeRole(u.UserID, e.target.value)
+                          }
+                          className="px-2 py-1 rounded-lg border text-sm
+                                     focus:ring-2 focus:ring-teal-500
+                                     disabled:bg-gray-100
+                                     disabled:cursor-not-allowed"
+                        >
+                          <option value="customer">Customer</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      </td>
+
+                      {/* STATUS */}
+                      <td className="p-3 text-center">
+                        {u.Status === 1 ? (
+                          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                            Hoạt động
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">
+                            Bị khoá
+                          </span>
+                        )}
+                      </td>
+
+                      {/* ACTION */}
+                      <td className="p-3 text-center">
+                        <button
+                          onClick={() =>
+                            handleToggleLock(u.UserID, u.Status)
+                          }
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-white text-sm ${
+                            u.Status === 1
+                              ? "bg-red-500 hover:bg-red-600"
+                              : "bg-gray-500 hover:bg-gray-600"
+                          }`}
+                        >
+                          {u.Status === 1 ? (
+                            <>
+                              <Lock size={14} /> Khoá
+                            </>
+                          ) : (
+                            <>
+                              <Unlock size={14} /> Mở
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {filteredUsers.length === 0 && (
+                <p className="text-center py-6 text-slate-500">
+                  Không tìm thấy người dùng.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

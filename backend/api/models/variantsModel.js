@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-export const createVariant = async ({ ProductID, ProductCode, Price, StockQuantity = 0, Weight = 0, IsActive = 1, attributeValueIds = [] }) => {
+export const createVariant = async ({ ProductID, ProductCode, Price, StockQuantity = 0, IsActive = 1, attributeValueIds = [] }) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -17,9 +17,9 @@ export const createVariant = async ({ ProductID, ProductCode, Price, StockQuanti
 
     const [variantRes] = await conn.query(`
       INSERT INTO product_variants 
-        (ProductID, ProductCode, Price, StockQuantity, Weight, IsActive, CreatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      [ProductID, finalProductCode, Price, StockQuantity, Weight, IsActive]
+        (ProductID, ProductCode, Price, StockQuantity, IsActive, CreatedAt)
+      VALUES (?, ?, ?, ?, ?, NOW())`,
+      [ProductID, finalProductCode, Price, StockQuantity, IsActive]
     );
 
     const VariantID = variantRes.insertId;

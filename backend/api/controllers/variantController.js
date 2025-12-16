@@ -15,7 +15,6 @@ export const createVariantController = async (req, res) => {
       ProductCode,
       Price,
       StockQuantity = 0,
-      Weight = null,
       IsActive = 1,
       attributeValueIds = [],
       images = [],
@@ -27,7 +26,6 @@ export const createVariantController = async (req, res) => {
       ProductCode,
       Price,
       StockQuantity,
-      Weight,
       IsActive,
       attributeValueIds,
     });

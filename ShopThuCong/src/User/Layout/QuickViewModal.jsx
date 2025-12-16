@@ -62,6 +62,7 @@ export default function QuickViewModal({ product, onClose }) {
           ProductID: details.ProductID,
           VariantID: selectedVariant.VariantID,
           ProductName: details.ProductName,
+          material: details.Material,
           ImageURL:
             selectedVariant?.images?.[0]?.ImageURL || details.ImageURL,
           quantity,
@@ -160,7 +161,13 @@ export default function QuickViewModal({ product, onClose }) {
                 Danh mục:{" "}
                 <b className="text-slate-800">{details.CategoryName}</b>
               </span>
+              <span className="w-[1px] h-3 bg-slate-200" />
+              <span>
+                 Chất Liệu:{" "}
+                <b className="text-slate-800">{details.Material}</b>
+              </span>
             </div>
+            
 
             {/* PRICE */}
             <p className="text-[30px] md:text-[32px] font-bold text-rose-500 mt-4 tracking-tight">

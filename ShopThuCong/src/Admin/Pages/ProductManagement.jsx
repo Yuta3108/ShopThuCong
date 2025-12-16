@@ -41,12 +41,12 @@ export default function ProductManagement() {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // ================= Sidebar Mobile =================
+  //  Sidebar Mobile 
   const [isOpen, setIsOpen] = useState(false);
   const toggleSidebar = (state) =>
     setIsOpen(state !== undefined ? state : !isOpen);
 
-  // ================= Axios Client =================
+  //  Axios Client 
   const axiosClient = axios.create({
     baseURL: API,
     headers: { "Content-Type": "application/json" },
@@ -57,7 +57,7 @@ export default function ProductManagement() {
     return config;
   });
 
-  // ================= Check Admin =================
+  //  Check Admin 
   if (!user || user.role !== "admin") {
     return (
       <div className="flex justify-center items-center h-screen text-red-600 font-semibold p-6 text-center">
@@ -66,7 +66,7 @@ export default function ProductManagement() {
     );
   }
 
-  // ================= FETCH =================
+  //  FETCH 
   const fetchCategories = async () => {
     const { data } = await axios.get(`${API}/categories`);
     setCategories(data.data || data);
@@ -87,7 +87,7 @@ export default function ProductManagement() {
     Promise.all([fetchCategories(), fetchProducts(), fetchAttributes()]);
   }, []);
 
-  // ================= CRUD PRODUCT =================
+  //  CRUD PRODUCT 
   const handleAddOrEdit = async (prod) => {
     if (!prod.CategoryID) return alert("Chưa chọn danh mục!");
 
@@ -142,7 +142,7 @@ export default function ProductManagement() {
     await deleteImage(imageId);
   };
 
-  // ================= CRUD ATTRIBUTE =================
+  //  CRUD ATTRIBUTE 
   const handleAddAttribute = async () => {
     if (!newAttrName.trim()) return;
     await createAttribute(newAttrName);
@@ -171,7 +171,7 @@ export default function ProductManagement() {
     fetchAttributes();
   };
 
-  // ================= SEARCH =================
+  //  SEARCH 
   const filteredProducts = products.filter((p) => {
     const s = search.toLowerCase();
     return (

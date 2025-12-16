@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
+import { Phone } from "lucide-react";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
@@ -244,7 +245,8 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-slate-600">Số điện thoại</label>
-                <input className="w-full p-3 border rounded-xl bg-slate-100 mt-1" readOnly value={user.Phone} />
+                <input className="w-full p-3 border rounded-xl bg-white mt-1" value={user.Phone}
+                onChange={(e) => setUser({ ...user, Phone: e.target.value })} />
               </div>
               <div>
                 <label className="text-slate-600">Email</label>
