@@ -31,7 +31,7 @@ export default function CheckoutPage() {
   );
   const total = Math.max(0, subtotal - discount);
 
-  // --- APPLY VOUCHER (CLICK) ---
+  // --- APPLY VOUCHER  ---
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
       setDiscount(0);
@@ -72,7 +72,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // --- APPLY VOUCHER (AUTO – 1 LẦN) ---
+  // --- APPLY VOUCHER  ---
   const applyVoucherAuto = async (code) => {
     try {
       const res = await axios.post(`${API}/vouchers/apply`, {

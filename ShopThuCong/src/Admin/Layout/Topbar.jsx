@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Search, Bell, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -101,9 +102,9 @@ export default function Topbar() {
                   animate-fadeIn
                 "
               >
-                <button className="w-full text-left px-4 py-2 hover:bg-slate-100 rounded-lg transition">
+                <Link to="/User" className=" block w-full text-left mx-4 py-2 hover:bg-slate-100 rounded-lg transition">
                   Hồ sơ của tôi
-                </button>
+                </Link>
                 <button className="w-full text-left px-4 py-2 hover:bg-slate-100 rounded-lg transition">
                   Cài đặt
                 </button>
