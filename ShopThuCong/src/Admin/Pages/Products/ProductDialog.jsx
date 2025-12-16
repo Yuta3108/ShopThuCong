@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Info } from "lucide-react";
 
-// ========= FORMAT MONEY ==========
+// ==== FORMAT MONEY 
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 0,
@@ -190,7 +190,7 @@ export default function ProductDialog({
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ===== BASIC INFO ===== */}
+          {/*  BASIC INFO  */}
           <input
             className="w-full border rounded-lg px-3 py-2"
             placeholder="Tên sản phẩm"
@@ -227,7 +227,7 @@ export default function ProductDialog({
             }
           />
 
-          {/* ===== ẢNH ĐẠI DIỆN ===== */}
+          {/*  ẢNH ĐẠI DIỆN  */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Ảnh đại diện
@@ -298,7 +298,7 @@ export default function ProductDialog({
             }
           />
 
-          {/* ===== STATUS ===== */}
+          {/*  STATUS  */}
           <div>
             <label className="text-sm font-medium">Tình trạng</label>
             <select
@@ -313,9 +313,7 @@ export default function ProductDialog({
             </select>
           </div>
 
-          {/* ======================================================= */}
-          {/* ===============  BIẾN THỂ SẢN PHẨM  ==================== */}
-          {/* ======================================================= */}
+          {/*  BIẾN THỂ SẢN PHẨM  */}
           <div className="pt-4 border-t">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-semibold">Biến thể sản phẩm</h3>
@@ -334,9 +332,9 @@ export default function ProductDialog({
                 key={i}
                 className="bg-gray-50 border rounded-xl p-4 mb-3 space-y-3"
               >
-                {/* ===== PRICE + STOCK ===== */}
+                {/*  PRICE + STOCK  */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* ==== PRICE (ĐÃ FORMAT MONEY) ==== */}
+                  {/* PRICE */}
                   <div>
                     <label className="text-sm text-gray-600">Giá</label>
                     <input
@@ -353,7 +351,7 @@ export default function ProductDialog({
                     />
                   </div>
 
-                  {/* ==== STOCK ==== */}
+                  {/*  STOCK */}
                   <div>
                     <label className="text-sm text-gray-600">Tồn kho</label>
                     <input
@@ -373,7 +371,7 @@ export default function ProductDialog({
                   </div>
                 </div>
 
-                {/* ====== ATTRIBUTE SELECT ===== */}
+                {/*  ATTRIBUTE SELECT  */}
                 <div>
                   <h4 className="text-sm font-semibold mb-2">Thuộc tính</h4>
 
@@ -418,7 +416,7 @@ export default function ProductDialog({
                   })}
                 </div>
 
-                {/* ===== IMAGE PREVIEW + UPLOAD ===== */}
+                {/*  IMAGE PREVIEW + UPLOAD  */}
                 <div>
                   <h4 className="text-sm font-semibold mb-1">Ảnh biến thể</h4>
 
@@ -461,7 +459,7 @@ export default function ProductDialog({
                   </div>
                 </div>
 
-                {/* ===== REMOVE VARIANT ===== */}
+                {/*  REMOVE VARIANT  */}
                 <button
                   type="button"
                   onClick={() =>

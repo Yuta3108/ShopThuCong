@@ -102,12 +102,14 @@ export default function ProductManagement() {
 
       const variantId = saved.VariantID || v.VariantID;
 
-      if (v.images?.length && variantId) {
+        if (v.images?.length && variantId) {
         for (const img of v.images) {
+          // chỉ upload ảnh mới (base64)
           if (typeof img === "string" && img.startsWith("data:image")) {
             await uploadVariantImage(variantId, img);
           }
         }
+        v.images = [];
       }
     }
 

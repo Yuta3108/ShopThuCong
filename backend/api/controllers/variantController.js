@@ -20,7 +20,7 @@ export const createVariantController = async (req, res) => {
       images = [],
     } = req.body;
 
-    console.log("🧩 createVariant body:", req.body, "ProductID:", ProductID);
+    console.log(" createVariant body:", req.body, "ProductID:", ProductID);
     const { VariantID } = await createVariant({
       ProductID,
       ProductCode,
@@ -29,20 +29,6 @@ export const createVariantController = async (req, res) => {
       IsActive,
       attributeValueIds,
     });
-
-    for (const img of images || []) {
-      if (typeof img === "string" && img.startsWith("data:image")) {
-        const up = await cloudinary.uploader.upload(img, {
-          folder: "shopthucong/variants",
-        });
-        await addVariantImage({
-          VariantID,
-          ImageURL: up.secure_url,
-          PublicID: up.public_id,
-        });
-      }
-    }
-
     res
       .status(201)
       .json({ message: "Tạo biến thể thành công", VariantID });
@@ -60,7 +46,7 @@ export const createVariantController = async (req, res) => {
 export const updateVariantController = async (req, res) => {
   try {
     const id = Number(req.params.variantId);
-    console.log("🧩 updateVariant body:", req.body, "variantId:", id);
+    console.log("updateVariant body:", req.body, "variantId:", id);
     const result = await updateVariant(id, req.body);
     res.json(result);
   } catch (err) {
@@ -74,7 +60,7 @@ export const updateVariantController = async (req, res) => {
 export const deleteVariantController = async (req, res) => {
   try {
     const id = Number(req.params.variantId);
-    console.log("🧩 deleteVariant ID:", id);
+    console.log(" deleteVariant ID:", id);
     const result = await deleteVariant(id);
     res.json({ message: "Xoá biến thể thành công", result });
   } catch (err) {
