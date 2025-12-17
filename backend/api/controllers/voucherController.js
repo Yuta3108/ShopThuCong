@@ -62,7 +62,15 @@ export const createVoucherController = async (req, res) => {
       EndDate: normalizeDate(d.EndDate),
       Status: d.Status ? 1 : 0,
     };
-
+    if (payload.StartDate && payload.EndDate) {
+      const start = new Date(payload.StartDate);
+      const end = new Date(payload.EndDate);
+      if (end < start) {
+        return res.status(400).json({
+       message: "Ngày kết thúc không được nhỏ hơn ngày bắt đầu",
+      });
+  }
+}
     const id = await createVoucher(payload);
     res.json({ VoucherID: id, ...payload });
 
@@ -89,7 +97,26 @@ export const updateVoucherController = async (req, res) => {
       EndDate: normalizeDate(d.EndDate),
       Status: d.Status === 0 || d.Status === "0" ? 0 : 1,
     };
+    if (payload.StartDate && payload.EndDate) {
+      const start = new Date(payload.StartDate);
+      const end = new Date(payload.EndDate);
 
+      if (end < start) {
+        return res.status(400).json({
+          message: "Ngày kết thúc không được nhỏ hơn ngày bắt đầu",
+        });
+      }
+    }
+    if (payload.StartDate) {
+      const now = new Date();
+      const start = new Date(payload.StartDate);
+
+      if (now >= start) {
+        return res.status(403).json({
+          message: "Voucher đã bắt đầu, không thể chỉnh sửa ngày",
+        });
+      }
+}
     // Kiểm tra trùng mã
     const existed = await getVoucherByCode(payload.Code);
     if (existed && existed.VoucherID != id) {
@@ -109,8 +136,38 @@ export const updateVoucherController = async (req, res) => {
 
 export const deleteVoucherController = async (req, res) => {
   try {
-    await deleteVoucher(req.params.id);
-    res.json({ message: "Xóa thành công" });
+    const id = Number(req.params.id);
+
+    //  Lấy voucher
+    const voucher = await getVoucherById(id);
+    if (!voucher) {
+      return res.status(404).json({ message: "Voucher không tồn tại" });
+    }
+
+    // Lấy StartDate
+    if (!voucher.StartDate) {
+      return res.status(400).json({
+        message: "Voucher chưa có ngày bắt đầu, không thể xoá",
+      });
+    }
+
+    const startDate = new Date(voucher.StartDate);
+    const now = new Date();
+
+    //  Tính số phút từ StartDate
+    const diffMinutes = (now - startDate) / (1000 * 60);
+
+    //  RÀNG BUỘC
+    if (diffMinutes >= 0) {
+      return res.status(403).json({
+        message: "Voucher đã bắt đầu hiệu lực, không thể xoá",
+      });
+    }
+
+    // Cho xoá
+    await deleteVoucher(id);
+    res.json({ message: "Xoá voucher thành công" });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

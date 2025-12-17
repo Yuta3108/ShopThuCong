@@ -6,6 +6,7 @@ import {
   deleteProduct,
   findProductDetailById,
   findProductDetailBySlugAndCode,
+  getProductCreatedAt,
 } from "../models/productsModel.js";
 import cloudinary from "../config/cloudinary.js";
 
@@ -82,9 +83,30 @@ export const updateProductController = async (req, res) => {
 
 export const deleteProductController = async (req, res) => {
   try {
-    const ok = await deleteProduct(Number(req.params.id));
-    res.json(ok ? { message: "Xoá sản phẩm thành công" } : { message: "Không tìm thấy sản phẩm" });
-  } catch {
-    res.status(500).json({ message: "Lỗi server" });
+    const id = Number(req.params.id);
+
+    // Lấy CreatedAt
+    const createdAt = await getProductCreatedAt(id);
+    if (!createdAt) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    // Tính số phút
+    const diffMinutes =
+      (Date.now() - new Date(createdAt).getTime()) / (1000 * 60);
+
+    // RÀNG BUỘC 30 PHÚT
+    if (diffMinutes > 30) {
+      return res.status(403).json({
+        message: "Sản phẩm đã tạo quá 30 phút, không thể xoá",
+      });
+    }
+
+    // Cho xoá
+    await deleteProduct(id);
+    res.json({ message: "Xoá sản phẩm thành công" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };

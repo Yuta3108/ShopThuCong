@@ -123,3 +123,10 @@ export const CheckStockProduct = async (variantId) => {
   );
   return row ? row.StockQuantity : null;
 };
+export const getVariantCreatedAt = async (variantId) => {
+  const [[row]] = await db.query(
+    `SELECT CreatedAt FROM product_variants WHERE VariantID = ?`,
+    [variantId]
+  );
+  return row ? row.CreatedAt : null;
+};

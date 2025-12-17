@@ -177,3 +177,10 @@ export const autoDeactivateProductIfOutOfStock = async (productId) => {
     );
   }
 };
+export const getProductCreatedAt = async (id) => {
+  const [[row]] = await db.query(
+    "SELECT CreatedAt FROM products WHERE ProductID = ?",
+    [id]
+  );
+  return row ? row.CreatedAt : null;
+};

@@ -5,6 +5,7 @@ import {
   addVariantImage,
   deleteImage,
   setVariantAttributes,
+  getVariantCreatedAt,
 } from "../models/variantsModel.js";
 import cloudinary from "../config/cloudinary.js";
 
@@ -60,14 +61,25 @@ export const updateVariantController = async (req, res) => {
 export const deleteVariantController = async (req, res) => {
   try {
     const id = Number(req.params.variantId);
-    console.log(" deleteVariant ID:", id);
-    const result = await deleteVariant(id);
-    res.json({ message: "Xoá biến thể thành công", result });
+
+    const createdAt = await getVariantCreatedAt(id);
+    if (!createdAt) {
+      return res.status(404).json({ message: "Biến thể không tồn tại" });
+    }
+
+    const diffMinutes =
+      (Date.now() - new Date(createdAt).getTime()) / (1000 * 60);
+
+    if (diffMinutes > 30) {
+      return res.status(403).json({
+        message: "Biến thể đã tạo quá 30 phút, không thể xoá",
+      });
+    }
+
+    await deleteVariant(id);
+    res.json({ message: "Xoá biến thể thành công" });
   } catch (err) {
-    console.error("deleteVariantController error:", err);
-    res
-      .status(500)
-      .json({ message: "Lỗi khi xoá biến thể", error: err.message });
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
 

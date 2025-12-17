@@ -125,26 +125,27 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
               />
             </div>
 
-            {/* START DATE */}
+            {/* START */}
             <div>
-              <label className="text-sm">Bắt đầu</label>
+              <label className="text-sm"> Ngày Bắt đầu</label>
               <input
-                type="date"
-                className={inputClass}
-                value={data.StartDate}
-                onChange={(e) => update("StartDate", e.target.value)}
-              />
+                  type="date"
+                  className={inputClass}
+                  value={data.StartDate}
+                  onChange={(e) => update("StartDate", e.target.value)}
+                />
             </div>
 
-            {/* END DATE */}
+            {/* END */}
             <div>
-              <label className="text-sm">Kết thúc</label>
-              <input
-                type="date"
-                className={inputClass}
-                value={data.EndDate}
-                onChange={(e) => update("EndDate", e.target.value)}
-              />
+              <label className="text-sm">Ngày Kết thúc</label>
+                    <input
+                    type="date"
+                    className={inputClass}
+                    value={data.EndDate}
+                    min={data.StartDate || undefined}
+                    onChange={(e) => update("EndDate", e.target.value)}
+                  />
             </div>
 
             {/* STATUS */}

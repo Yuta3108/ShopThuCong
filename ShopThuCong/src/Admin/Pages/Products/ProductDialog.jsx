@@ -118,6 +118,16 @@ export default function ProductDialog({
     };
     reader.readAsDataURL(file);
   };
+  const canDeleteVariant = (createdAt, variantId) => {
+  if (!variantId) return true;
+  if (!createdAt) return false;
+
+  const created = new Date(createdAt).getTime();
+  const now = Date.now();
+  const diffMinutes = (now - created) / (1000 * 60);
+
+  return diffMinutes <= 30;
+};
 
   const handleSelectDropdown = (i, attr, value) => {
     const updated = [...product.variants];
@@ -460,17 +470,36 @@ export default function ProductDialog({
                 </div>
 
                 {/*  REMOVE VARIANT  */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    v.VariantID
-                      ? onDeleteVariant(v.VariantID, i, product, setProduct)
-                      : removeVariant(i)
-                  }
-                  className="w-full sm:w-auto px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-medium"
-                >
-                  Xóa biến thể
-                </button>
+                {(() => {
+  const allowDelete = canDeleteVariant(v.CreatedAt, v.VariantID);
+
+  return (
+    <button
+      type="button"
+      disabled={!allowDelete}
+      onClick={() =>
+        allowDelete &&
+        (v.VariantID
+          ? onDeleteVariant(v.VariantID, i, product, setProduct)
+          : removeVariant(i))
+      }
+      title={
+        allowDelete
+          ? "Xoá biến thể"
+          : "Không thể xoá biến thể sau 30 phút kể từ khi tạo"
+      }
+      className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium
+        ${
+          allowDelete
+            ? "bg-red-50 hover:bg-red-100 text-red-600"
+            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+        }
+      `}
+    >
+      Xóa biến thể
+    </button>
+  );
+})()}
               </div>
             ))}
           </div>
