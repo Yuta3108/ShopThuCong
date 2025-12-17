@@ -6,31 +6,40 @@ import "swiper/css/navigation";
 
 export default function Banner() {
   const banners = [
-    {
-      image:
-        "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=1500&q=80",
-      title: "ThenFong Collection",
-      subtitle: "Phong cách tối giản, sang trọng cho mọi khoảnh khắc.",
-      cta: "Khám phá ngay",
-    },
-    {
-      image:
-        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1500&q=80",
-      title: "Ưu đãi độc quyền",
-      subtitle: "Giảm giá lên đến 40% cho đơn hàng đầu tiên.",
-      cta: "Nhận ưu đãi",
-    },
-    {
-      image:
-        "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1500&q=80",
-      title: "Trải nghiệm khác biệt",
-      subtitle: "Chất lượng từ chi tiết nhỏ nhất.",
-      cta: "Mua ngay",
-    },
-  ];
+  {
+    image: "/Banner/Banner1.jpg",
+    title: "Trải nghiệm khác biệt",
+    subtitle: "Chất lượng từ chi tiết nhỏ nhất.",
+    cta: "Mua ngay",
+  },
+  {
+    image: "/Banner/Banner2.jpg",
+    title: "Thủ công tinh tế",
+    subtitle: "Mỗi sản phẩm là một câu chuyện.",
+    cta: "Xem ngay",
+  },
+  {
+    image: "/Banner/Banner3.jpg",
+    title: "Phong cách mộc mạc",
+    subtitle: "Gần gũi – tự nhiên – bền vững.",
+    cta: "Khám phá",
+  },
+  {
+    image: "/Banner/Banner4.jpg",
+    title: "Giá trị từ đôi tay",
+    subtitle: "Tạo nên sự khác biệt cho không gian sống.",
+    cta: "Bộ sưu tập",
+  },
+  {
+    image: "/Banner/Banner5.jpg",
+    title: "Handmade for life",
+    subtitle: "Chậm lại để cảm nhận.",
+    cta: "Mua sắm",
+  },
+];
 
   return (
-    <div className="relative w-full h-[420px] md:h-[520px] overflow-hidden">
+    <div className=" banner-wrapper relative w-full h-[420px] md:h-[520px] overflow-hidden">
       <Swiper
         modules={[Navigation, Autoplay]}
         navigation
