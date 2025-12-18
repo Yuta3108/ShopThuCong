@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 
-// ================= FORMAT MONEY =================
+//  FORMAT MONEY 
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(Number(value) || 0);
 
-// ================= CHECK XOÁ 30 PHÚT =================
+//  CHECK XOÁ 30 PHÚT 
 const canDeleteProduct = (createdAt) => {
   if (!createdAt) return false;
 
@@ -51,7 +51,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
 
   return (
     <div className="w-full">
-      {/* ================= MOBILE CARD LIST ================= */}
+      {/*  MOBILE CARD LIST  */}
       <div className="grid grid-cols-1 md:hidden gap-4 mb-6">
         {currentProducts.map((p) => {
           const allowDelete = canDeleteProduct(p.CreatedAt);
@@ -142,7 +142,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
         })}
       </div>
 
-      {/* ================= DESKTOP TABLE ================= */}
+      {/*  DESKTOP TABLE  */}
       <div className="hidden md:block overflow-x-auto rounded-2xl bg-white border shadow-md">
         <table className="min-w-full text-[13px] text-slate-700">
           <thead>
@@ -245,7 +245,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
         </table>
       </div>
 
-      {/* ================= PAGINATION ================= */}
+      {/*  PAGINATION  */}
       <div className="flex justify-center items-center gap-2 py-4">
         <button
           onClick={() => handlePageChange(currentPage - 1)}

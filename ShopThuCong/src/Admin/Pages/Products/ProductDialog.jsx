@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Info } from "lucide-react";
 
-// ==== FORMAT MONEY 
+/*  FORMAT MONEY  */
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 0,
@@ -10,6 +10,17 @@ const formatMoney = (value) =>
 
 const parseMoneyInput = (value) =>
   Number(String(value).replace(/[^\d]/g, "")) || 0;
+
+/* UPLOAD PRODUCT IMAGE  */
+const handleUploadProductImage = (file, product, setProduct) => {
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    setProduct({ ...product, ImageURL: reader.result }); 
+  };
+  reader.readAsDataURL(file);
+};
 
 export default function ProductDialog({
   isOpen,
@@ -63,7 +74,8 @@ export default function ProductDialog({
               const matchedValue = matchedAttr.values?.find(
                 (vv) => vv.Value === a.Value
               );
-              if (matchedValue) attrValueIds.push(matchedValue.AttributeValueID);
+              if (matchedValue)
+                attrValueIds.push(matchedValue.AttributeValueID);
             }
           }
         }
@@ -108,26 +120,38 @@ export default function ProductDialog({
     setProduct({ ...product, variants: updated });
   };
 
-  const handleUploadImage = (i, file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const updated = [...product.variants];
-      updated[i].images = [...(updated[i].images || []), reader.result];
-      setProduct({ ...product, variants: updated });
-    };
-    reader.readAsDataURL(file);
+  /*  hàm upload ảnh  */
+ const handleUploadImage = (i, file) => {
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    setProduct((prev) => {
+      const variants = prev.variants.map((v, idx) => {
+        if (idx !== i) return v;
+
+        return {
+          ...v,
+          images: [...(v.images || []), reader.result], // base64
+        };
+      });
+
+      return { ...prev, variants };
+    });
   };
-  const canDeleteVariant = (createdAt, variantId) => {
-  if (!variantId) return true;
-  if (!createdAt) return false;
-
-  const created = new Date(createdAt).getTime();
-  const now = Date.now();
-  const diffMinutes = (now - created) / (1000 * 60);
-
-  return diffMinutes <= 30;
+  reader.readAsDataURL(file);
 };
+
+  const canDeleteVariant = (createdAt, variantId) => {
+    if (!variantId) return true;
+    if (!createdAt) return false;
+
+    const created = new Date(createdAt).getTime();
+    const now = Date.now();
+    const diffMinutes = (now - created) / (1000 * 60);
+
+    return diffMinutes <= 30;
+  };
 
   const handleSelectDropdown = (i, attr, value) => {
     const updated = [...product.variants];
@@ -187,7 +211,6 @@ export default function ProductDialog({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-2 sm:px-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full sm:w-[720px] max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
-        {/* CLOSE */}
         <button
           onClick={onClose}
           className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
@@ -195,12 +218,12 @@ export default function ProductDialog({
           <X size={22} />
         </button>
 
-        <h2 className="text-lg sm:text-xl font-bold text-teal-600 mb-4 mt-1 text-center sm:text-left">
+        <h2 className="text-lg sm:text-xl font-bold text-teal-600 mb-4 mt-1">
           {isEdit ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/*  BASIC INFO  */}
+          {/* BASIC INFO */}
           <input
             className="w-full border rounded-lg px-3 py-2"
             placeholder="Tên sản phẩm"
@@ -210,6 +233,7 @@ export default function ProductDialog({
             }
           />
 
+          {/* CATEGORY */}
           <select
             className="w-full border rounded-lg px-3 py-2 bg-white"
             value={product.CategoryID || ""}
@@ -228,6 +252,7 @@ export default function ProductDialog({
             ))}
           </select>
 
+          {/* PRODUCT CODE */}
           <input
             className="w-full border rounded-lg px-3 py-2"
             placeholder="Mã ProductCode"
@@ -236,50 +261,7 @@ export default function ProductDialog({
               setProduct({ ...product, ProductCode: e.target.value })
             }
           />
-
-          {/*  ẢNH ĐẠI DIỆN  */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ảnh đại diện
-            </label>
-            <div className="flex flex-wrap items-center gap-3">
-              {product.ImageURL && (
-                <div className="relative w-24 h-24 border rounded-lg overflow-hidden">
-                  <img
-                    src={product.ImageURL}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setProduct({ ...product, ImageURL: "" })}
-                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )}
-
-              <label className="w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
-                <span className="text-2xl">＋</span>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = () =>
-                      setProduct({ ...product, ImageURL: reader.result });
-                    reader.readAsDataURL(file);
-                  }}
-                />
-              </label>
-            </div>
-          </div>
-
-          <textarea
+            <textarea
             className="w-full border rounded-lg px-3 py-2"
             rows={2}
             placeholder="Mô tả ngắn"
@@ -323,7 +305,47 @@ export default function ProductDialog({
             </select>
           </div>
 
-          {/*  BIẾN THỂ SẢN PHẨM  */}
+          {/* PRODUCT IMAGE */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ảnh đại diện
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              {product.ImageURL && (
+                <div className="relative w-24 h-24 border rounded-lg overflow-hidden">
+                  <img
+                    src={product.ImageURL}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setProduct({ ...product, ImageURL: "" })}
+                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              
+              <label className="w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
+                <span className="text-2xl">＋</span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleUploadProductImage(
+                      e.target.files?.[0],
+                      product,
+                      setProduct
+                    )
+                  }
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* BIẾN THỂ */}
           <div className="pt-4 border-t">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-semibold">Biến thể sản phẩm</h3>
@@ -342,49 +364,36 @@ export default function ProductDialog({
                 key={i}
                 className="bg-gray-50 border rounded-xl p-4 mb-3 space-y-3"
               >
-                {/*  PRICE + STOCK  */}
+                {/* PRICE + STOCK */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* PRICE */}
-                  <div>
-                    <label className="text-sm text-gray-600">Giá</label>
-                    <input
-                      className="w-full border rounded px-3 py-2 text-right"
-                      placeholder="Giá"
-                      value={formatMoney(v.Price)}
-                      onChange={(e) =>
-                        handleVariantChange(
-                          i,
-                          "Price",
-                          parseMoneyInput(e.target.value)
-                        )
-                      }
+                  <input
+                    className="w-full border rounded px-3 py-2 text-right"
+                    value={formatMoney(v.Price)}
+                    onChange={(e) =>
+                      handleVariantChange(
+                        i,
+                        "Price",
+                        parseMoneyInput(e.target.value)
+                      )
+                    }
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full border rounded px-3 py-2 text-right"
+                    value={v.StockQuantity}
+                    onChange={(e) =>
+                      handleVariantChange(
+                        i,
+                        "StockQuantity",
+                        Number(e.target.value)
+                      )
+                    }
                     />
-                  </div>
-
-                  {/*  STOCK */}
-                  <div>
-                    <label className="text-sm text-gray-600">Tồn kho</label>
-                    <input
-                      type="number"
-                      min="0"
-                      className="w-full border rounded px-3 py-2 text-right"
-                      placeholder="Số lượng"
-                      value={v.StockQuantity}
-                      onChange={(e) =>
-                        handleVariantChange(
-                          i,
-                          "StockQuantity",
-                          Number(e.target.value)
-                        )
-                      }
-                    />
-                  </div>
                 </div>
 
-                {/*  ATTRIBUTE SELECT  */}
+                {/* ATTRIBUTES */}
                 <div>
-                  <h4 className="text-sm font-semibold mb-2">Thuộc tính</h4>
-
                   {attributes.map((attr) => {
                     const selected =
                       attr.values.find((x) =>
@@ -404,14 +413,15 @@ export default function ProductDialog({
                             handleSelectDropdown(
                               i,
                               attr,
-                              e.target.value ? Number(e.target.value) : null
+                              e.target.value
+                                ? Number(e.target.value)
+                                : null
                             )
                           }
                         >
                           <option value="">
                             -- Chọn {attr.AttributeName} --
                           </option>
-
                           {attr.values.map((val) => (
                             <option
                               key={val.AttributeValueID}
@@ -426,10 +436,9 @@ export default function ProductDialog({
                   })}
                 </div>
 
-                {/*  IMAGE PREVIEW + UPLOAD  */}
+                {/* VARIANT IMAGES */}
                 <div>
                   <h4 className="text-sm font-semibold mb-1">Ảnh biến thể</h4>
-
                   <div className="flex flex-wrap gap-3">
                     {v.images.map((img, idx) => (
                       <div
@@ -440,7 +449,6 @@ export default function ProductDialog({
                           src={typeof img === "string" ? img : img.ImageURL}
                           className="w-full h-full object-cover"
                         />
-
                         <button
                           type="button"
                           onClick={() => {
@@ -469,42 +477,44 @@ export default function ProductDialog({
                   </div>
                 </div>
 
-                {/*  REMOVE VARIANT  */}
+                {/* REMOVE VARIANT */}
                 {(() => {
-  const allowDelete = canDeleteVariant(v.CreatedAt, v.VariantID);
+                  const allowDelete = canDeleteVariant(
+                    v.CreatedAt,
+                    v.VariantID
+                  );
 
-  return (
-    <button
-      type="button"
-      disabled={!allowDelete}
-      onClick={() =>
-        allowDelete &&
-        (v.VariantID
-          ? onDeleteVariant(v.VariantID, i, product, setProduct)
-          : removeVariant(i))
-      }
-      title={
-        allowDelete
-          ? "Xoá biến thể"
-          : "Không thể xoá biến thể sau 30 phút kể từ khi tạo"
-      }
-      className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium
-        ${
-          allowDelete
-            ? "bg-red-50 hover:bg-red-100 text-red-600"
-            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-        }
-      `}
-    >
-      Xóa biến thể
-    </button>
-  );
-})()}
+                  return (
+                    <button
+                      type="button"
+                      disabled={!allowDelete}
+                      onClick={() =>
+                        allowDelete &&
+                        (v.VariantID
+                          ? onDeleteVariant(
+                              v.VariantID,
+                              i,
+                              product,
+                              setProduct
+                            )
+                          : removeVariant(i))
+                      }
+                      className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium
+                        ${
+                          allowDelete
+                            ? "bg-red-50 hover:bg-red-100 text-red-600"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        }
+                      `}
+                    >
+                      Xóa biến thể
+                    </button>
+                  );
+                })()}
               </div>
             ))}
           </div>
 
-          {/* SUBMIT */}
           <button
             type="submit"
             disabled={isSaving}

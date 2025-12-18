@@ -35,7 +35,7 @@ export const findProducts = async (filters = {}) => {
 
 export const findProductById = async (id) => {
   const [[product]] = await db.query(`
-    SELECT p.*, c.CategoryName,
+    SELECT p.*, c.CategoryName, c.Slug AS CategorySlug,
       MIN(v.Price) AS minPrice, MAX(v.Price) AS maxPrice
     FROM products p
     LEFT JOIN categories c ON c.CategoryID = p.CategoryID
