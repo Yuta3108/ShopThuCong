@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { X, Minus, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
@@ -38,15 +39,22 @@ export default function QuickViewModal({ product, onClose }) {
   }, [product?.CategorySlug, product?.ProductCode]);
 
   const handleAddToCart = async () => {
-    if (!selectedVariant) {
-      alert("Vui lòng chọn biến thể!");
-      return;
-    }
+  if (!selectedVariant) {
+    Swal.fire({
+      icon: "warning",
+      title: "Chưa chọn biến thể",
+      text: "Vui lòng chọn biến thể trước khi thêm vào giỏ hàng",
+      confirmButtonText: "OK",
+    });
+    return;
+  }
 
-    const isDB =
-      localStorage.getItem("cartMode") === "db" &&
-      !!localStorage.getItem("token");
+  const isDB =
+    localStorage.getItem("cartMode") === "db" &&
+    !!localStorage.getItem("token");
 
+  try {
+    // CART LOCAL
     if (!isDB) {
       let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -72,11 +80,20 @@ export default function QuickViewModal({ product, onClose }) {
 
       localStorage.setItem("cart", JSON.stringify(cart));
       window.dispatchEvent(new Event("updateCart"));
-      alert("Đã thêm vào giỏ hàng!");
+
+      Swal.fire({
+        icon: "success",
+        title: "Thành công",
+        text: "Đã thêm sản phẩm vào giỏ hàng",
+        timer: 1400,
+        showConfirmButton: false,
+      });
+
       onClose();
       return;
     }
 
+    // CART DB
     await axios.post(
       `${API}/cart/add`,
       {
@@ -89,10 +106,27 @@ export default function QuickViewModal({ product, onClose }) {
         },
       }
     );
+
     window.dispatchEvent(new Event("updateCart"));
-    alert("Đã thêm vào giỏ hàng!");
+
+    Swal.fire({
+      icon: "success",
+      title: "Thành công",
+      text: "Đã thêm sản phẩm vào giỏ hàng",
+      timer: 1400,
+      showConfirmButton: false,
+    });
+
     onClose();
-  };
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Lỗi",
+      text: "Không thể thêm sản phẩm vào giỏ hàng",
+      confirmButtonText: "OK",
+    });
+  }
+};
 
   if (loading || !details) {
     return (

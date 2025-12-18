@@ -5,6 +5,7 @@ import axios from "axios";
 
 export default function Header() {
   const [user, setUser] = useState(null);
+  const API = "https://backend-eta-ivory-29.vercel.app/api";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -19,7 +20,7 @@ export default function Header() {
     const fetchCategories = async () => {
       try {
         const res = await axios.get(
-          "https://backend-eta-ivory-29.vercel.app/api/categories"
+          `${API}/categories`
         );
         setCategories(res.data);
       } catch (err) {
@@ -44,7 +45,7 @@ export default function Header() {
     if (isDB && token) {
       try {
         const res = await axios.get(
-          "https://backend-eta-ivory-29.vercel.app/api/cart",
+          "${API}/cart",
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const items = res.data.items || [];
@@ -73,25 +74,25 @@ export default function Header() {
   }, []);
   // Tự động gợi ý khi nhập tìm kiếm
   useEffect(() => {
-  if (!keyword.trim()) {
-    setSuggestions([]);
-    return;
-  }
-  const timer = setTimeout(async () => {
-    const res = await axios.get(
-      "https://backend-eta-ivory-29.vercel.app/api/products",
-      {
-        params: {
-          q: keyword,
-          pageSize: 5,
-        },
-      }
-    );
-    setSuggestions(res.data);
-  }, 300);
+    if (!keyword.trim()) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const res = await axios.get(
+        `${API}/products`,
+        {
+          params: {
+            q: keyword,
+            pageSize: 5,
+          },
+        }
+      );
+      setSuggestions(res.data);
+    }, 300);
 
-  return () => clearTimeout(timer);
-}, [keyword]);
+    return () => clearTimeout(timer);
+  }, [keyword]);
   // Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -116,7 +117,7 @@ export default function Header() {
             className="flex items-center gap-2 group whitespace-nowrap"
           >
             <img
-              src="/LogoHinh.png"   // ảnh bỏ trong public/logo.png
+              src="/LogoHinh.png"
               alt="Logo"
               className="w-10 h-10 rounded-2xl object-cover group-hover:scale-[1.05] transition-all"
             ></img>
@@ -199,37 +200,37 @@ export default function Header() {
                 className="border border-white/80 bg-white/70 backdrop-blur-xl rounded-full pl-9 pr-4 py-2 text-xs md:text-sm w-44 md:w-64 focus:outline-none focus:ring-2 focus:ring-teal-400/70 shadow-[0_8px_24px_rgba(15,23,42,0.08)] placeholder:text-slate-400"
               />
               {showSuggest && suggestions.length > 0 && (
-                  <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl z-50">
-                    {suggestions.map((p) => (
-                      <div
-                          key={p.ProductID}
-                          onClick={() => {
-                            navigate(`/san-pham/${p.ProductID}`);
-                            setShowSuggest(false);
-                            setKeyword("");
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50 cursor-pointer"
-                        >
-                          {/* ẢNH */}
-                          <img
-                            src={p.ImageURL || "/no-image.png"}
-                            alt={p.ProductName}
-                            className="w-12 h-12 rounded-lg object-cover border"
-                          />
+                <div className="absolute top-full mt-2 w-full bg-white rounded-2xl shadow-xl z-50">
+                  {suggestions.map((p) => (
+                    <div
+                      key={p.ProductID}
+                      onClick={() => {
+                        navigate(`/chi-tiet/${p.CategorySlug}/${p.ProductCode}`);
+                        setShowSuggest(false);
+                        setKeyword("");
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-teal-50 cursor-pointer"
+                    >
+                      {/* ẢNH */}
+                      <img
+                        src={p.ImageURL || "/no-image.png"}
+                        alt={p.ProductName}
+                        className="w-12 h-12 rounded-lg object-cover border"
+                      />
 
-                          {/* TEXT */}
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-800 line-clamp-1">
-                              {p.ProductName}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              Từ {p.minPrice?.toLocaleString()}₫
-                            </p>
-                          </div>
-</div>
-                    ))}
-                  </div>
-                )}
+                      {/* TEXT */}
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-800 line-clamp-1">
+                          {p.ProductName}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Từ {p.minPrice?.toLocaleString()}₫
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Link to="/cart" className="relative">
@@ -314,9 +315,8 @@ export default function Header() {
               >
                 <span>Sản phẩm</span>
                 <span
-                  className={`transform transition-transform ${
-                    isProductOpen ? "rotate-180" : ""
-                  }`}
+                  className={`transform transition-transform ${isProductOpen ? "rotate-180" : ""
+                    }`}
                 >
                   ▾
                 </span>

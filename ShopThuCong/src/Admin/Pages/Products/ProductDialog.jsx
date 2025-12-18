@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { X, Info } from "lucide-react";
+import Swal from "sweetalert2";
+import { Loader2 } from "lucide-react";
 
 /*  FORMAT MONEY  */
 const formatMoney = (value) =>
@@ -168,11 +170,23 @@ export default function ProductDialog({
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isSaving) return;
+  e.preventDefault();
+  if (isSaving) return;
 
-    setIsSaving(true);
+  setIsSaving(true);
 
+  // Hiển thị loading Swal
+  Swal.fire({
+    title: "Đang xử lý...",
+    text: "Vui lòng chờ một chút nhé ",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+
+  try {
     const cleanVariants = product.variants.map((v) => ({
       ...v,
       attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
@@ -180,9 +194,27 @@ export default function ProductDialog({
 
     await onSubmit({ ...product, variants: cleanVariants });
 
+    Swal.fire({
+      icon: "success",
+      title: "Thành công ",
+      text: isEdit ? "Đã cập nhật sản phẩm" : "Đã thêm sản phẩm mới",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
     resetForm();
+    onClose();
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Lỗi ",
+      text: "Có lỗi xảy ra, vui lòng thử lại",
+      confirmButtonText: "OK",
+    });
+  } finally {
     setIsSaving(false);
-  };
+  }
+};
 
   const resetForm = () => {
     setProduct({
@@ -516,16 +548,23 @@ export default function ProductDialog({
           </div>
 
           <button
-            type="submit"
-            disabled={isSaving}
-            className={`w-full py-2 rounded-lg text-white transition ${
-              isSaving
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-teal-600 hover:bg-teal-700"
-            }`}
-          >
-            {isSaving ? "Đang lưu..." : isEdit ? "Lưu thay đổi" : "Lưu sản phẩm"}
-          </button>
+              type="submit"
+              disabled={isSaving}
+              className={`w-full py-2 rounded-lg text-white flex items-center justify-center gap-2 transition ${
+                isSaving
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-teal-600 hover:bg-teal-700"
+              }`}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="animate-spin w-5 h-5" />
+                  <span>Đang xử lý...</span>
+                </>
+              ) : (
+                isEdit ? "Lưu thay đổi" : "Lưu sản phẩm"
+              )}
+            </button>
         </form>
       </div>
     </div>
