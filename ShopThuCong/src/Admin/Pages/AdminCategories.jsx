@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../Layout/Sidebar";
-import { Search, Plus, Edit, Trash2, X, ImageOff } from "lucide-react";
+import { Search, Plus, X, ImageOff } from "lucide-react";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
-// ================= AXIOS CLIENT =================
+/*  AXIOS CLIENT  */
 const axiosClient = axios.create({
   baseURL: API,
   headers: { "Content-Type": "application/json" },
@@ -17,7 +18,7 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-// ================= MAIN COMPONENT =================
+/*  COMPONENT  */
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,7 @@ export default function AdminCategories() {
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editID, setEditID] = useState(null);
+
   const [previewImage, setPreviewImage] = useState("");
 
   const [form, setForm] = useState({
@@ -35,9 +37,13 @@ export default function AdminCategories() {
     imageBase64: "",
   });
 
-  const toggleSidebar = (state) =>
-    setIsOpen(state !== undefined ? state : !isOpen);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingImage, setDeletingImage] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState(false);
 
+  const toggleSidebar = () => setIsOpen(!isOpen);
+
+  /*  AUTH CHECK  */
   const user = JSON.parse(localStorage.getItem("user"));
   if (!user || user.role !== "admin") {
     return (
@@ -47,21 +53,31 @@ export default function AdminCategories() {
     );
   }
 
-  // ================= FETCH =================
+  /*  FETCH  */
   const fetchCategories = async () => {
-    const { data } = await axiosClient.get("/categories");
-    setCategories(data);
-    setLoading(false);
+    try {
+      const { data } = await axiosClient.get("/categories");
+      setCategories(data);
+    } catch {
+      Swal.fire({
+        title: "Lỗi",
+        text: "Không thể tải danh mục!",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  // ================= MODAL =================
+  /*  MODAL  */
   const openAdd = () => {
     setIsEdit(false);
     setEditID(null);
+    setPreviewImage("");
     setForm({
       CategoryName: "",
       Description: "",
@@ -73,23 +89,35 @@ export default function AdminCategories() {
   const openEdit = (cat) => {
     setIsEdit(true);
     setEditID(cat.CategoryID);
+    setPreviewImage(cat.ImageURL || "");
     setForm({
       CategoryName: cat.CategoryName,
       Description: cat.Description || "",
       imageBase64: "",
     });
-    setPreviewImage(cat.ImageURL || "");
     setModalOpen(true);
   };
 
-  // ================= SUBMIT =================
+  /*  SUBMIT  */
   const handleSubmit = async () => {
     if (!form.CategoryName.trim()) {
-      alert("Tên danh mục không được để trống!");
+      await Swal.fire({
+        title: "Thiếu thông tin",
+        text: "Tên danh mục không được để trống!",
+        confirmButtonText: "OK",
+      });
       return;
     }
 
     try {
+      setSubmitting(true);
+
+      Swal.fire({
+        title: "Đang lưu...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
       if (isEdit) {
         await axiosClient.put(`/categories/${editID}`, form);
       } else {
@@ -98,51 +126,125 @@ export default function AdminCategories() {
 
       await fetchCategories();
       setModalOpen(false);
-    } catch (err) {
-      console.error(err);
-      alert("Lỗi thao tác danh mục!");
+
+      Swal.fire({
+        title: "Thành công",
+        text: isEdit
+          ? "Cập nhật danh mục thành công"
+          : "Thêm danh mục thành công",
+        confirmButtonText: "OK",
+      });
+    } catch {
+      Swal.fire({
+        title: "Lỗi",
+        text: "Không thể lưu danh mục!",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // ================= DELETE CATEGORY =================
+  /*  DELETE CATEGORY  */
   const handleDelete = async (id) => {
-    if (!window.confirm("Xác nhận xoá danh mục?")) return;
+    if (deletingCategory) return;
+
+    const result = await Swal.fire({
+      title: "Xoá danh mục?",
+      text: "Danh mục sẽ bị xoá vĩnh viễn.",
+      showCancelButton: true,
+      confirmButtonText: "Xoá",
+      cancelButtonText: "Huỷ",
+      confirmButtonColor: "#dc2626",
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
+      setDeletingCategory(true);
+
+      Swal.fire({
+        title: "Đang xoá...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
       await axiosClient.delete(`/categories/${id}`);
       setCategories((prev) => prev.filter((c) => c.CategoryID !== id));
+
+      Swal.fire({
+        title: "Đã xoá",
+        text: "Danh mục đã được xoá",
+        confirmButtonText: "OK",
+      });
     } catch {
-      alert("Không thể xoá danh mục!");
+      Swal.fire({
+        title: "Lỗi",
+        text: "Không thể xoá danh mục!",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setDeletingCategory(false);
     }
   };
 
-  // ================= DELETE IMAGE =================
+  /*  DELETE IMAGE  */
   const handleDeleteImage = async () => {
-  if (!window.confirm("Xoá ảnh danh mục?")) return;
+    if (deletingImage) return;
 
-  try {
-    await axiosClient.delete(`/categories/${editID}/image`);
+    const result = await Swal.fire({
+      title: "Xoá ảnh danh mục?",
+      text: "Ảnh sẽ bị xoá vĩnh viễn.",
+      showCancelButton: true,
+      confirmButtonText: "Xoá",
+      cancelButtonText: "Huỷ",
+      confirmButtonColor: "#dc2626",
+    });
 
-    setPreviewImage("");
-    setForm({ ...form, imageBase64: "" });
+    if (!result.isConfirmed) return;
 
-    alert("Đã xoá ảnh danh mục");
-  } catch {
-    alert("Không thể xoá ảnh!");
-  }
-};
+    try {
+      setDeletingImage(true);
 
-  // ================= FILTER =================
+      Swal.fire({
+        title: "Đang xoá ảnh...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      await axiosClient.delete(`/categories/${editID}/image`);
+
+      setPreviewImage("");
+      setForm({ ...form, imageBase64: "" });
+
+      Swal.fire({
+        title: "Đã xoá",
+        text: "Ảnh danh mục đã được xoá",
+        confirmButtonText: "OK",
+      });
+    } catch {
+      Swal.fire({
+        title: "Lỗi",
+        text: "Không thể xoá ảnh danh mục!",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setDeletingImage(false);
+    }
+  };
+
+  /*  FILTER  */
   const filtered = categories.filter((c) =>
     c.CategoryName.toLowerCase().includes(search.toLowerCase())
   );
 
+  /*  RENDER  */
   return (
     <div className="flex bg-[#F5F5F5] min-h-screen">
       <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
       <div className="flex-1 md:ml-64 p-4 sm:p-6">
-        <div className="w-full max-w-none ">
+        <div className="w-full">
           <h1 className="text-2xl font-semibold text-slate-800 mb-6">
             Quản Lý Danh Mục
           </h1>
@@ -158,7 +260,7 @@ export default function AdminCategories() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Tìm theo tên danh mục..."
-                className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm 
+                className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm
                            focus:ring-2 focus:ring-teal-500 outline-none"
               />
             </div>
@@ -173,7 +275,7 @@ export default function AdminCategories() {
           </div>
 
           {/* TABLE */}
-          <div className="bg-white rounded-xl shadow border overflow-x-auto">
+          <div className="bg-white rounded-2xl shadow border overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-teal-600 text-white">
                 <tr>
@@ -187,14 +289,14 @@ export default function AdminCategories() {
               </thead>
               <tbody>
                 {filtered.map((c) => (
-                  <tr key={c.CategoryID} className="border-t hover:bg-teal-50">
+                  <tr
+                    key={c.CategoryID}
+                    className="border-t hover:bg-teal-50"
+                  >
                     <td className="p-3 text-center">
                       <img
                         src={c.ImageURL || "https://placehold.co/80x80"}
-                        alt={c.CategoryName}
-                        className="w-12 h-12 rounded-lg object-cover border shadow-sm 
-                                      cursor-pointer transition-transform
-                                      group-hover:scale-110"
+                        className="w-12 h-12 object-cover rounded-lg border"
                       />
                     </td>
                     <td className="p-3 text-center">{c.CategoryID}</td>
@@ -212,7 +314,8 @@ export default function AdminCategories() {
                       </button>
                       <button
                         onClick={() => handleDelete(c.CategoryID)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg"
+                        disabled={deletingCategory}
+                        className="px-3 py-1 bg-red-500 text-white rounded-lg disabled:opacity-50"
                       >
                         Xoá
                       </button>
@@ -282,42 +385,36 @@ export default function AdminCategories() {
 
                       const reader = new FileReader();
                       reader.onloadend = () => {
-                        setPreviewImage(reader.result); // preview ảnh mới
-                        setForm({ ...form, imageBase64: reader.result });
+                        setPreviewImage(reader.result);
+                        setForm({
+                          ...form,
+                          imageBase64: reader.result,
+                        });
                       };
                       reader.readAsDataURL(file);
                     }}
                   />
 
-                  {/* BOX */}
-                  <div
-                    className={`w-28 h-28 rounded-xl border-2 border-dashed
-                          flex items-center justify-center overflow-hidden
-                          transition
-                          ${previewImage
-                        ? "border-slate-300"
-                        : "border-slate-300 hover:border-teal-500"
-                      }`}
-                  >
+                  <div className="w-28 h-28 rounded-xl border-2 border-dashed
+                                  flex items-center justify-center overflow-hidden">
                     {previewImage ? (
                       <div className="relative w-full h-full">
                         <img
                           src={previewImage}
-                          alt="Preview"
                           className="w-full h-full object-cover"
                         />
 
-                        {/* DELETE IMAGE (XOÁ CLOUDINARY) */}
                         {isEdit && (
                           <button
                             type="button"
+                            disabled={deletingImage}
                             onClick={(e) => {
                               e.preventDefault();
                               handleDeleteImage();
                             }}
-                            className="absolute top-1 right-1 bg-black/60 text-white
-                                      rounded-full w-6 h-6 flex items-center
-                                      justify-center text-xs hover:bg-black"
+                            className="absolute top-1 right-1 w-6 h-6 rounded-full
+                                       flex items-center justify-center text-xs
+                                       bg-black/60 text-white hover:bg-black"
                           >
                             ✕
                           </button>
@@ -330,11 +427,22 @@ export default function AdminCategories() {
                 </label>
               </div>
             </div>
+
             <button
               onClick={handleSubmit}
-              className="w-full mt-5 bg-teal-600 text-white py-2 rounded-xl hover:bg-teal-700"
+              disabled={submitting}
+              className={`w-full mt-5 py-2 rounded-xl text-white
+                ${
+                  submitting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-teal-600 hover:bg-teal-700"
+                }`}
             >
-              {isEdit ? "Cập nhật" : "Thêm"}
+              {submitting
+                ? "Đang lưu..."
+                : isEdit
+                ? "Cập nhật"
+                : "Thêm"}
             </button>
           </div>
         </div>

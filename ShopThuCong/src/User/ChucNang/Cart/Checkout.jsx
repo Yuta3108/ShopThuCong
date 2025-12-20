@@ -79,7 +79,14 @@ export default function CheckoutPage() {
         code: code.trim().toUpperCase(),
         orderTotal: subtotal,
       });
-
+      if (err.response?.status === 400) {
+        Swal.fire({
+          title: "Voucher không hợp lệ",
+          text: err.response.data?.message,
+          confirmButtonText: "OK",
+        });
+        return null; 
+      }
       if (res.data.success) {
         setDiscount(Number(res.data.discount));
       } else {
