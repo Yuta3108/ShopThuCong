@@ -1,12 +1,18 @@
 import {
   getAllCategories,
-  getCategoryBySlug as getSlugModel,
+  getCategoryBySlug,
+  getCategoryById,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  checkSlugExist,
+  clearCategoryImage,
 } from "../models/CategoryModel.js";
 
-//  GET 
+import cloudinary from "../config/cloudinary.js";
+import { slugify } from "../utils/slugify.js";
+
+// GET ALL
 export const getCategories = async (req, res) => {
   try {
     res.json(await getAllCategories());
@@ -15,53 +21,140 @@ export const getCategories = async (req, res) => {
   }
 };
 
-export const getCategoryBySlug = async (req, res) => {
+// GET BY SLUG
+export const getCategoryBySlugController = async (req, res) => {
   try {
-    const category = await getSlugModel(req.params.slug);
-    if (!category) return res.status(404).json({ message: "Không tìm thấy danh mục" });
+    const category = await getCategoryBySlug(req.params.slug);
+    if (!category)
+      return res.status(404).json({ message: "Không tìm thấy danh mục" });
     res.json(category);
   } catch {
     res.status(500).json({ message: "Lỗi server" });
   }
 };
 
-// CREATE 
+// CREATE (BASE64 → CLOUDINARY)
 export const createCategoryController = async (req, res) => {
   try {
-    const { CategoryName, Slug, Description } = req.body;
+    const { CategoryName, Description, imageBase64 } = req.body;
+    if (!CategoryName)
+      return res.status(400).json({ message: "Thiếu tên danh mục!" });
 
-    if (!CategoryName || !Slug)
-      return res.status(400).json({ message: "Thiếu dữ liệu!" });
+    // upload cloudinary
+    let imageUrl = null;
+    let imagePublicId = null;
 
-    const id = await createCategory(CategoryName, Slug, Description);
+    if (imageBase64) {
+      const upload = await cloudinary.uploader.upload(imageBase64, {
+        folder: "categories",
+      });
+      imageUrl = upload.secure_url;
+      imagePublicId = upload.public_id;
+    }
+
+    // auto slug
+    let slug = slugify(CategoryName);
+    let baseSlug = slug;
+    let count = 1;
+    while (await checkSlugExist(slug)) {
+      slug = `${baseSlug}-${count++}`;
+    }
+
+    const id = await createCategory(
+      CategoryName,
+      slug,
+      Description,
+      imageUrl,
+      imagePublicId
+    );
+
     res.json({ message: "Thêm danh mục thành công!", id });
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Lỗi server" });
   }
 };
 
-// UPDATE 
+// UPDATE (XOÁ ẢNH CŨ → UP ẢNH MỚI)
 export const updateCategoryController = async (req, res) => {
   try {
     const { id } = req.params;
-    const { CategoryName, Slug, Description } = req.body;
+    const { CategoryName, Description, imageBase64 } = req.body;
 
-    const ok = await updateCategory(id, CategoryName, Slug, Description);
-    if (!ok) return res.status(404).json({ message: "Không tìm thấy danh mục!" });
+    if (!CategoryName)
+      return res.status(400).json({ message: "Thiếu tên danh mục!" });
 
-    res.json({ message: "Sửa danh mục thành công!" });
-  } catch {
+    const old = await getCategoryById(id);
+    if (!old)
+      return res.status(404).json({ message: "Không tìm thấy danh mục!" });
+
+    let imageUrl = old.ImageURL;
+    let imagePublicId = old.ImagePublicID;
+
+    // nếu có ảnh mới → xoá ảnh cũ
+    if (imageBase64) {
+      if (imagePublicId) {
+        await cloudinary.uploader.destroy(imagePublicId);
+      }
+
+      const upload = await cloudinary.uploader.upload(imageBase64, {
+        folder: "categories",
+      });
+      imageUrl = upload.secure_url;
+      imagePublicId = upload.public_id;
+    }
+
+    // auto slug
+    let slug = slugify(CategoryName);
+    let baseSlug = slug;
+    let count = 1;
+    while (await checkSlugExist(slug, id)) {
+      slug = `${baseSlug}-${count++}`;
+    }
+
+    await updateCategory(
+      id,
+      CategoryName,
+      slug,
+      Description,
+      imageUrl,
+      imagePublicId
+    );
+
+    res.json({ message: "Cập nhật danh mục thành công!" });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Lỗi server" });
   }
 };
 
-// DELETE 
+// DELETE IMAGE RIÊNG
+export const deleteCategoryImageController = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const publicId = await clearCategoryImage(id);
+    if (!publicId)
+      return res.status(404).json({ message: "Không có ảnh để xoá!" });
+
+    await cloudinary.uploader.destroy(publicId);
+
+    res.json({ message: "Xoá ảnh danh mục thành công!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+// DELETE CATEGORY
 export const deleteCategoryController = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const ok = await deleteCategory(id);
-    if (!ok) return res.status(404).json({ message: "Không tìm thấy danh mục!" });
+    const publicId = await deleteCategory(id);
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
+    }
 
     res.json({ message: "Xoá danh mục thành công!" });
   } catch {
