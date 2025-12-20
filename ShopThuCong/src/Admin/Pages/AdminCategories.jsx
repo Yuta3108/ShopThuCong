@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../Layout/Sidebar";
-import { Search, Plus, Edit, Trash2, X } from "lucide-react";
+import { Search, Plus, Edit, Trash2, X, ImageOff } from "lucide-react";
 import axios from "axios";
 
 const API = "https://backend-eta-ivory-29.vercel.app/api";
@@ -27,17 +27,18 @@ export default function AdminCategories() {
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editID, setEditID] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
 
-   const toggleSidebar = (state) =>
-    setIsOpen(state !== undefined ? state : !isOpen);
   const [form, setForm] = useState({
     CategoryName: "",
-    Slug: "",
     Description: "",
+    imageBase64: "",
   });
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const toggleSidebar = (state) =>
+    setIsOpen(state !== undefined ? state : !isOpen);
 
+  const user = JSON.parse(localStorage.getItem("user"));
   if (!user || user.role !== "admin") {
     return (
       <div className="flex justify-center items-center h-screen text-red-600 font-semibold">
@@ -46,23 +47,26 @@ export default function AdminCategories() {
     );
   }
 
-  // ================= FETCH DATA =================
+  // ================= FETCH =================
+  const fetchCategories = async () => {
+    const { data } = await axiosClient.get("/categories");
+    setCategories(data);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data } = await axiosClient.get("/categories");
-        setCategories(data);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchCategories();
   }, []);
 
-  // ================= OPEN MODAL =================
+  // ================= MODAL =================
   const openAdd = () => {
     setIsEdit(false);
-    setForm({ CategoryName: "", Slug: "", Description: "" });
+    setEditID(null);
+    setForm({
+      CategoryName: "",
+      Description: "",
+      imageBase64: "",
+    });
     setModalOpen(true);
   };
 
@@ -71,77 +75,80 @@ export default function AdminCategories() {
     setEditID(cat.CategoryID);
     setForm({
       CategoryName: cat.CategoryName,
-      Slug: cat.Slug,
       Description: cat.Description || "",
+      imageBase64: "",
     });
+    setPreviewImage(cat.ImageURL || "");
     setModalOpen(true);
   };
 
-  // SUBMIT
+  // ================= SUBMIT =================
   const handleSubmit = async () => {
-    const { CategoryName, Slug } = form;
-
-    if (!CategoryName.trim() || !Slug.trim()) {
-      alert("Tên & Slug không được để trống!");
+    if (!form.CategoryName.trim()) {
+      alert("Tên danh mục không được để trống!");
       return;
     }
 
     try {
       if (isEdit) {
-        await axiosClient.put(`/categories/sua/${editID}`, form);
-        setCategories((prev) =>
-          prev.map((c) => (c.CategoryID === editID ? { ...c, ...form } : c))
-        );
+        await axiosClient.put(`/categories/${editID}`, form);
       } else {
-        const res = await axiosClient.post("/categories/them", form);
-        setCategories((prev) => [...prev, { CategoryID: res.data.id, ...form }]);
+        await axiosClient.post("/categories", form);
       }
 
+      await fetchCategories();
       setModalOpen(false);
-    } catch {
-      alert("Lỗi thao tác với danh mục!");
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi thao tác danh mục!");
     }
   };
 
-  // DELETE
+  // ================= DELETE CATEGORY =================
   const handleDelete = async (id) => {
     if (!window.confirm("Xác nhận xoá danh mục?")) return;
 
     try {
-      await axiosClient.delete(`/categories/xoa/${id}`);
+      await axiosClient.delete(`/categories/${id}`);
       setCategories((prev) => prev.filter((c) => c.CategoryID !== id));
     } catch {
-      alert("Không thể xoá!");
+      alert("Không thể xoá danh mục!");
     }
   };
 
-  // FILTER
+  // ================= DELETE IMAGE =================
+  const handleDeleteImage = async () => {
+  if (!window.confirm("Xoá ảnh danh mục?")) return;
+
+  try {
+    await axiosClient.delete(`/categories/${editID}/image`);
+
+    setPreviewImage("");
+    setForm({ ...form, imageBase64: "" });
+
+    alert("Đã xoá ảnh danh mục");
+  } catch {
+    alert("Không thể xoá ảnh!");
+  }
+};
+
+  // ================= FILTER =================
   const filtered = categories.filter((c) =>
-    [c.CategoryName, c.Slug].some((v) =>
-      v.toLowerCase().includes(search.toLowerCase())
-    )
+    c.CategoryName.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="flex bg-[#F5F5F5] min-h-screen">
-
-      {/* SIDEBAR */}
       <Sidebar isOpen={isOpen} toggleSidebar={toggleSidebar} />
 
-      {/* CONTENT */}
       <div className="flex-1 md:ml-64 p-4 sm:p-6">
-
-        <div className="max-w-5xl mx-auto">
-
-          {/* HEADER */}
-          <h1 className="text-2xl font-semibold text-slate-800 tracking-tight mb-6">
+        <div className="w-full max-w-none ">
+          <h1 className="text-2xl font-semibold text-slate-800 mb-6">
             Quản Lý Danh Mục
           </h1>
 
-          {/* SEARCH / ADD */}
-          <div className="flex flex-col sm:flex-row sm:justify-between gap-3 mb-6">
-
-            {/* Search */}
+          {/* SEARCH + ADD */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3 mb-6">
             <div className="relative w-full sm:w-80">
               <Search
                 size={18}
@@ -150,13 +157,12 @@ export default function AdminCategories() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Tìm theo tên hoặc slug…"
+                placeholder="Tìm theo tên danh mục..."
                 className="w-full pl-10 pr-3 py-2 rounded-xl border bg-white shadow-sm 
                            focus:ring-2 focus:ring-teal-500 outline-none"
               />
             </div>
 
-            {/* ADD Button */}
             <button
               onClick={openAdd}
               className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-xl
@@ -166,77 +172,47 @@ export default function AdminCategories() {
             </button>
           </div>
 
-          {/* MOBILE LIST */}
-          <div className="grid grid-cols-1 md:hidden gap-4">
-            {filtered.map((c) => (
-              <div
-                key={c.CategoryID}
-                className="p-4 bg-white rounded-xl shadow border hover:shadow-md transition"
-              >
-                <h3 className="font-semibold text-lg">{c.CategoryName}</h3>
-                <p className="text-slate-600 text-sm">@{c.Slug}</p>
-
-                <p className="text-slate-500 text-sm mt-2">
-                  {c.Description || "Không có mô tả."}
-                </p>
-
-                <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={() => openEdit(c)}
-                    className="flex-1 flex items-center justify-center bg-yellow-500 text-white rounded-lg py-2 hover:bg-yellow-600"
-                  >
-                    <Edit size={16} /> Sửa
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(c.CategoryID)}
-                    className="flex-1 flex items-center justify-center bg-red-500 text-white rounded-lg py-2 hover:bg-red-600"
-                  >
-                    <Trash2 size={16} /> Xoá
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* DESKTOP TABLE */}
-          <div className="hidden md:block overflow-x-auto bg-white rounded-xl shadow border">
+          {/* TABLE */}
+          <div className="bg-white rounded-xl shadow border overflow-x-auto">
             <table className="min-w-full text-sm">
-              <thead className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white">
+              <thead className="bg-teal-600 text-white">
                 <tr>
-                  <th className="p-3 text-left">ID</th>
-                  <th className="p-3 text-left">Tên danh mục</th>
-                  <th className="p-3 text-left">Slug</th>
-                  <th className="p-3 text-left w-1/3">Mô tả</th>
+                  <th className="p-3 text-center">Ảnh</th>
+                  <th className="p-3 text-center">ID</th>
+                  <th className="p-3 text-center">Tên</th>
+                  <th className="p-3 text-center">Slug</th>
+                  <th className="p-3 text-center">Mô tả</th>
                   <th className="p-3 text-center">Hành động</th>
                 </tr>
               </thead>
-
               <tbody>
-                {filtered.map((c, i) => (
-                  <tr
-                    key={c.CategoryID}
-                    className={`border-t hover:bg-teal-50 transition ${
-                      i % 2 === 0 ? "bg-gray-50" : "bg-white"
-                    }`}
-                  >
-                    <td className="p-3">{c.CategoryID}</td>
-                    <td className="p-3 font-semibold">{c.CategoryName}</td>
-                    <td className="p-3 text-slate-700">{c.Slug}</td>
-                    <td className="p-3 text-slate-600">
+                {filtered.map((c) => (
+                  <tr key={c.CategoryID} className="border-t hover:bg-teal-50">
+                    <td className="p-3 text-center">
+                      <img
+                        src={c.ImageURL || "https://placehold.co/80x80"}
+                        alt={c.CategoryName}
+                        className="w-12 h-12 rounded-lg object-cover border shadow-sm 
+                                      cursor-pointer transition-transform
+                                      group-hover:scale-110"
+                      />
+                    </td>
+                    <td className="p-3 text-center">{c.CategoryID}</td>
+                    <td className="p-3 font-semibold text-center">{c.CategoryName}</td>
+                    <td className="p-3 text-slate-600 text-center">{c.Slug}</td>
+                    <td className="p-3 text-slate-500 text-center">
                       {c.Description || "—"}
                     </td>
-
                     <td className="p-3 text-center space-x-2">
                       <button
                         onClick={() => openEdit(c)}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+                        className="px-3 py-1 bg-yellow-500 text-white rounded-lg"
                       >
                         Sửa
                       </button>
                       <button
                         onClick={() => handleDelete(c.CategoryID)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        className="px-3 py-1 bg-red-500 text-white rounded-lg"
                       >
                         Xoá
                       </button>
@@ -245,8 +221,13 @@ export default function AdminCategories() {
                 ))}
               </tbody>
             </table>
-          </div>
 
+            {loading && (
+              <div className="p-6 text-center text-slate-500">
+                Đang tải dữ liệu...
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -254,10 +235,9 @@ export default function AdminCategories() {
       {modalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl shadow-xl w-11/12 sm:w-96 relative">
-
             <button
               onClick={() => setModalOpen(false)}
-              className="absolute right-3 top-3 text-slate-500 hover:text-slate-700"
+              className="absolute right-3 top-3 text-slate-500"
             >
               <X size={20} />
             </button>
@@ -276,13 +256,6 @@ export default function AdminCategories() {
                 className="w-full border p-2 rounded-lg"
               />
 
-              <input
-                value={form.Slug}
-                onChange={(e) => setForm({ ...form, Slug: e.target.value })}
-                placeholder="Slug"
-                className="w-full border p-2 rounded-lg"
-              />
-
               <textarea
                 value={form.Description}
                 onChange={(e) =>
@@ -291,11 +264,75 @@ export default function AdminCategories() {
                 placeholder="Mô tả"
                 className="w-full border p-2 rounded-lg h-24 resize-none"
               />
-            </div>
 
+              {/* IMAGE PICKER */}
+              <div>
+                <p className="text-sm font-medium text-slate-600 mb-2">
+                  Ảnh đại diện
+                </p>
+
+                <label className="inline-block cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (!file) return;
+
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setPreviewImage(reader.result); // preview ảnh mới
+                        setForm({ ...form, imageBase64: reader.result });
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+
+                  {/* BOX */}
+                  <div
+                    className={`w-28 h-28 rounded-xl border-2 border-dashed
+                          flex items-center justify-center overflow-hidden
+                          transition
+                          ${previewImage
+                        ? "border-slate-300"
+                        : "border-slate-300 hover:border-teal-500"
+                      }`}
+                  >
+                    {previewImage ? (
+                      <div className="relative w-full h-full">
+                        <img
+                          src={previewImage}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+
+                        {/* DELETE IMAGE (XOÁ CLOUDINARY) */}
+                        {isEdit && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleDeleteImage();
+                            }}
+                            className="absolute top-1 right-1 bg-black/60 text-white
+                                      rounded-full w-6 h-6 flex items-center
+                                      justify-center text-xs hover:bg-black"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-3xl text-slate-400">+</span>
+                    )}
+                  </div>
+                </label>
+              </div>
+            </div>
             <button
               onClick={handleSubmit}
-              className="w-full mt-5 bg-teal-600 text-white py-2 rounded-xl hover:bg-teal-700 transition"
+              className="w-full mt-5 bg-teal-600 text-white py-2 rounded-xl hover:bg-teal-700"
             >
               {isEdit ? "Cập nhật" : "Thêm"}
             </button>

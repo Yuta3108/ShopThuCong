@@ -87,13 +87,10 @@ export default function HomePage() {
                 >
                   <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mb-2 rounded-2xl overflow-hidden relative shadow-md bg-white border border-slate-200">
                     <img
-                      src={`/category/${cat.CategoryID}.jpg`}
-                      onError={(e) =>
-                        (e.target.src = "https://placehold.co/260x260")
-                      }
-                      alt={cat.CategoryName}
-                      className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-300"
-                    />
+                        src={cat.ImageURL || "https://placehold.co/260x260"}
+                        alt={cat.CategoryName}
+                        className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-300"
+                      />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   <span className="text-xs sm:text-sm text-slate-800 line-clamp-2 group-hover:text-rose-500 transition-colors">

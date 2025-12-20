@@ -148,7 +148,7 @@ export default function AdminUser() {
 
       {/* CONTENT */}
       <div className="flex-1 md:ml-64 p-4 sm:p-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="w-full">
           <h1 className="text-2xl font-semibold text-slate-800 mb-6">
             Quản Lý Người Dùng
           </h1>

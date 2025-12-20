@@ -25,7 +25,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
   const menu = [
     { name: "Tổng quan", path: "/admin", icon: <LayoutDashboard size={18} /> },
     { name: "Sản phẩm", path: "/admin/products", icon: <ShoppingBag size={18} /> },
-    //{ name: "Categories", path: "/admin/categories", icon: <Package size={18} /> },
+    { name: "Categories", path: "/admin/categories", icon: <Package size={18} /> },
     { name: "Đơn hàng", path: "/admin/order", icon: <Tag size={18} /> },
     { name: "Người dùng", path: "/admin/users", icon: <Users size={18} /> },
     { name: "Voucher", path: "/admin/voucher", icon: <Package2Icon size={18} /> },
