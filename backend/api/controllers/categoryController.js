@@ -10,7 +10,7 @@ import {
 } from "../models/CategoryModel.js";
 
 import cloudinary from "../config/cloudinary.js";
-import { slugify } from "../utils/slugify.js";
+import { slugify } from "../config/slugify.js";
 
 // GET ALL
 export const getCategories = async (req, res) => {

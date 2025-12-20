@@ -45,7 +45,7 @@ export default function Header() {
     if (isDB && token) {
       try {
         const res = await axios.get(
-          "${API}/cart",
+          `${API}/cart`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const items = res.data.items || [];
