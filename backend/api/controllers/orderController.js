@@ -25,9 +25,15 @@ import { createShippingOrder } from "../GHN/ghnService.js";
 //TẠO ĐƠN HÀNG 
 export const createOrderFromCart = async (req, res) => {
   const conn = await db.getConnection();
-  let orderId = null;
+  let orderId;
 
   try {
+    // =====================
+    // 0. VALIDATE USER
+    // =====================
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Token không hợp lệ" });
+    }
     const userId = req.user.id;
 
     const {
@@ -38,17 +44,19 @@ export const createOrderFromCart = async (req, res) => {
       paymentMethod,
       note,
       voucherCode,
-      discount,
+      discount = 0,
 
       // SHIPPING
       shippingMethod,
-      shippingFee,
+      shippingFee = 0,
       to_district_id,
       to_ward_code,
       service_id,
     } = req.body;
 
-    // 1) LẤY GIỎ HÀNG
+    // =====================
+    // 1. LẤY GIỎ HÀNG
+    // =====================
     const [cartRows] = await Cart.getCartByUserId(userId);
     if (!cartRows.length) {
       return res.status(400).json({ message: "Giỏ hàng trống" });
@@ -60,7 +68,9 @@ export const createOrderFromCart = async (req, res) => {
       return res.status(400).json({ message: "Giỏ hàng trống" });
     }
 
-    // 2) CHECK TỒN KHO
+    // =====================
+    // 2. CHECK TỒN KHO
+    // =====================
     for (const item of items) {
       const stock = await CheckStockProduct(item.VariantID);
       if (stock < item.Quantity) {
@@ -70,11 +80,22 @@ export const createOrderFromCart = async (req, res) => {
       }
     }
 
-    // 3) TÍNH TIỀN
-    const subtotal = items.reduce((sum, item) => sum + item.UnitPrice * item.Quantity, 0);
-    const total = Math.max(0, subtotal - (Number(discount) || 0) + (Number(shippingFee) || 0));
+    // =====================
+    // 3. TÍNH TIỀN
+    // =====================
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.UnitPrice * item.Quantity,
+      0
+    );
 
-    // 4) TẠO ĐƠN NỘI BỘ (TRANSACTION)
+    const total = Math.max(
+      0,
+      subtotal - Number(discount) + Number(shippingFee)
+    );
+
+    // =====================
+    // 4. TẠO ORDER (TRANSACTION)
+    // =====================
     await conn.beginTransaction();
 
     orderId = await createOrderModel(
@@ -92,10 +113,10 @@ export const createOrderFromCart = async (req, res) => {
         discount,
         total,
       },
-      conn // dùng conn để nằm trong transaction
+      conn
     );
 
-
+    // ORDER ITEMS
     await createOrderItemsModel(orderId, items);
 
     // TRỪ KHO
@@ -112,101 +133,97 @@ export const createOrderFromCart = async (req, res) => {
       }
     }
 
-    // XOÁ GIỎ HÀNG
+    // XOÁ GIỎ
     await conn.query("DELETE FROM cart_items WHERE CartID = ?", [cartId]);
 
-    // COMMIT TRƯỚC: đảm bảo đơn nội bộ luôn được tạo
     await conn.commit();
 
-    // 5) GHN: chạy ngoài transaction (fail không rollback order)
-    let ghnOrderCode = null;
-    let expectedDeliveryTime = null;
-
-    try {
-      // validate tối thiểu cho GHN (nếu thiếu thì bỏ qua GHN luôn)
-      if (to_district_id && to_ward_code && address && receiverName && phone) {
-        const ghnRes = await createShippingOrder({
-          to_name: receiverName,
-          to_phone: phone,
-          to_address: address,
-          to_district_id: Number(to_district_id),
-          to_ward_code: String(to_ward_code),
-
-          //FIX: thêm weight để GHN không reject
-          items: items.map((i) => ({
-            name: i.ProductName,
-            quantity: i.Quantity,
-            price: i.UnitPrice,
-            weight: 200, // tạm fix cứng, sau này lấy từ DB cho chuẩn
-          })),
-
-          cod_amount: paymentMethod === "cod" ? total : 0,
-          service_id: Number(service_id || 53321),
-
-          required_note: "CHOXEMHANG",
-          payment_type_id: paymentMethod === "cod" ? 1 : 2,
-        });
-
-        ghnOrderCode = ghnRes?.data?.order_code || null;
-        expectedDeliveryTime = ghnRes?.data?.expected_delivery_time || null;
-
-        if (ghnOrderCode) {
-          await db.query(
-            `UPDATE orders
-             SET ShippingProvider = 'GHN',
-                 ShippingCode = ?,
-                 ExpectedDeliveryTime = ?
-             WHERE OrderID = ?`,
-            [ghnOrderCode, expectedDeliveryTime, orderId]
-          );
-        }
-      }
-    } catch (ghnErr) {
-      console.error("[GHN] createShippingOrder failed (order vẫn giữ):", ghnErr);
-      // không throw nữa
-    }
-
-    // 6) GỬI EMAIL (fail email cũng không làm fail order)
-    try {
-      await sendInvoiceEmail({
-        receiverName,
-        phone,
-        email,
-        address,
-        total,
-        paymentMethod,
-        items: items.map((i) => ({
-          ProductName: i.ProductName,
-          Qty: i.Quantity,
-          Price: i.UnitPrice,
-        })),
-      });
-    } catch (mailErr) {
-      console.error("[MAIL] sendInvoiceEmail failed:", mailErr);
-    }
-
-    return res.json({
+    // =====================
+    // 5. TRẢ RESPONSE NGAY (🔥 QUAN TRỌNG)
+    // =====================
+    res.json({
       success: true,
       orderId,
-      shippingCode: ghnOrderCode,
-      expectedDeliveryTime,
-      warning: ghnOrderCode ? null : "Tạo vận đơn GHN chưa thành công (đơn nội bộ đã tạo)",
+      message: "Đặt hàng thành công",
+    });
+
+    // =====================
+    // 6. BACKGROUND TASKS (KHÔNG await)
+    // =====================
+    setImmediate(async () => {
+      try {
+        // ===== GHN =====
+        if (
+          to_district_id &&
+          to_ward_code &&
+          address &&
+          receiverName &&
+          phone
+        ) {
+          const ghnRes = await createShippingOrder({
+            to_name: receiverName,
+            to_phone: phone,
+            to_address: address,
+            to_district_id: Number(to_district_id),
+            to_ward_code: String(to_ward_code),
+            items: items.map((i) => ({
+              name: i.ProductName,
+              quantity: i.Quantity,
+              price: i.UnitPrice,
+              weight: 200,
+            })),
+            cod_amount: paymentMethod === "cod" ? total : 0,
+            service_id: Number(service_id || 53321),
+            required_note: "CHOXEMHANG",
+            payment_type_id: paymentMethod === "cod" ? 1 : 2,
+          });
+
+          const ghnOrderCode = ghnRes?.data?.order_code;
+          const expectedDeliveryTime =
+            ghnRes?.data?.expected_delivery_time;
+
+          if (ghnOrderCode) {
+            await db.query(
+              `UPDATE orders
+               SET ShippingProvider='GHN',
+                   ShippingCode=?,
+                   ExpectedDeliveryTime=?
+               WHERE OrderID=?`,
+              [ghnOrderCode, expectedDeliveryTime, orderId]
+            );
+          }
+        }
+
+        // ===== EMAIL =====
+        await sendInvoiceEmail({
+          receiverName,
+          phone,
+          email,
+          address,
+          total,
+          paymentMethod,
+          items: items.map((i) => ({
+            ProductName: i.ProductName,
+            Qty: i.Quantity,
+            Price: i.UnitPrice,
+          })),
+        });
+      } catch (err) {
+        console.error("BACKGROUND ERROR:", err);
+      }
     });
   } catch (err) {
     console.error("Lỗi createOrderFromCart:", err);
-
-    // rollback nếu còn transaction chưa commit
     try {
       await conn.rollback();
     } catch {}
 
-    return res.status(500).json({
-      message: "Lỗi server khi tạo đơn hàng",
-    });
+    res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
   } finally {
     conn.release();
   }
 };
+
 
 export const getMyOrders = async (req, res) => {
   try {
