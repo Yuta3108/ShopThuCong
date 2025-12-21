@@ -8,17 +8,40 @@ export const createOrderModel = async (data) => {
     email,
     shippingAddress,
     paymentMethod,
+
+    shippingMethod,
+    shippingFee,
+    shippingProvider,
+    shippingCode,
+    expectedDeliveryTime,
+
     note,
     voucherCode,
     discount,
-    total
+    total,
   } = data;
 
   const [result] = await db.query(
-    `INSERT INTO orders 
-    (UserID, ReceiverName, Phone, Email, ShippingAddress, PaymentMethod,
-     Total, Status, Note, VoucherCode, Discount, CreatedAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, NOW())`,
+    `INSERT INTO orders (
+      UserID,
+      ReceiverName,
+      Phone,
+      Email,
+      ShippingAddress,
+      PaymentMethod,
+      ShippingMethod,
+      ShippingFee,
+      ShippingProvider,
+      ShippingCode,
+      ExpectedDeliveryTime,
+      Total,
+      Status,
+      Note,
+      VoucherCode,
+      Discount,
+      CreatedAt
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, NOW())`,
     [
       userId,
       receiverName,
@@ -26,10 +49,17 @@ export const createOrderModel = async (data) => {
       email,
       shippingAddress,
       paymentMethod,
+
+      shippingMethod || null,
+      shippingFee || 0,
+      shippingProvider || null,
+      shippingCode || null,
+      expectedDeliveryTime || null,
+
       total,
       note || null,
       voucherCode || null,
-      discount || 0
+      discount || 0,
     ]
   );
 

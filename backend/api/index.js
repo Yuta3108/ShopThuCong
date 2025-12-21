@@ -13,6 +13,7 @@ import voucherRoutes from "./routes/voucherRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js"
 import zaloPayRoutes from "./ZaloPay/zaloPayRoutes.js";
+import shippingRoutes from "./GHN/shippingRoutes.js";
 dotenv.config();
 const app = express();
 app.use(cors());
@@ -31,6 +32,7 @@ app.use("/api/vouchers", voucherRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/payment", zaloPayRoutes);
+app.use("/api/shipping", shippingRoutes);
 app.get("/", (req, res) => {
   res.send("Backend API đang chạy trên Vercel");
 });

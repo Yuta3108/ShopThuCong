@@ -21,11 +21,13 @@ import {
 import { decreaseStockProduct, CheckStockProduct } from "../models/variantsModel.js";
 import { autoDeactivateProductIfOutOfStock } from "../models/productsModel.js";
 import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js";
-
-// =========================== TẠO ĐƠN HÀNG ===============================
+import { createShippingOrder } from "../GHN/ghnService.js";
+//TẠO ĐƠN HÀNG 
 export const createOrderFromCart = async (req, res) => {
+  const conn = await db.getConnection();
   try {
     const userId = req.user.id;
+
     const {
       receiverName,
       phone,
@@ -35,37 +37,49 @@ export const createOrderFromCart = async (req, res) => {
       note,
       voucherCode,
       discount,
+
+      // SHIPPING
+      shippingMethod,
+      shippingFee,
+      to_district_id,
+      to_ward_code,
     } = req.body;
 
-    // Lấy giỏ hàng
+    /* LẤY GIỎ HÀNG */
     const [cartRows] = await Cart.getCartByUserId(userId);
-    if (!cartRows.length) return res.status(400).json({});
+    if (!cartRows.length) {
+      return res.status(400).json({ message: "Giỏ hàng trống" });
+    }
 
     const cartId = cartRows[0].CartID;
 
-    // Lấy item trong giỏ
     const [items] = await CartItem.getCartItems(cartId);
-    if (!items.length) return res.status(400).json({});
-    // Kiểm tra tồn kho
+    if (!items.length) {
+      return res.status(400).json({ message: "Giỏ hàng trống" });
+    }
+
+    /* CHECK TỒN KHO*/
     for (const item of items) {
       const stock = await CheckStockProduct(item.VariantID);
       if (stock < item.Quantity) {
         return res.status(400).json({
-          message: `Sản phẩm '${item.ProductName}' chỉ còn ${stock} cái.`,
-          variantId: item.VariantID,
-          stockAvailable: stock
+          message: `Sản phẩm '${item.ProductName}' chỉ còn ${stock} cái`,
         });
       }
     }
-    // Tổng tiền
-    const total =
-      items.reduce((sum, item) => sum + item.UnitPrice * item.Quantity, 0) -
-      (discount || 0);
 
-    const conn = await db.getConnection();
+    /* TÍNH TỔNG TIỀN */
+    const total =
+      items.reduce(
+        (sum, item) => sum + item.UnitPrice * item.Quantity,
+        0
+      ) -
+      (discount || 0) +
+      (shippingFee || 0);
+
     await conn.beginTransaction();
 
-    // Tạo đơn hàng
+    /* TẠO ORDER NỘI BỘ  */
     const orderId = await createOrderModel({
       userId,
       receiverName,
@@ -73,38 +87,74 @@ export const createOrderFromCart = async (req, res) => {
       email,
       shippingAddress: address,
       paymentMethod,
+
+      shippingMethod,
+      shippingFee,
+
       note,
       voucherCode,
       discount,
       total,
     });
 
-    // Chi tiết đơn hàng
+    /* TẠO ORDER GHN */
+    const ghnRes = await createShippingOrder({
+      to_name: receiverName,
+      to_phone: phone,
+      to_address: address,
+      to_district_id: Number(to_district_id),
+      to_ward_code: String(to_ward_code),
+
+      items: items.map((i) => ({
+        name: i.ProductName,
+        quantity: i.Quantity,
+        price: i.UnitPrice,
+      })),
+
+      cod_amount: paymentMethod === "cod" ? total : 0,
+      service_type_id: shippingMethod === "fast" ? 2 : 1,
+    });
+
+    const ghnOrderCode = ghnRes?.data?.order_code;
+    const expectedDeliveryTime = ghnRes?.data?.expected_delivery_time;
+
+    /* UPDATE ORDER  GHN */
+    if (ghnOrderCode) {
+      await conn.query(
+        `UPDATE orders
+         SET ShippingProvider = 'GHN',
+             ShippingCode = ?,
+             ExpectedDeliveryTime = ?
+         WHERE OrderID = ?`,
+        [ghnOrderCode, expectedDeliveryTime || null, orderId]
+      );
+    }
+
+    /* CHI TIẾT ĐƠN HÀNG */
     await createOrderItemsModel(orderId, items);
-    // Giảm số lượng sản phẩm
+
+    /* TRỪ KHO */
     for (const item of items) {
-        await decreaseStockProduct(item.VariantID, item.Quantity);
-        await autoDeactivateProductIfOutOfStock(item.ProductID);
-      }
-    // Giảm lượt voucher
+      await decreaseStockProduct(item.VariantID, item.Quantity);
+      await autoDeactivateProductIfOutOfStock(item.ProductID);
+    }
+
+    /* TRỪ VOUCHER  */
     if (voucherCode) {
-      try {
-        const voucher = await getVoucherByCode(voucherCode.trim());
-        if (voucher) {
-          await decreaseVoucherQuantity(voucher.VoucherID);
-        }
-      } catch (err) {
-        console.error("Lỗi giảm lượt voucher:", err);
+      const voucher = await getVoucherByCode(voucherCode.trim());
+      if (voucher) {
+        await decreaseVoucherQuantity(voucher.VoucherID);
       }
     }
 
-    // Xoá giỏ hàng
+    /* XOÁ GIỎ HÀNG*/
     await conn.query("DELETE FROM cart_items WHERE CartID = ?", [cartId]);
+
     await conn.commit();
     conn.release();
 
-    // GỬI EMAIL 
-    const orderData = {
+    /*  GỬI EMAIL */
+    await sendInvoiceEmail({
       receiverName,
       phone,
       email,
@@ -116,14 +166,19 @@ export const createOrderFromCart = async (req, res) => {
         Qty: i.Quantity,
         Price: i.UnitPrice,
       })),
-    };
+    });
 
-    await sendInvoiceEmail(orderData);
-
-    res.json({ orderId });
+    return res.json({
+      success: true,
+      orderId,
+      shippingCode: ghnOrderCode,
+      expectedDeliveryTime,
+    });
   } catch (err) {
+    await conn.rollback();
+    conn.release();
     console.error("Lỗi createOrderFromCart:", err);
-    res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
+    return res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
   }
 };
 

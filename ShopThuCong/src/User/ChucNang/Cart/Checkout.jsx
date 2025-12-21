@@ -22,14 +22,21 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [note, setNote] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
-
+  const [shippingMethod, setShippingMethod] = useState("standard");
+  const [shippingFee, setShippingFee] = useState(0);
   const autoAppliedRef = useRef(false);
-
+  const [addressDetail, setAddressDetail] = useState("");
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [provinces, setProvinces] = useState([]);
+  const [provinceId, setProvinceId] = useState("");
+  const [toDistrictId, setToDistrictId] = useState("");
+  const [toWardCode, setToWardCode] = useState("");
   const subtotal = cart.reduce(
     (sum, item) => sum + item.UnitPrice * item.Quantity,
     0
   );
-  const total = Math.max(0, subtotal - discount);
+  const total = Math.max(0, subtotal - discount + shippingFee);
 
   // --- APPLY VOUCHER  ---
   const applyVoucher = async () => {
@@ -71,31 +78,34 @@ export default function CheckoutPage() {
       });
     }
   };
-
+  useEffect(() => {
+  axios.get(`${API}/shipping/ghn/provinces`)
+    .then(res => setProvinces(res.data.data))
+    .catch(() => setProvinces([]));
+}, []);
   // --- APPLY VOUCHER  ---
   const applyVoucherAuto = async (code) => {
-    try {
-      const res = await axios.post(`${API}/vouchers/apply`, {
-        code: code.trim().toUpperCase(),
-        orderTotal: subtotal,
-      });
-      if (err.response?.status === 400) {
-        Swal.fire({
-          title: "Voucher không hợp lệ",
-          text: err.response.data?.message,
-          confirmButtonText: "OK",
-        });
-        return null; 
-      }
-      if (res.data.success) {
-        setDiscount(Number(res.data.discount));
-      } else {
-        setDiscount(0);
-      }
-    } catch {
+  try {
+    const res = await axios.post(`${API}/vouchers/apply`, {
+      code: code.trim().toUpperCase(),
+      orderTotal: subtotal,
+    });
+    if (res.data.success) {
+      setDiscount(Number(res.data.discount));
+    } else {
       setDiscount(0);
     }
-  };
+  } catch (err) {
+    if (err.response?.status === 400) {
+      Swal.fire({
+        title: "Voucher không hợp lệ",
+        text: err.response.data?.message,
+        confirmButtonText: "OK",
+      });
+    }
+    setDiscount(0);
+  }
+};
 
   // --- LOAD USER + CART ---
   useEffect(() => {
@@ -153,21 +163,27 @@ export default function CheckoutPage() {
       const token = localStorage.getItem("token");
 
       const res = await axios.post(
-        `${API}/orders`,
-        {
-          receiverName: user.FullName,
-          phone: user.Phone,
-          email: user.Email,
-          address: user.Address,
-          paymentMethod,
-          voucherCode,
-          discount,
-          note,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+          `${API}/orders`,
+          {
+            receiverName: user.FullName,
+            phone: user.Phone,
+            email: user.Email,
+            address: user.Address,
+            paymentMethod,
+            voucherCode,
+            discount,
+            note,
+
+            // SHIPPING
+            shippingMethod,
+            shippingFee,
+            to_district_id: toDistrictId,
+            to_ward_code: toWardCode,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
       const orderId = res.data.orderId;
       if (!orderId) {
@@ -261,14 +277,74 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <div>
-              <label className="text-slate-600">Địa chỉ giao hàng</label>
-              <input
-                className="w-full p-3 border rounded-xl bg-white mt-1"
-                value={user.Address}
-                onChange={(e) => setUser({ ...user, Address: e.target.value })}
-              />
-            </div>
+            <div className="space-y-3">
+  <label className="text-slate-600">Địa chỉ giao hàng</label>
+
+            {/* Địa chỉ chi tiết */}
+            <input
+              className="w-full p-3 border rounded-xl bg-white"
+              placeholder="Số nhà, tên đường..."
+              value={addressDetail}
+              onChange={(e) => setAddressDetail(e.target.value)}
+            />
+
+            {/* Quận / Huyện */}
+            <select
+              value={provinceId}
+              onChange={async (e) => {
+                const id = e.target.value;
+                setProvinceId(id);
+                setToDistrictId("");
+                setToWardCode("");
+                setWards([]);
+
+                const res = await axios.get(
+                  `${API}/shipping/ghn/districts?province_id=${id}`
+                );
+                setDistricts(res.data.data);
+              }}
+            >
+              <option value="">Chọn tỉnh / thành</option>
+              {provinces.map(p => (
+                <option key={p.ProvinceID} value={p.ProvinceID}>
+                  {p.ProvinceName}
+                </option>
+              ))}
+            </select>
+
+            {/* Phường / Xã */}
+            <select
+                value={toDistrictId}
+                onChange={async (e) => {
+                  const id = e.target.value;
+                  setToDistrictId(id);
+                  setToWardCode("");
+
+                  const res = await axios.get(
+                    `${API}/shipping/ghn/wards?district_id=${id}`
+                  );
+                  setWards(res.data.data);
+                }}
+              >
+                <option value="">Chọn quận / huyện</option>
+                {districts.map(d => (
+                  <option key={d.DistrictID} value={d.DistrictID}>
+                    {d.DistrictName}
+                  </option>
+                ))}
+              </select>
+              <select
+              value={toWardCode}
+              onChange={(e) => setToWardCode(e.target.value)}
+            >
+              <option value="">Chọn phường / xã</option>
+              {wards.map(w => (
+                <option key={w.WardCode} value={w.WardCode}>
+                  {w.WardName}
+                </option>
+              ))}
+            </select>
+          </div>
 
             <div>
               <label className="text-slate-600">Ghi chú</label>

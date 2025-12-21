@@ -101,7 +101,12 @@ export default function Header() {
     setUser(null);
     navigate("/login");
   };
-
+  const handleSearchEnter = (e) => {
+  if (e.key === "Enter" && keyword.trim()) {
+    navigate(`/san-pham?search=${encodeURIComponent(keyword)}`);
+    setShowSuggest(false);
+  }
+};
   const handleProfileClick = () => {
     if (user?.role === "admin") navigate("/admin");
     else navigate("/user");
@@ -196,6 +201,7 @@ export default function Header() {
                   setKeyword(e.target.value);
                   setShowSuggest(true);
                 }}
+                onKeyDown={handleSearchEnter}
                 placeholder="Tìm sản phẩm..."
                 className="border border-white/80 bg-white/70 backdrop-blur-xl rounded-full pl-9 pr-4 py-2 text-xs md:text-sm w-44 md:w-64 focus:outline-none focus:ring-2 focus:ring-teal-400/70 shadow-[0_8px_24px_rgba(15,23,42,0.08)] placeholder:text-slate-400"
               />

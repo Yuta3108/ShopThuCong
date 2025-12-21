@@ -6,7 +6,7 @@ import axios from "axios";
 import ProductCard from "./ProductCard";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import QuickViewModal from "../../Layout/QuickViewModal";
-
+import { useSearchParams } from "react-router-dom";
 const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function ProductAllPage() {
@@ -19,6 +19,8 @@ export default function ProductAllPage() {
   const [filterSort, setFilterSort] = useState("newest");
   const [filterPrice, setFilterPrice] = useState(null);
   const [openPriceBox, setOpenPriceBox] = useState(true);
+  const [searchParams] = useSearchParams();
+  const searchKeyword = searchParams.get("search") || "";
 
   // PAGINATION
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,22 +45,35 @@ export default function ProductAllPage() {
   }, [filterPrice, filterSort]);
 
   const filteredProducts = products
-    .filter((p) => {
-      if (!filterPrice) return true;
-      const min = Number(p.minPrice);
-      if (filterPrice === "under100") return min < 100000;
-      if (filterPrice === "100-200") return min >= 100000 && min <= 200000;
-      if (filterPrice === "200-500") return min >= 200000 && min <= 500000;
-      if (filterPrice === "above500") return min > 500000;
-      return true;
-    })
-    .sort((a, b) => {
-      if (filterSort === "newest") return b.ProductID - a.ProductID;
-      if (filterSort === "price_asc") return a.minPrice - b.minPrice;
-      if (filterSort === "price_desc") return b.minPrice - a.minPrice;
-      return 0;
-    });
+  // SEARCH
+  .filter((p) => {
+    if (!searchKeyword) return true;
+    return p.ProductName
+      ?.toLowerCase()
+      .includes(searchKeyword.toLowerCase());
+  })
 
+  //  PRICE FILTER
+  .filter((p) => {
+    if (!filterPrice) return true;
+    const min = Number(p.minPrice);
+    if (filterPrice === "under100") return min < 100000;
+    if (filterPrice === "100-200") return min >= 100000 && min <= 200000;
+    if (filterPrice === "200-500") return min >= 200000 && min <= 500000;
+    if (filterPrice === "above500") return min > 500000;
+    return true;
+  })
+
+  // ↕ SORT
+  .sort((a, b) => {
+    if (filterSort === "newest") return b.ProductID - a.ProductID;
+    if (filterSort === "price_asc") return a.minPrice - b.minPrice;
+    if (filterSort === "price_desc") return b.minPrice - a.minPrice;
+    return 0;
+  });
+  useEffect(() => {
+  setCurrentPage(1);
+  }, [searchKeyword]);
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * itemsPerPage;
