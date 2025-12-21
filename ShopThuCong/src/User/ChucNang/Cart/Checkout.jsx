@@ -34,7 +34,7 @@ export default function CheckoutPage() {
   const [toWardCode, setToWardCode] = useState("");
   const SERVICE_MAP = {
   standard: 53321, 
-  fast: 100039      
+  fast: 53321      
   };
   const serviceId = SERVICE_MAP[shippingMethod];
  

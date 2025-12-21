@@ -112,7 +112,7 @@ export const createOrderFromCart = async (req, res) => {
       })),
 
       cod_amount: paymentMethod === "cod" ? total : 0,
-      service_type_id: shippingMethod === "fast" ? 2 : 1,
+      service_id: Number(req.body.service_id || 53321),
     });
 
     const ghnOrderCode = ghnRes?.data?.order_code;
