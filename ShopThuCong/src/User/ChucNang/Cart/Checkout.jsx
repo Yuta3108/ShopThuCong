@@ -32,12 +32,34 @@ export default function CheckoutPage() {
   const [provinceId, setProvinceId] = useState("");
   const [toDistrictId, setToDistrictId] = useState("");
   const [toWardCode, setToWardCode] = useState("");
-  const subtotal = cart.reduce(
+  const SERVICE_MAP = {
+  standard: 53321, 
+  fast: 100039      
+  };
+  const serviceId = SERVICE_MAP[shippingMethod];
+ 
+const subtotal = cart.reduce(
     (sum, item) => sum + item.UnitPrice * item.Quantity,
     0
   );
   const total = Math.max(0, subtotal - discount + shippingFee);
+  const calculateShippingFee = async (districtId, wardCode) => {
+    try {
+      const res = await axios.post(`${API}/shipping/ghn/fee`, {
+        to_district_id: Number(districtId),
+        to_ward_code: wardCode,
+        service_id: serviceId,
+        insurance_value: subtotal,
+        cod_amount: paymentMethod === "cod" ? subtotal : 0,
+      });
 
+      const fee = res.data?.data?.total || 0;
+      setShippingFee(fee);
+    } catch (err) {
+      console.error("GHN fee error:", err);
+      setShippingFee(0);
+    }
+  };
   // --- APPLY VOUCHER  ---
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
@@ -79,33 +101,38 @@ export default function CheckoutPage() {
     }
   };
   useEffect(() => {
-  axios.get(`${API}/shipping/ghn/provinces`)
-    .then(res => setProvinces(res.data.data))
-    .catch(() => setProvinces([]));
-}, []);
+    axios.get(`${API}/shipping/ghn/provinces`)
+      .then(res => setProvinces(res.data.data))
+      .catch(() => setProvinces([]));
+  }, []);
+  useEffect(() => {
+    if (toDistrictId && toWardCode) {
+      calculateShippingFee(toDistrictId, toWardCode);
+    }
+  }, [shippingMethod]);
   // --- APPLY VOUCHER  ---
   const applyVoucherAuto = async (code) => {
-  try {
-    const res = await axios.post(`${API}/vouchers/apply`, {
-      code: code.trim().toUpperCase(),
-      orderTotal: subtotal,
-    });
-    if (res.data.success) {
-      setDiscount(Number(res.data.discount));
-    } else {
+    try {
+      const res = await axios.post(`${API}/vouchers/apply`, {
+        code: code.trim().toUpperCase(),
+        orderTotal: subtotal,
+      });
+      if (res.data.success) {
+        setDiscount(Number(res.data.discount));
+      } else {
+        setDiscount(0);
+      }
+    } catch (err) {
+      if (err.response?.status === 400) {
+        Swal.fire({
+          title: "Voucher không hợp lệ",
+          text: err.response.data?.message,
+          confirmButtonText: "OK",
+        });
+      }
       setDiscount(0);
     }
-  } catch (err) {
-    if (err.response?.status === 400) {
-      Swal.fire({
-        title: "Voucher không hợp lệ",
-        text: err.response.data?.message,
-        confirmButtonText: "OK",
-      });
-    }
-    setDiscount(0);
-  }
-};
+  };
 
   // --- LOAD USER + CART ---
   useEffect(() => {
@@ -159,36 +186,45 @@ export default function CheckoutPage() {
 
   // --- HANDLE ORDER ---
   const handleOrder = async () => {
+    if (!addressDetail || !toDistrictId || !toWardCode) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Thiếu thông tin giao hàng",
+        text: "Vui lòng nhập đầy đủ địa chỉ, quận/huyện và phường/xã",
+      });
+    }
     try {
       const token = localStorage.getItem("token");
 
       const res = await axios.post(
-          `${API}/orders`,
-          {
-            receiverName: user.FullName,
-            phone: user.Phone,
-            email: user.Email,
-            address: user.Address,
-            paymentMethod,
-            voucherCode,
-            discount,
-            note,
+        `${API}/orders`,
+        {
+          receiverName: user.FullName,
+          phone: user.Phone,
+          email: user.Email,
+          address: `${addressDetail}, ${wards.find(w => w.WardCode === toWardCode)?.WardName || ""}, ${districts.find(d => d.DistrictID == toDistrictId)?.DistrictName || ""}`,
+          paymentMethod,
+          voucherCode,
+          discount,
+          note,
 
-            // SHIPPING
-            shippingMethod,
-            shippingFee,
-            to_district_id: toDistrictId,
-            to_ward_code: toWardCode,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+          // SHIPPING
+          shippingMethod,
+          shippingFee,
+          service_id: serviceId,
+          to_district_id: Number(toDistrictId),
+          to_ward_code: toWardCode,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       const orderId = res.data.orderId;
       if (!orderId) {
         return Swal.fire("Lỗi", "Không tạo được đơn hàng!", "error");
       }
+
 
       if (paymentMethod === "zalopay") {
         const zaloRes = await axios.post(
@@ -239,7 +275,7 @@ export default function CheckoutPage() {
         <p className="text-center py-10">Không tìm thấy người dùng.</p>
       </div>
     );
-
+ 
   return (
     <div className="bg-[#F5F5F5] min-h-screen flex flex-col">
       <Header />
@@ -269,7 +305,7 @@ export default function CheckoutPage() {
               <div>
                 <label className="text-slate-600">Số điện thoại</label>
                 <input className="w-full p-3 border rounded-xl bg-white mt-1" value={user.Phone}
-                onChange={(e) => setUser({ ...user, Phone: e.target.value })} />
+                  onChange={(e) => setUser({ ...user, Phone: e.target.value })} />
               </div>
               <div>
                 <label className="text-slate-600">Email</label>
@@ -278,48 +314,47 @@ export default function CheckoutPage() {
             </div>
 
             <div className="space-y-3">
-  <label className="text-slate-600">Địa chỉ giao hàng</label>
+              <label className="text-slate-600">Địa chỉ giao hàng</label>
 
-            {/* Địa chỉ chi tiết */}
-            <input
-              className="w-full p-3 border rounded-xl bg-white"
-              placeholder="Số nhà, tên đường..."
-              value={addressDetail}
-              onChange={(e) => setAddressDetail(e.target.value)}
-            />
+              {/* Địa chỉ chi tiết */}
+              <input
+                className="w-full p-3 border rounded-xl bg-white"
+                placeholder="Số nhà, tên đường..."
+                value={addressDetail}
+                onChange={(e) => setAddressDetail(e.target.value)}
+              />
+              {/* Tỉnh / Thành */}
+              <select
+                value={provinceId}
+                onChange={async (e) => {
+                  const id = e.target.value;
+                  setProvinceId(id);
+                  setToDistrictId("");
+                  setToWardCode("");
+                  setWards([]);
+                  setShippingFee(0);
+                  const res = await axios.get(
+                    `${API}/shipping/ghn/districts?province_id=${id}`
+                  );
+                  setDistricts(res.data.data);
+                }}
+              >
+                <option value="">Chọn tỉnh / thành</option>
+                {provinces.map(p => (
+                  <option key={p.ProvinceID} value={p.ProvinceID}>
+                    {p.ProvinceName}
+                  </option>
+                ))}
+              </select>
 
-            {/* Quận / Huyện */}
-            <select
-              value={provinceId}
-              onChange={async (e) => {
-                const id = e.target.value;
-                setProvinceId(id);
-                setToDistrictId("");
-                setToWardCode("");
-                setWards([]);
-
-                const res = await axios.get(
-                  `${API}/shipping/ghn/districts?province_id=${id}`
-                );
-                setDistricts(res.data.data);
-              }}
-            >
-              <option value="">Chọn tỉnh / thành</option>
-              {provinces.map(p => (
-                <option key={p.ProvinceID} value={p.ProvinceID}>
-                  {p.ProvinceName}
-                </option>
-              ))}
-            </select>
-
-            {/* Phường / Xã */}
-            <select
+              {/* Quận / Huyện + Phường / Xã */}
+              <select
                 value={toDistrictId}
                 onChange={async (e) => {
                   const id = e.target.value;
                   setToDistrictId(id);
                   setToWardCode("");
-
+                  setShippingFee(0);
                   const res = await axios.get(
                     `${API}/shipping/ghn/wards?district_id=${id}`
                   );
@@ -334,18 +369,42 @@ export default function CheckoutPage() {
                 ))}
               </select>
               <select
-              value={toWardCode}
-              onChange={(e) => setToWardCode(e.target.value)}
-            >
-              <option value="">Chọn phường / xã</option>
-              {wards.map(w => (
-                <option key={w.WardCode} value={w.WardCode}>
-                  {w.WardName}
-                </option>
-              ))}
-            </select>
-          </div>
+                value={toWardCode}
+                onChange={(e) => {
+                  const ward = e.target.value;
+                  setToWardCode(ward);
+                  if (toDistrictId && ward) {
+                    calculateShippingFee(toDistrictId, ward);
+                  }
+                }}
+              >
+                <option value="">Chọn phường / xã</option>
+                {wards.map(w => (
+                  <option key={w.WardCode} value={w.WardCode}>
+                    {w.WardName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <label>
+              <input
+                type="radio"
+                value="standard"
+                checked={shippingMethod === "standard"}
+                onChange={() => setShippingMethod("standard")}
+              />
+              Giao hàng tiêu chuẩn
+            </label>
 
+            <label>
+              <input
+                type="radio"
+                value="fast"
+                checked={shippingMethod === "fast"}
+                onChange={() => setShippingMethod("fast")}
+              />
+              Giao hàng nhanh
+            </label>
             <div>
               <label className="text-slate-600">Ghi chú</label>
               <textarea
@@ -405,7 +464,10 @@ export default function CheckoutPage() {
             <span>Giảm giá</span>
             <span className="text-emerald-600">-{formatMoney(discount)}₫</span>
           </div>
-
+          <div className="flex justify-between text-sm">
+            <span>Phí vận chuyển</span>
+            <span>{formatMoney(shippingFee)}₫</span>
+          </div>
           <div className="flex justify-between text-xl font-bold text-rose-500 mt-3 mb-6">
             <span>Tổng cộng</span>
             <span>{formatMoney(total)}₫</span>
@@ -419,29 +481,29 @@ export default function CheckoutPage() {
               Thanh toán khi nhận hàng (COD)
             </label>
             {/* Banking + ZaloPay chỉ hiện khi total > 0 */}
-                {total > 0 && (
-                  <>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        value="banking"
-                        checked={paymentMethod === "banking"}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                      />
-                      Chuyển khoản ngân hàng
-                    </label>
+            {total > 0 && (
+              <>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="banking"
+                    checked={paymentMethod === "banking"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  Chuyển khoản ngân hàng
+                </label>
 
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        value="zalopay"
-                        checked={paymentMethod === "zalopay"}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                      />
-                      Thanh toán qua ZaloPay
-                    </label>
-                  </>
-                )}
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="zalopay"
+                    checked={paymentMethod === "zalopay"}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  Thanh toán qua ZaloPay
+                </label>
+              </>
+            )}
           </div>
 
           <button

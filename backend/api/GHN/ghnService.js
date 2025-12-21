@@ -72,19 +72,19 @@ export async function getWards(districtId) {
  * service_type_id: 2 (nhanh) / 1 (thường) tuỳ GHN
  */
 export async function estimateFee({
+  service_id,
   to_district_id,
   to_ward_code,
   weight,
   length,
   width,
   height,
-  service_type_id,
   insurance_value,
   cod_amount,
 }) {
   try {
     const payload = {
-      service_type_id,
+      service_id: Number(service_id), 
       from_district_id: Number(process.env.GHN_FROM_DISTRICT),
       from_ward_code: String(process.env.GHN_FROM_WARD),
 
@@ -100,7 +100,6 @@ export async function estimateFee({
       cod_amount,
     };
 
-    // Xoá field undefined/null để GHN khỏi bắt bẻ
     Object.keys(payload).forEach((k) => {
       if (payload[k] === undefined || payload[k] === null || payload[k] === "")
         delete payload[k];
@@ -123,7 +122,7 @@ export async function createShippingOrder({
 
   items,
   cod_amount,
-  service_type_id,
+  service_id,
   required_note = "KHONGCHOXEMHANG",
 
   weight,
@@ -159,7 +158,7 @@ export async function createShippingOrder({
       height,
 
       cod_amount,
-      service_type_id,
+      service_id: Number(service_id),
       insurance_value,
 
       items,
