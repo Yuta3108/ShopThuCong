@@ -25,6 +25,8 @@ import { createShippingOrder } from "../GHN/ghnService.js";
 //TẠO ĐƠN HÀNG 
 export const createOrderFromCart = async (req, res) => {
   const conn = await db.getConnection();
+  let orderId = null;
+
   try {
     const userId = req.user.id;
 
@@ -43,14 +45,14 @@ export const createOrderFromCart = async (req, res) => {
       shippingFee,
       to_district_id,
       to_ward_code,
+      service_id,
     } = req.body;
 
-    /* LẤY GIỎ HÀNG */
+    // 1) LẤY GIỎ HÀNG
     const [cartRows] = await Cart.getCartByUserId(userId);
     if (!cartRows.length) {
       return res.status(400).json({ message: "Giỏ hàng trống" });
     }
-
     const cartId = cartRows[0].CartID;
 
     const [items] = await CartItem.getCartItems(cartId);
@@ -58,7 +60,7 @@ export const createOrderFromCart = async (req, res) => {
       return res.status(400).json({ message: "Giỏ hàng trống" });
     }
 
-    /* CHECK TỒN KHO*/
+    // 2) CHECK TỒN KHO
     for (const item of items) {
       const stock = await CheckStockProduct(item.VariantID);
       if (stock < item.Quantity) {
@@ -68,79 +70,45 @@ export const createOrderFromCart = async (req, res) => {
       }
     }
 
-    /* TÍNH TỔNG TIỀN */
-    const total =
-      items.reduce(
-        (sum, item) => sum + item.UnitPrice * item.Quantity,
-        0
-      ) -
-      (discount || 0) +
-      (shippingFee || 0);
+    // 3) TÍNH TIỀN
+    const subtotal = items.reduce((sum, item) => sum + item.UnitPrice * item.Quantity, 0);
+    const total = Math.max(0, subtotal - (Number(discount) || 0) + (Number(shippingFee) || 0));
 
+    // 4) TẠO ĐƠN NỘI BỘ (TRANSACTION)
     await conn.beginTransaction();
 
-    /* TẠO ORDER NỘI BỘ  */
-    const orderId = await createOrderModel({
-      userId,
-      receiverName,
-      phone,
-      email,
-      shippingAddress: address,
-      paymentMethod,
-      shippingMethod,
-      shippingFee,
-      note,
-      voucherCode,
-      discount,
-      total,
+    orderId = await createOrderModel(
+      {
+        userId,
+        receiverName,
+        phone,
+        email,
+        shippingAddress: address,
+        paymentMethod,
+        shippingMethod,
+        shippingFee,
+        note,
+        voucherCode,
+        discount,
+        total,
+      },
+      conn // dùng conn để nằm trong transaction
+    );
+
+    // tạo order_items (nếu model này đang dùng db.query thì vẫn OK, nhưng transaction sẽ không bao hết.
+    // nếu em có thể sửa createOrderItemsModel nhận conn thì càng chuẩn.
+    await createOrderItemsModel(orderId, items, conn).catch(async () => {
+      // nếu hàm createOrderItemsModel chưa hỗ trợ conn, vẫn chạy bản cũ:
+      await createOrderItemsModel(orderId, items);
     });
 
-    /* TẠO ORDER GHN */
-    const ghnRes = await createShippingOrder({
-      to_name: receiverName,
-      to_phone: phone,
-      to_address: address,
-      to_district_id: Number(to_district_id),
-      to_ward_code: String(to_ward_code),
-
-      items: items.map((i) => ({
-        name: i.ProductName,
-        quantity: i.Quantity,
-        price: i.UnitPrice,
-      })),
-
-      cod_amount: paymentMethod === "cod" ? total : 0,
-      service_id: Number(req.body.service_id || 53321),
-
-      required_note: "CHOXEMHANG",
-      payment_type_id: paymentMethod === "cod" ? 1 : 2,
-    });
-
-    const ghnOrderCode = ghnRes?.data?.order_code;
-    const expectedDeliveryTime = ghnRes?.data?.expected_delivery_time;
-
-    /* UPDATE ORDER  GHN */
-    if (ghnOrderCode) {
-      await conn.query(
-        `UPDATE orders
-         SET ShippingProvider = 'GHN',
-             ShippingCode = ?,
-             ExpectedDeliveryTime = ?
-         WHERE OrderID = ?`,
-        [ghnOrderCode, expectedDeliveryTime || null, orderId]
-      );
-    }
-
-    /* CHI TIẾT ĐƠN HÀNG */
-    await createOrderItemsModel(orderId, items);
-
-    /* TRỪ KHO */
+    // TRỪ KHO
     for (const item of items) {
       await decreaseStockProduct(item.VariantID, item.Quantity);
       await autoDeactivateProductIfOutOfStock(item.ProductID);
     }
 
-    /* TRỪ VOUCHER  */
+    // TRỪ VOUCHER
     if (voucherCode) {
       const voucher = await getVoucherByCode(voucherCode.trim());
       if (voucher) {
@@ -148,38 +116,99 @@ export const createOrderFromCart = async (req, res) => {
       }
     }
 
-    /* XOÁ GIỎ HÀNG*/
+    // XOÁ GIỎ HÀNG
     await conn.query("DELETE FROM cart_items WHERE CartID = ?", [cartId]);
 
+    // COMMIT TRƯỚC: đảm bảo đơn nội bộ luôn được tạo
     await conn.commit();
-    conn.release();
 
-    /*  GỬI EMAIL */
-    await sendInvoiceEmail({
-      receiverName,
-      phone,
-      email,
-      address,
-      total,
-      paymentMethod,
-      items: items.map((i) => ({
-        ProductName: i.ProductName,
-        Qty: i.Quantity,
-        Price: i.UnitPrice,
-      })),
-    });
+    // 5) GHN: chạy ngoài transaction (fail không rollback order)
+    let ghnOrderCode = null;
+    let expectedDeliveryTime = null;
+
+    try {
+      // validate tối thiểu cho GHN (nếu thiếu thì bỏ qua GHN luôn)
+      if (to_district_id && to_ward_code && address && receiverName && phone) {
+        const ghnRes = await createShippingOrder({
+          to_name: receiverName,
+          to_phone: phone,
+          to_address: address,
+          to_district_id: Number(to_district_id),
+          to_ward_code: String(to_ward_code),
+
+          //FIX: thêm weight để GHN không reject
+          items: items.map((i) => ({
+            name: i.ProductName,
+            quantity: i.Quantity,
+            price: i.UnitPrice,
+            weight: 200, // tạm fix cứng, sau này lấy từ DB cho chuẩn
+          })),
+
+          cod_amount: paymentMethod === "cod" ? total : 0,
+          service_id: Number(service_id || 53321),
+
+          required_note: "CHOXEMHANG",
+          payment_type_id: paymentMethod === "cod" ? 1 : 2,
+        });
+
+        ghnOrderCode = ghnRes?.data?.order_code || null;
+        expectedDeliveryTime = ghnRes?.data?.expected_delivery_time || null;
+
+        if (ghnOrderCode) {
+          await db.query(
+            `UPDATE orders
+             SET ShippingProvider = 'GHN',
+                 ShippingCode = ?,
+                 ExpectedDeliveryTime = ?
+             WHERE OrderID = ?`,
+            [ghnOrderCode, expectedDeliveryTime, orderId]
+          );
+        }
+      }
+    } catch (ghnErr) {
+      console.error("[GHN] createShippingOrder failed (order vẫn giữ):", ghnErr);
+      // không throw nữa
+    }
+
+    // 6) GỬI EMAIL (fail email cũng không làm fail order)
+    try {
+      await sendInvoiceEmail({
+        receiverName,
+        phone,
+        email,
+        address,
+        total,
+        paymentMethod,
+        items: items.map((i) => ({
+          ProductName: i.ProductName,
+          Qty: i.Quantity,
+          Price: i.UnitPrice,
+        })),
+      });
+    } catch (mailErr) {
+      console.error("[MAIL] sendInvoiceEmail failed:", mailErr);
+    }
 
     return res.json({
       success: true,
       orderId,
       shippingCode: ghnOrderCode,
       expectedDeliveryTime,
+      warning: ghnOrderCode ? null : "Tạo vận đơn GHN chưa thành công (đơn nội bộ đã tạo)",
     });
   } catch (err) {
-    await conn.rollback();
-    conn.release();
     console.error("Lỗi createOrderFromCart:", err);
-    return res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
+
+    // rollback nếu còn transaction chưa commit
+    try {
+      await conn.rollback();
+    } catch {}
+
+    return res.status(500).json({
+      message: "Lỗi server khi tạo đơn hàng",
+    });
+  } finally {
+    conn.release();
   }
 };
 

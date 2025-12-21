@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-export const createOrderModel = async (data) => {
+export const createOrderModel = async (data, conn = db) => {
   const {
     userId,
     receiverName,
@@ -21,7 +21,7 @@ export const createOrderModel = async (data) => {
     total,
   } = data;
 
-  const [result] = await db.query(
+  const [result] = await conn.query(
     `INSERT INTO orders (
       UserID,
       ReceiverName,
