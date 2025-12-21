@@ -1,6 +1,6 @@
 import db from "../config/db.js";
 
-export const createOrderModel = async (data, conn = db) => {
+export const createOrderModel = async (data) => {
   const {
     userId,
     receiverName,
@@ -11,18 +11,16 @@ export const createOrderModel = async (data, conn = db) => {
 
     shippingMethod,
     shippingFee,
-    shippingProvider,
-    shippingCode,
-    expectedDeliveryTime,
 
     note,
     voucherCode,
     discount,
-    total,
+    total
   } = data;
 
-  const [result] = await conn.query(
-    `INSERT INTO orders (
+  const [result] = await db.query(
+    `INSERT INTO orders 
+    (
       UserID,
       ReceiverName,
       Phone,
@@ -31,9 +29,6 @@ export const createOrderModel = async (data, conn = db) => {
       PaymentMethod,
       ShippingMethod,
       ShippingFee,
-      ShippingProvider,
-      ShippingCode,
-      ExpectedDeliveryTime,
       Total,
       Status,
       Note,
@@ -41,7 +36,7 @@ export const createOrderModel = async (data, conn = db) => {
       Discount,
       CreatedAt
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, NOW())`,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, NOW())`,
     [
       userId,
       receiverName,
@@ -49,17 +44,12 @@ export const createOrderModel = async (data, conn = db) => {
       email,
       shippingAddress,
       paymentMethod,
-
       shippingMethod || null,
       shippingFee || 0,
-      shippingProvider || null,
-      shippingCode || null,
-      expectedDeliveryTime || null,
-
       total,
       note || null,
       voucherCode || null,
-      discount || 0,
+      discount || 0
     ]
   );
 

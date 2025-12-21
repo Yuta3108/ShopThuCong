@@ -37,8 +37,7 @@ export default function CheckoutPage() {
   fast: 53321      
   };
   const serviceId = SERVICE_MAP[shippingMethod];
- 
-const subtotal = cart.reduce(
+  const subtotal = cart.reduce(
     (sum, item) => sum + item.UnitPrice * item.Quantity,
     0
   );
@@ -186,79 +185,111 @@ const subtotal = cart.reduce(
 
   // --- HANDLE ORDER ---
   const handleOrder = async () => {
-    if (!addressDetail || !toDistrictId || !toWardCode) {
-      return Swal.fire({
-        icon: "warning",
-        title: "Thiếu thông tin giao hàng",
-        text: "Vui lòng nhập đầy đủ địa chỉ, quận/huyện và phường/xã",
-      });
+  // 1️⃣ Validate địa chỉ
+  if (!addressDetail || !toDistrictId || !toWardCode) {
+    return Swal.fire({
+      icon: "warning",
+      title: "Thiếu thông tin giao hàng",
+      text: "Vui lòng nhập đầy đủ địa chỉ, quận/huyện và phường/xã",
+    });
+  }
+
+  if (!shippingFee || shippingFee <= 0) {
+    return Swal.fire({
+      icon: "warning",
+      title: "Chưa tính phí vận chuyển",
+      text: "Vui lòng chọn đầy đủ địa chỉ để tính phí giao hàng",
+    });
+  }
+
+  // 2️⃣ Build địa chỉ đầy đủ
+  const ward = wards.find((w) => w.WardCode === toWardCode);
+  const district = districts.find((d) => d.DistrictID == toDistrictId);
+
+  if (!ward || !district) {
+    return Swal.fire({
+      icon: "error",
+      title: "Địa chỉ không hợp lệ",
+      text: "Vui lòng chọn lại quận/huyện và phường/xã",
+    });
+  }
+
+  const fullAddress = `${addressDetail}, ${ward.WardName}, ${district.DistrictName}`;
+
+  // 3️⃣ Check token
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return Swal.fire({
+      icon: "warning",
+      title: "Chưa đăng nhập",
+      text: "Vui lòng đăng nhập để tiếp tục",
+    });
+  }
+
+  try {
+    // 4️⃣ Gửi đơn hàng (CHỈ GỬI FIELD BE DÙNG)
+    const res = await axios.post(
+      `${API}/orders`,
+      {
+        receiverName: user.FullName,
+        phone: user.Phone,
+        email: user.Email,
+        address: fullAddress,
+        paymentMethod,
+        shippingMethod,
+        shippingFee,
+        voucherCode,
+        discount,
+        note,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const orderId = res.data?.orderId;
+    if (!orderId) {
+      return Swal.fire("Lỗi", "Không tạo được đơn hàng", "error");
     }
-    try {
-      const token = localStorage.getItem("token");
 
-      const res = await axios.post(
-        `${API}/orders`,
-        {
-          receiverName: user.FullName,
-          phone: user.Phone,
-          email: user.Email,
-          address: `${addressDetail}, ${wards.find(w => w.WardCode === toWardCode)?.WardName || ""}, ${districts.find(d => d.DistrictID == toDistrictId)?.DistrictName || ""}`,
-          paymentMethod,
-          voucherCode,
-          discount,
-          note,
-
-          // SHIPPING
-          shippingMethod,
-          shippingFee,
-          service_id: serviceId,
-          to_district_id: Number(toDistrictId),
-          to_ward_code: toWardCode,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+    // 5️⃣ ZaloPay (GIỮ NGUYÊN)
+    if (paymentMethod === "zalopay") {
+      const zaloRes = await axios.post(
+        `${API}/payment/zalopay`,
+        { amount: total, orderId },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const orderId = res.data.orderId;
-      if (!orderId) {
-        return Swal.fire("Lỗi", "Không tạo được đơn hàng!", "error");
+      const orderUrl = zaloRes.data?.order_url;
+      if (!orderUrl) {
+        return Swal.fire("Lỗi", "Không tạo được đơn ZaloPay", "error");
       }
 
-
-      if (paymentMethod === "zalopay") {
-        const zaloRes = await axios.post(
-          `${API}/payment/zalopay`,
-          { amount: total, orderId },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        const { order_url } = zaloRes.data;
-        if (!order_url) {
-          return Swal.fire("Lỗi", "Không tạo được đơn ZaloPay", "error");
-        }
-        localStorage.setItem("pendingOrderId", orderId);
-        window.location.assign(order_url);
-        return;
-      }
-
-      Swal.fire({
-        icon: "success",
-        title: "Đặt hàng thành công vui lòng check hoá đơn bên Email!",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      localStorage.removeItem("selectedVoucher");
-      navigate("/");
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi đặt hàng",
-        text: err.response?.data?.message || "Không thể tạo đơn hàng",
-      });
+      localStorage.setItem("pendingOrderId", orderId);
+      window.location.href = orderUrl;
+      return;
     }
-  };
+
+    // 6️⃣ Thành công
+    Swal.fire({
+      icon: "success",
+      title: "Đặt hàng thành công",
+      text: "Vui lòng kiểm tra hoá đơn trong Email",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    localStorage.removeItem("selectedVoucher");
+    navigate("/");
+  } catch (err) {
+    console.error("Order error:", err);
+    Swal.fire({
+      icon: "error",
+      title: "Lỗi đặt hàng",
+      text: err.response?.data?.message || "Không thể tạo đơn hàng",
+    });
+  }
+};
 
   if (loading)
     return (
@@ -507,11 +538,12 @@ const subtotal = cart.reduce(
           </div>
 
           <button
-            onClick={handleOrder}
-            className="w-full mt-6 py-3 bg-rose-500 text-white rounded-full font-semibold hover:bg-rose-600"
-          >
-            Đặt hàng
-          </button>
+    onClick={handleOrder}
+    disabled={!shippingFee || shippingFee <= 0}
+    className="w-full mt-6 py-3 bg-rose-500 text-white rounded-full font-semibold disabled:opacity-50"
+  >
+    Đặt hàng
+  </button>
         </section>
       </main>
 
