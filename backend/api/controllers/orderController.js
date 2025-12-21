@@ -87,10 +87,8 @@ export const createOrderFromCart = async (req, res) => {
       email,
       shippingAddress: address,
       paymentMethod,
-
       shippingMethod,
       shippingFee,
-
       note,
       voucherCode,
       discount,
@@ -113,6 +111,9 @@ export const createOrderFromCart = async (req, res) => {
 
       cod_amount: paymentMethod === "cod" ? total : 0,
       service_id: Number(req.body.service_id || 53321),
+
+      required_note: "CHOXEMHANG",
+      payment_type_id: paymentMethod === "cod" ? 1 : 2,
     });
 
     const ghnOrderCode = ghnRes?.data?.order_code;
