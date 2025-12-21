@@ -179,16 +179,15 @@ export const createOrderFromCart = async (req, res) => {
           });
 
           const ghnOrderCode = ghnRes?.data?.order_code;
-          const expectedDeliveryTime =
-            ghnRes?.data?.expected_delivery_time;
+          const expectedDeliveryTime = ghnRes?.data?.expected_delivery_time;
 
           if (ghnOrderCode) {
             await db.query(
               `UPDATE orders
-               SET ShippingProvider='GHN',
-                   ShippingCode=?,
-                   ExpectedDeliveryTime=?
-               WHERE OrderID=?`,
+           SET ShippingProvider='GHN',
+               ShippingCode=?,
+               ExpectedDeliveryTime=?
+           WHERE OrderID=?`,
               [ghnOrderCode, expectedDeliveryTime, orderId]
             );
           }
@@ -212,11 +211,20 @@ export const createOrderFromCart = async (req, res) => {
         console.error("BACKGROUND ERROR:", err);
       }
     });
+
+    // =====================
+    // 5. TRẢ RESPONSE NGAY 
+    // =====================
+    return res.json({
+      success: true,
+      orderId,
+      message: "Đặt hàng thành công",
+    });
   } catch (err) {
     console.error("Lỗi createOrderFromCart:", err);
     try {
       await conn.rollback();
-    } catch {}
+    } catch { }
 
     res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
   } finally {
@@ -290,7 +298,7 @@ export const deleteOrder = async (req, res) => {
 export const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.orderId;
-    
+
     // Lấy thông tin đơn hàng
     const order = await getOrderDetailModel(orderId);
     if (!order)
