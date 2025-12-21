@@ -95,12 +95,8 @@ export const createOrderFromCart = async (req, res) => {
       conn // dùng conn để nằm trong transaction
     );
 
-    // tạo order_items (nếu model này đang dùng db.query thì vẫn OK, nhưng transaction sẽ không bao hết.
-    // nếu em có thể sửa createOrderItemsModel nhận conn thì càng chuẩn.
-    await createOrderItemsModel(orderId, items, conn).catch(async () => {
-      // nếu hàm createOrderItemsModel chưa hỗ trợ conn, vẫn chạy bản cũ:
-      await createOrderItemsModel(orderId, items);
-    });
+
+    await createOrderItemsModel(orderId, items);
 
     // TRỪ KHO
     for (const item of items) {
