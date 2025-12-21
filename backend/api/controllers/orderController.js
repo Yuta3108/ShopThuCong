@@ -28,9 +28,7 @@ export const createOrderFromCart = async (req, res) => {
   let orderId;
 
   try {
-    // =====================
-    // 0. VALIDATE USER
-    // =====================
+    // 0️⃣ CHECK TOKEN
     if (!req.user?.id) {
       return res.status(401).json({ message: "Token không hợp lệ" });
     }
@@ -54,9 +52,7 @@ export const createOrderFromCart = async (req, res) => {
       service_id,
     } = req.body;
 
-    // =====================
-    // 1. LẤY GIỎ HÀNG
-    // =====================
+    // 1️⃣ LẤY GIỎ HÀNG
     const [cartRows] = await Cart.getCartByUserId(userId);
     if (!cartRows.length) {
       return res.status(400).json({ message: "Giỏ hàng trống" });
@@ -68,9 +64,7 @@ export const createOrderFromCart = async (req, res) => {
       return res.status(400).json({ message: "Giỏ hàng trống" });
     }
 
-    // =====================
-    // 2. CHECK TỒN KHO
-    // =====================
+    // 2️⃣ CHECK TỒN KHO
     for (const item of items) {
       const stock = await CheckStockProduct(item.VariantID);
       if (stock < item.Quantity) {
@@ -80,9 +74,7 @@ export const createOrderFromCart = async (req, res) => {
       }
     }
 
-    // =====================
-    // 3. TÍNH TIỀN
-    // =====================
+    // 3️⃣ TÍNH TIỀN
     const subtotal = items.reduce(
       (sum, item) => sum + item.UnitPrice * item.Quantity,
       0
@@ -93,9 +85,7 @@ export const createOrderFromCart = async (req, res) => {
       subtotal - Number(discount) + Number(shippingFee)
     );
 
-    // =====================
-    // 4. TẠO ORDER (TRANSACTION)
-    // =====================
+    // 4️⃣ TRANSACTION
     await conn.beginTransaction();
 
     orderId = await createOrderModel(
@@ -138,21 +128,25 @@ export const createOrderFromCart = async (req, res) => {
 
     await conn.commit();
 
-    // =====================
-    // 5. TRẢ RESPONSE NGAY (🔥 QUAN TRỌNG)
-    // =====================
+    /**
+     * ============================
+     * ✅ TRẢ RESPONSE DUY NHẤT
+     * ============================
+     */
     res.json({
       success: true,
       orderId,
       message: "Đặt hàng thành công",
     });
 
-    // =====================
-    // 6. BACKGROUND TASKS (KHÔNG await)
-    // =====================
+    /**
+     * ============================
+     * 🔥 BACKGROUND TASKS
+     * ============================
+     */
     setImmediate(async () => {
       try {
-        // ===== GHN =====
+        // GHN
         if (
           to_district_id &&
           to_ward_code &&
@@ -179,21 +173,22 @@ export const createOrderFromCart = async (req, res) => {
           });
 
           const ghnOrderCode = ghnRes?.data?.order_code;
-          const expectedDeliveryTime = ghnRes?.data?.expected_delivery_time;
+          const expectedDeliveryTime =
+            ghnRes?.data?.expected_delivery_time;
 
           if (ghnOrderCode) {
             await db.query(
               `UPDATE orders
-           SET ShippingProvider='GHN',
-               ShippingCode=?,
-               ExpectedDeliveryTime=?
-           WHERE OrderID=?`,
+               SET ShippingProvider='GHN',
+                   ShippingCode=?,
+                   ExpectedDeliveryTime=?
+               WHERE OrderID=?`,
               [ghnOrderCode, expectedDeliveryTime, orderId]
             );
           }
         }
 
-        // ===== EMAIL =====
+        // EMAIL
         await sendInvoiceEmail({
           receiverName,
           phone,
@@ -211,21 +206,11 @@ export const createOrderFromCart = async (req, res) => {
         console.error("BACKGROUND ERROR:", err);
       }
     });
-
-    // =====================
-    // 5. TRẢ RESPONSE NGAY 
-    // =====================
-    return res.json({
-      success: true,
-      orderId,
-      message: "Đặt hàng thành công",
-    });
   } catch (err) {
     console.error("Lỗi createOrderFromCart:", err);
     try {
       await conn.rollback();
-    } catch { }
-
+    } catch {}
     res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
   } finally {
     conn.release();
