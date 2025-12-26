@@ -23,7 +23,7 @@ import {
   CheckStockProduct,
 } from "../models/variantsModel.js";
 import { autoDeactivateProductIfOutOfStock } from "../models/productsModel.js";
-import sendInvoiceEmail from "../config/sendInvoiceEmail.js"
+import {sendInvoiceEmail} from "../config/sendInvoiceEmail.js"
 
 export const createOrderFromCart = async (req, res) => {
   const conn = await db.getConnection();
