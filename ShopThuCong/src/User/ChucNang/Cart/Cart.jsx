@@ -188,7 +188,15 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     const token = localStorage.getItem("token");
-
+    if( total > 5000000 ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Giá trị đơn hàng vượt quá hạn mức",
+        text: "Vui lòng giảm bớt sản phẩm trong giỏ hàng để tiếp tục thanh toán",
+        confirmButtonColor: "#fb7185",
+      });
+      return;
+    }
     if (!token) {
       Swal.fire({
         icon: "warning",
@@ -330,7 +338,12 @@ export default function CartPage() {
 
                 <button
                   onClick={handleCheckout}
-                  className="w-full py-3 bg-rose-500 text-white rounded-full font-semibold hover:bg-rose-600"
+                  disabled={total > 5000000}
+                  className={`w-full py-3 rounded-full font-semibold
+                  ${total > 5000000
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-rose-500 text-white hover:bg-rose-600"}
+                `}
                 >
                   Thanh toán
                 </button>

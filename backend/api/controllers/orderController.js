@@ -28,7 +28,6 @@ import sendInvoiceEmail from "../config/sendInvoiceEmail.js"
 export const createOrderFromCart = async (req, res) => {
   const conn = await db.getConnection();
   let orderId;
-
   try {
     //  CHECK TOKEN
     if (!req.user?.id) {
@@ -83,6 +82,17 @@ export const createOrderFromCart = async (req, res) => {
       0,
       subtotal - Number(discount) + Number(shippingFee)
     );
+    const MAX_ORDER_AMOUNT = 5_000_000;
+    if (total <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Tổng tiền đơn hàng không hợp lệ" });
+    }
+    if (total > MAX_ORDER_AMOUNT) {
+      return res.status(400).json({
+        message: `Tổng tiền đơn hàng vượt quá hạn mức ${MAX_ORDER_AMOUNT.toLocaleString("vi-VN")} VND`,
+      });
+    }
 
     // TRANSACTION
     await conn.beginTransaction();
