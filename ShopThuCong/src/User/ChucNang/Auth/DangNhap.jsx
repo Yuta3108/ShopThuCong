@@ -15,7 +15,15 @@ function DangNhap() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    if (!email.trim() || !password.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Thiếu thông tin!",
+        text: "Vui lòng nhập đầy đủ thông tin.",
+        confirmButtonColor: "#fb7185",
+      });
+      return;
+    }
     try {
       const response = await fetch(
         `https://backend-eta-ivory-29.vercel.app/api/dangnhap`,

@@ -23,18 +23,14 @@ import {
   CheckStockProduct,
 } from "../models/variantsModel.js";
 import { autoDeactivateProductIfOutOfStock } from "../models/productsModel.js";
+import sendInvoiceEmail from "../config/sendInvoiceEmail.js"
 
-/**
- * ============================
- * TẠO ĐƠN HÀNG (KHÔNG GHN)
- * ============================
- */
 export const createOrderFromCart = async (req, res) => {
   const conn = await db.getConnection();
   let orderId;
 
   try {
-    // 0️⃣ CHECK TOKEN
+    //  CHECK TOKEN
     if (!req.user?.id) {
       return res.status(401).json({ message: "Token không hợp lệ" });
     }
@@ -55,7 +51,7 @@ export const createOrderFromCart = async (req, res) => {
       shippingFee = 0,
     } = req.body;
 
-    // 1️⃣ LẤY GIỎ HÀNG
+    // LẤY GIỎ HÀNG
     const [cartRows] = await Cart.getCartByUserId(userId);
     if (!cartRows.length) {
       return res.status(400).json({ message: "Giỏ hàng trống" });
@@ -67,7 +63,7 @@ export const createOrderFromCart = async (req, res) => {
       return res.status(400).json({ message: "Giỏ hàng trống" });
     }
 
-    // 2️⃣ CHECK TỒN KHO
+    //  CHECK TỒN KHO
     for (const item of items) {
       const stock = await CheckStockProduct(item.VariantID);
       if (stock < item.Quantity) {
@@ -77,7 +73,7 @@ export const createOrderFromCart = async (req, res) => {
       }
     }
 
-    // 3️⃣ TÍNH TIỀN
+    // TÍNH TIỀN
     const subtotal = items.reduce(
       (sum, item) => sum + item.UnitPrice * item.Quantity,
       0
@@ -88,7 +84,7 @@ export const createOrderFromCart = async (req, res) => {
       subtotal - Number(discount) + Number(shippingFee)
     );
 
-    // 4️⃣ TRANSACTION
+    // TRANSACTION
     await conn.beginTransaction();
 
     orderId = await createOrderModel(
@@ -111,7 +107,7 @@ export const createOrderFromCart = async (req, res) => {
 
     // ORDER ITEMS
     await createOrderItemsModel(orderId, items);
-
+    
     // TRỪ KHO
     for (const item of items) {
       await decreaseStockProduct(item.VariantID, item.Quantity);
@@ -130,8 +126,25 @@ export const createOrderFromCart = async (req, res) => {
     await conn.query("DELETE FROM cart_items WHERE CartID = ?", [cartId]);
 
     await conn.commit();
-
-    // ✅ TRẢ RESPONSE DUY NHẤT
+    // GỬI EMAIL HOÁ ĐƠN
+    try {
+    await sendInvoiceEmail({
+      receiverName,
+      phone,
+      email,
+      address,
+      total,
+      paymentMethod,
+      items: items.map((i) => ({
+        ProductName: i.ProductName,
+        Qty: i.Quantity,
+        Price: i.UnitPrice,
+      })),
+    });
+  } catch (emailErr) {
+    console.error("Lỗi gửi email hoá đơn:", emailErr);
+  }
+    // TRẢ RESPONSE DUY NHẤT
     return res.json({
       success: true,
       orderId,
@@ -147,11 +160,6 @@ export const createOrderFromCart = async (req, res) => {
     conn.release();
   }
 };
-
-/* ============================
-   CÁC API KHÁC GIỮ NGUYÊN
-============================ */
-
 export const getMyOrders = async (req, res) => {
   try {
     const [orders] = await db.query(

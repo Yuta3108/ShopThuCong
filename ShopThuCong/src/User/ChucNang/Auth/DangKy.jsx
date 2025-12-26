@@ -17,17 +17,37 @@ function DangKy() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!/[a-zA-Z]/.test(matKhau) || matKhau.length < 8) {
+    if (!matKhau.trim()) {
       Swal.fire({
         icon: "warning",
-        title: "Mật khẩu không hợp lệ",
-        text: "Mật khẩu phải có ít nhất 8 ký tự và chứa ít nhất một chữ cái.",
+        title: "Thiếu thông tin!",
+        text: "Vui lòng nhập mật khẩu.",
         confirmButtonColor: "#fb7185",
       });
       return;
     }
-
+    if (
+        matKhau.length < 8 ||
+        !/[a-zA-Z]/.test(matKhau) ||
+        !/[0-9]/.test(matKhau)
+      ) {
+        Swal.fire({
+          icon: "warning",
+          title: "Mật khẩu không hợp lệ",
+          text: "Mật khẩu phải có ít nhất 8 ký tự, gồm chữ và số.",
+          confirmButtonColor: "#fb7185",
+        });
+        return;
+      }
+    if (!sdt.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Thiếu thông tin!",
+        text: "Vui lòng nhập số điện thoại.",
+        confirmButtonColor: "#fb7185",
+      });
+      return;
+    }
     if (!/^\d{10,11}$/.test(sdt)) {
       Swal.fire({
         icon: "warning",
@@ -47,7 +67,38 @@ function DangKy() {
       });
       return;
     }
+    if (!email.trim()) {
+          Swal.fire({
+            icon: "warning",
+            title: "Thiếu thông tin!",
+            text: "Vui lòng nhập email.",
+            confirmButtonColor: "#fb7185",
+          });
+          return;
+      }
+      const vietCharRegex =
+      /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
 
+      if (vietCharRegex.test(email)) {
+        Swal.fire({
+          icon: "error",
+          title: "Email không hợp lệ!",
+          text: "Email không được chứa ký tự tiếng Việt.",
+          confirmButtonColor: "#fb7185",
+        });
+        return;
+      }
+      const emailRegex =
+          /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email.trim())) {
+          Swal.fire({
+            icon: "error",
+            title: "Email không hợp lệ!",
+            text: "Vui lòng nhập đúng định dạng email (vd: example@gmail.com)",
+            confirmButtonColor: "#fb7185",
+          });
+          return;
+      }
     const tenKhachHang = `${ho} ${ten}`.trim();
     const data = { tenKhachHang, email, matKhau, sdt, diaChi };
 
@@ -139,11 +190,16 @@ function DangKy() {
 
             <input
               type="text"
+              inputMode="numeric"
               placeholder="Số điện thoại"
               className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm 
                          focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
               value={sdt}
-              onChange={(e) => setSdt(e.target.value)}
+              onChange={(e) =>{
+              const numberOnly = e.target.value.replace(/\D/g, '');
+              setSdt(numberOnly);
+              }}
+              maxLength={11}
               required
             />
 
