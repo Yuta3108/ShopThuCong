@@ -5,8 +5,8 @@ import { Search, Pencil, Trash2, Eye } from "lucide-react";
 import OrderDetailModal from "../Pages/Order/OrderDetailModal";
 import OrderStatusModal from "../Pages/Order/OrderStatusModal";
 import { orderStatusText, orderStatusColor } from "../../utils/orderStatus";
-
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+import Swal from "sweetalert2";
+const API = "http://localhost:5000/api";
 
 // Format tiền
 const formatMoney = (value) =>
@@ -76,10 +76,8 @@ export default function AdminOrderPage() {
 
   // DELETE ORDER
   const handleDelete = async (id) => {
-    if (!window.confirm("Xoá đơn hàng này?")) return;
-
+    if (!window.confirm("Bạn có chắc muốn xoá đơn hàng này?")) return;
     setRemoving(id);
-
     setTimeout(async () => {
       await axiosClient.delete(`/orders/${id}`);
       setOrders((prev) => prev.filter((o) => o.OrderID !== id));
@@ -282,13 +280,6 @@ export default function AdminOrderPage() {
                         className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-600 shadow-sm transition"
                       >
                         <Eye size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(o.OrderID)}
-                        className="p-2 bg-red-50 hover:bg-red-100 rounded-lg text-red-600 shadow-sm transition"
-                      >
-                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>

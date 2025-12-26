@@ -45,7 +45,7 @@ export const createOrderFromCart = async (req, res) => {
       voucherCode,
       discount = 0,
 
-      // SHIPPING (FE ĐÃ TÍNH)
+      // SHIPPING 
       shippingMethod,
       shippingFee = 0,
     } = req.body;

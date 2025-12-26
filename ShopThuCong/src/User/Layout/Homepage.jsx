@@ -5,7 +5,7 @@ import axios from "axios";
 import ProductCard from "../ChucNang/Products/ProductCard";
 import QuickViewModal from "./QuickViewModal";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);

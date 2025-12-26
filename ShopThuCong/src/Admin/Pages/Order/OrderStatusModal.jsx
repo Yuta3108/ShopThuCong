@@ -1,5 +1,5 @@
 import React from "react";
-
+import { orderStatusText } from "../../../utils/orderStatus";
 export default function OrderStatusModal({
   open,
   onClose,
@@ -29,16 +29,19 @@ export default function OrderStatusModal({
         </div>
 
         <label className="text-sm font-medium">Trạng thái đơn hàng</label>
-        <select
-          value={editData.Status}
-          onChange={(e) => setEditData({ ...editData, Status: e.target.value })}
-          className="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none"
-        >
-          <option value="pending">Chờ xử lý</option>
-          <option value="processing">Đang xử lý</option>
-          <option value="completed">Hoàn tất</option>
-          <option value="cancelled">Đã hủy</option>
-        </select>
+          <select
+            value={editData.Status}
+            onChange={(e) =>
+              setEditData({ ...editData, Status: e.target.value })
+            }
+            className="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none"
+          >
+            {Object.entries(orderStatusText).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
 
         <div className="flex justify-end gap-2 mt-6">
           <button

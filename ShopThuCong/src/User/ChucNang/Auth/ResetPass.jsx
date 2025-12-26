@@ -22,7 +22,7 @@ export default function DatLaiMatKhau() {
     }
     try {
       const res = await fetch(
-        "https://backend-eta-ivory-29.vercel.app/api/reset-password",
+        "http://localhost:5000/api/reset-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

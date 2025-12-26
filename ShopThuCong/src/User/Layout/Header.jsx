@@ -5,7 +5,7 @@ import axios from "axios";
 
 export default function Header() {
   const [user, setUser] = useState(null);
-  const API = "https://backend-eta-ivory-29.vercel.app/api";
+  const API = "http://localhost:5000/api";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [categories, setCategories] = useState([]);

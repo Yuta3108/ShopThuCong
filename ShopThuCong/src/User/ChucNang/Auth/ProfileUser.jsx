@@ -6,7 +6,7 @@ import OrderDetailModal from "../../../Admin/Pages/Order/OrderDetailModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 
 import { orderStatusText, orderStatusColor } from "../../../utils/orderStatus";
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -20,7 +20,7 @@ export default function UserProfile() {
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   const [form, setForm] = useState({
     FullName: "",
@@ -464,7 +464,7 @@ export default function UserProfile() {
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex justify-center mt-6 gap-2">
+                    <div className="flex justify-center mt-10 gap-2">
                       <button
                         disabled={currentPage === 1}
                         onClick={() => setCurrentPage((p) => p - 1)}

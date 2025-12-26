@@ -10,7 +10,7 @@ export default function QuenMatKhau() {
     e.preventDefault();
     try {
       const res = await fetch(
-        "https://backend-eta-ivory-29.vercel.app/api/forgot-password",
+        "http://localhost:5000/api/forgot-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -6,7 +6,7 @@ import Footer from "../../Layout/Footer";
 import Swal from "sweetalert2";
 import VoucherModal from "./VoucherModal";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 export default function CartPage() {
   const [cart, setCart] = useState([]);
