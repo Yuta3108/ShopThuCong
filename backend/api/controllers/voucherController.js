@@ -127,7 +127,6 @@ export const updateVoucherController = async (req, res) => {
     res.json({ message: "Cập nhật thành công" });
 
   } catch (err) {
-    console.log("Lỗi updateVoucher:", err);
     res.status(500).json({ error: err.message });
   }
 };

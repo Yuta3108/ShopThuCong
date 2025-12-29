@@ -12,9 +12,11 @@ const formatMoney = (value) =>
 const canDeleteProduct = (createdAt) => {
   if (!createdAt) return false;
 
+  // ép giờ DB (UTC) → local
   const created = new Date(createdAt).getTime();
   const now = Date.now();
-  const diffMinutes = (now - created) / (1000 * 60);
+
+  const diffMinutes = (now - created) / 60000;
 
   return diffMinutes <= 30;
 };

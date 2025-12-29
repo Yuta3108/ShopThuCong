@@ -20,8 +20,6 @@ export const createVariantController = async (req, res) => {
       attributeValueIds = [],
       images = [],
     } = req.body;
-
-    console.log(" createVariant body:", req.body, "ProductID:", ProductID);
     const { VariantID } = await createVariant({
       ProductID,
       ProductCode,
@@ -47,7 +45,6 @@ export const createVariantController = async (req, res) => {
 export const updateVariantController = async (req, res) => {
   try {
     const id = Number(req.params.variantId);
-    console.log("updateVariant body:", req.body, "variantId:", id);
     const result = await updateVariant(id, req.body);
     res.json(result);
   } catch (err) {

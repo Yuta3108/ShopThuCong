@@ -11,7 +11,6 @@ export const authMiddleware = (req, res, next) => {
       id: decoded.id || decoded.UserID,
       role: decoded.role || decoded.Role,
     };
-    console.log("JWT decoded:", decoded);
     next();
   } catch (err) {
     res.status(403).json({ message: "Token không hợp lệ." });

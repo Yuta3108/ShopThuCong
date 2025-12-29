@@ -19,7 +19,7 @@ const handleUploadProductImage = (file, product, setProduct) => {
 
   const reader = new FileReader();
   reader.onload = () => {
-    setProduct({ ...product, ImageURL: reader.result }); 
+    setProduct({ ...product, ImageURL: reader.result });
   };
   reader.readAsDataURL(file);
 };
@@ -123,26 +123,26 @@ export default function ProductDialog({
   };
 
   /*  hàm upload ảnh  */
- const handleUploadImage = (i, file) => {
-  if (!file) return;
+  const handleUploadImage = (i, file) => {
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    setProduct((prev) => {
-      const variants = prev.variants.map((v, idx) => {
-        if (idx !== i) return v;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProduct((prev) => {
+        const variants = prev.variants.map((v, idx) => {
+          if (idx !== i) return v;
 
-        return {
-          ...v,
-          images: [...(v.images || []), reader.result], // base64
-        };
+          return {
+            ...v,
+            images: [...(v.images || []), reader.result], // base64
+          };
+        });
+
+        return { ...prev, variants };
       });
-
-      return { ...prev, variants };
-    });
+    };
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(file);
-};
 
   const canDeleteVariant = (createdAt, variantId) => {
     if (!variantId) return true;
@@ -170,51 +170,95 @@ export default function ProductDialog({
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (isSaving) return;
+    e.preventDefault();
+    if (isSaving) return;
 
-  setIsSaving(true);
-
-  // Hiển thị loading Swal
-  Swal.fire({
-    title: "Đang xử lý...",
-    text: "Vui lòng chờ một chút nhé ",
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    didOpen: () => {
-      Swal.showLoading();
-    },
-  });
-
-  try {
-    const cleanVariants = product.variants.map((v) => ({
-      ...v,
-      attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
-    }));
-
-    await onSubmit({ ...product, variants: cleanVariants });
-
+    setIsSaving(true);
+    if(!product.CategoryID){
+      Swal.fire({
+        icon: "warning",
+        title: "Chưa chọn danh mục",
+        text: "Vui lòng chọn danh mục sản phẩm",
+      });
+      setIsSaving(false);
+      return;
+    }
+    if(!product.ProductName || product.ProductName.trim() === ""){
+      Swal.fire({
+        icon: "warning",
+        title: "Chưa nhập tên sản phẩm",
+        text: "Vui lòng nhập tên sản phẩm",
+      });
+      setIsSaving(false);
+      return;
+    }
+    if(!product.ProductCode || product.ProductCode.trim() === ""){
+      Swal.fire({
+        icon: "warning",
+        title: "Chưa nhập mã sản phẩm",
+        text: "Vui lòng nhập mã sản phẩm",
+      });
+      setIsSaving(false);
+      return;
+    }
+    if(product.variants.length === 0){
+      Swal.fire({
+        icon: "warning",
+        title: "Chưa có biến thể",
+        text: "Vui lòng thêm ít nhất một biến thể cho sản phẩm",
+      });
+      setIsSaving(false);
+      return;
+    }
+    if(product.variants.some(v => !v.Price || v.Price <= 0)){
+      Swal.fire({
+        icon: "warning",
+        title: "Giá biến thể không hợp lệ",
+        text: "Vui lòng kiểm tra lại giá của các biến thể",
+      });
+      setIsSaving(false);
+      return;
+    }
+    // Hiển thị loading Swal
     Swal.fire({
-      icon: "success",
-      title: "Thành công ",
-      text: isEdit ? "Đã cập nhật sản phẩm" : "Đã thêm sản phẩm mới",
-      timer: 1500,
-      showConfirmButton: false,
+      title: "Đang xử lý...",
+      text: "Vui lòng chờ một chút nhé ",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
     });
 
-    resetForm();
-    onClose();
-  } catch (err) {
-    Swal.fire({
-      icon: "error",
-      title: "Lỗi ",
-      text: "Có lỗi xảy ra, vui lòng thử lại",
-      confirmButtonText: "OK",
-    });
-  } finally {
-    setIsSaving(false);
-  }
-};
+    try {
+      const cleanVariants = product.variants.map((v) => ({
+        ...v,
+        attributeValueIds: (v.attributeValueIds || []).filter(Boolean),
+      }));
+
+      await onSubmit({ ...product, variants: cleanVariants });
+
+      Swal.fire({
+        icon: "success",
+        title: "Thành công ",
+        text: isEdit ? "Đã cập nhật sản phẩm" : "Đã thêm sản phẩm mới",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      resetForm();
+      onClose();
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi ",
+        text: "Bạn Nhập Trùng ProductCode Hoặc Lỗi Kỹ Thuật, vui lòng thử lại",
+        confirmButtonText: "OK",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const resetForm = () => {
     setProduct({
@@ -293,7 +337,7 @@ export default function ProductDialog({
               setProduct({ ...product, ProductCode: e.target.value })
             }
           />
-            <textarea
+          <textarea
             className="w-full border rounded-lg px-3 py-2"
             rows={2}
             placeholder="Mô tả ngắn"
@@ -358,7 +402,7 @@ export default function ProductDialog({
                   </button>
                 </div>
               )}
-              
+
               <label className="w-24 h-24 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 cursor-pointer">
                 <span className="text-2xl">＋</span>
                 <input
@@ -397,31 +441,54 @@ export default function ProductDialog({
                 className="bg-gray-50 border rounded-xl p-4 mb-3 space-y-3"
               >
                 {/* PRICE + STOCK */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    className="w-full border rounded px-3 py-2 text-right"
-                    value={formatMoney(v.Price)}
-                    onChange={(e) =>
-                      handleVariantChange(
-                        i,
-                        "Price",
-                        parseMoneyInput(e.target.value)
-                      )
-                    }
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    className="w-full border rounded px-3 py-2 text-right"
-                    value={v.StockQuantity}
-                    onChange={(e) =>
-                      handleVariantChange(
-                        i,
-                        "StockQuantity",
-                        Number(e.target.value)
-                      )
-                    }
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* GIÁ */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Giá (₫)
+                    </label>
+
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="w-full border rounded-lg px-3 py-2 text-right
+                 focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500
+                 placeholder:text-gray-400"
+                      placeholder="VD: 120.000"
+                      value={v.Price ? formatMoney(v.Price) : ""}
+                      onChange={(e) =>
+                        handleVariantChange(
+                          i,
+                          "Price",
+                          parseMoneyInput(e.target.value)
+                        )
+                      }
                     />
+                  </div>
+
+                  {/* SỐ LƯỢNG */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Số lượng
+                    </label>
+
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-full border rounded-lg px-3 py-2 text-right
+                      focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500
+                      placeholder:text-gray-400"
+                      placeholder="VD: 50"
+                      value={v.StockQuantity || ""}
+                      onChange={(e) =>
+                        handleVariantChange(
+                          i,
+                          "StockQuantity",
+                          Number(e.target.value)
+                        )
+                      }
+                    />
+                  </div>
                 </div>
 
                 {/* ATTRIBUTES */}
@@ -524,18 +591,17 @@ export default function ProductDialog({
                         allowDelete &&
                         (v.VariantID
                           ? onDeleteVariant(
-                              v.VariantID,
-                              i,
-                              product,
-                              setProduct
-                            )
+                            v.VariantID,
+                            i,
+                            product,
+                            setProduct
+                          )
                           : removeVariant(i))
                       }
                       className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium
-                        ${
-                          allowDelete
-                            ? "bg-red-50 hover:bg-red-100 text-red-600"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        ${allowDelete
+                          ? "bg-red-50 hover:bg-red-100 text-red-600"
+                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
                         }
                       `}
                     >
@@ -548,23 +614,22 @@ export default function ProductDialog({
           </div>
 
           <button
-              type="submit"
-              disabled={isSaving}
-              className={`w-full py-2 rounded-lg text-white flex items-center justify-center gap-2 transition ${
-                isSaving
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-teal-600 hover:bg-teal-700"
+            type="submit"
+            disabled={isSaving}
+            className={`w-full py-2 rounded-lg text-white flex items-center justify-center gap-2 transition ${isSaving
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-teal-600 hover:bg-teal-700"
               }`}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="animate-spin w-5 h-5" />
-                  <span>Đang xử lý...</span>
-                </>
-              ) : (
-                isEdit ? "Lưu thay đổi" : "Lưu sản phẩm"
-              )}
-            </button>
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="animate-spin w-5 h-5" />
+                <span>Đang xử lý...</span>
+              </>
+            ) : (
+              isEdit ? "Lưu thay đổi" : "Lưu sản phẩm"
+            )}
+          </button>
         </form>
       </div>
     </div>

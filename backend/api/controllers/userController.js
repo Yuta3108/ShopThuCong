@@ -83,7 +83,6 @@ export const dangKy = async (req, res) => {
 
     res.status(201).json({ message: "Đăng ký thành công! Kiểm tra email để xác minh." });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ message: "Lỗi máy chủ." });
   }
 };
