@@ -1,65 +1,137 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Search, Bell, ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Bell, ChevronDown } from "lucide-react";
+import Swal from "sweetalert2";
+import axios from "axios";
+
+/* ================= AXIOS CLIENT ================= */
+const axiosClient = axios.create({
+  baseURL: "http://localhost:5000/api",
+});
+
+axiosClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export default function Topbar() {
-  const [openMenu, setOpenMenu] = useState(false);
   const navigate = useNavigate();
 
+  const [openMenu, setOpenMenu] = useState(false);
+
+  
+  const [lastOrderId, setLastOrderId] = useState(null);
+  const [hasNewOrder, setHasNewOrder] = useState(false);
+  const [newOrderCount, setNewOrderCount] = useState(0);
+
+  /* LOGOUT  */
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");
   };
 
+  /* CHECK NEW ORDER*/
+  useEffect(() => {
+    let mounted = true;
+
+    const checkNewOrder = async () => {
+      try {
+        const res = await axiosClient.get("/orders/lastest");
+        const currentId = res.data.orderId;
+
+        if (!mounted || !currentId) return;
+
+       
+        if (lastOrderId === null) {
+          setLastOrderId(currentId);
+          return;
+        }
+
+        //  CÓ ĐƠN MỚI
+        if (currentId > lastOrderId) {
+          const diff = currentId - lastOrderId;
+
+          setHasNewOrder(true);
+          setNewOrderCount((prev) => prev + diff);
+
+          Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Có đơn hàng mới đã được đặt!",
+            text: `Có ${diff} đơn hàng mới`,
+            showConfirmButton: false,
+            timer: 3000,
+          });
+
+          setLastOrderId(currentId);
+        }
+      } catch (err) {
+        console.error("Check new order error:", err);
+      }
+    };
+
+    checkNewOrder();
+    const interval = setInterval(checkNewOrder, 5000); // 5s
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [lastOrderId]);
+
   return (
     <header className="sticky top-0 z-40 px-4 md:px-6 py-4">
-      {/* FLOATING CARD */}
       <div
         className="
-        max-w-6xl mx-auto
-        bg-white/70 backdrop-blur-xl
-        border border-slate-200/70 shadow-[0_4px_20px_rgba(0,0,0,0.05)]
-        rounded-2xl px-5 py-3
-        flex items-center justify-between
-        transition-all
-      "
+          max-w-6xl mx-auto
+          bg-white/70 backdrop-blur-xl
+          border border-slate-200/70
+          shadow-[0_4px_20px_rgba(0,0,0,0.05)]
+          rounded-2xl px-5 py-3
+          flex items-center justify-between
+        "
       >
-        {/* LEFT BRAND */}
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-slate-900 tracking-tight">
-            ThenFong Admin
-          </span>
-        </div>
+        {/* LEFT */}
+        <span className="text-lg font-semibold text-slate-900">
+          ThenFong Admin
+        </span>
 
-        {/* RIGHT OPTIONS */}
-        <div className="flex items-center gap-3 md:gap-4">
-          {/* SEARCH BAR */}
-          <div
-            className="
-            hidden md:flex items-center
-            bg-slate-100 hover:bg-slate-200
-            px-3 py-2 rounded-2xl w-64
-            transition shadow-inner active:scale-[0.98]
-          "
-          >
-            <Search size={18} className="text-slate-500 mr-2" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm..."
-              className="bg-transparent outline-none text-sm flex-1"
-            />
-          </div>
-
-          {/* NOTIFICATION */}
+        {/* RIGHT */}
+        <div className="flex items-center gap-4">
+          {/*NOTIFICATION */}
           <button
+            onClick={() => {
+              setHasNewOrder(false);
+              setNewOrderCount(0);
+            }}
             className="
-            relative hover:bg-slate-200/60
-            p-2 rounded-xl transition shadow-sm active:scale-95
-          "
+              relative hover:bg-slate-200/60
+              p-2 rounded-xl transition
+              active:scale-95
+            "
           >
             <Bell size={20} className="text-slate-700" />
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full shadow" />
+
+            {newOrderCount > 0 && (
+              <span
+                className="
+                  absolute -top-1 -right-1
+                  min-w-[18px] h-[18px]
+                  px-1
+                  bg-rose-500 text-white
+                  text-[11px] font-bold
+                  rounded-full
+                  flex items-center justify-center
+                  shadow
+                "
+              >
+                {newOrderCount}
+              </span>
+            )}
           </button>
 
           {/* USER MENU */}
@@ -69,51 +141,49 @@ export default function Topbar() {
               className="
                 flex items-center gap-2
                 p-1.5 pr-2 rounded-xl
-                hover:bg-slate-200/60 transition active:scale-95
+                hover:bg-slate-200/60 transition
               "
             >
               <img
                 src="/logoavatar.png"
-                className="w-9 h-9 rounded-full object-cover border border-slate-300 shadow-sm"
                 alt="Avatar"
+                className="w-9 h-9 rounded-full border"
               />
-              <div className="hidden sm:flex flex-col text-left leading-tight">
-                <span className="font-semibold text-sm text-slate-900">
-                  Admin
-                </span>
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="font-semibold text-sm">Admin</span>
                 <span className="text-xs text-slate-500">Quản trị viên</span>
               </div>
               <ChevronDown
                 size={18}
-                className={`text-slate-600 transition ${
-                  openMenu ? "rotate-180" : ""
-                }`}
+                className={`transition ${openMenu ? "rotate-180" : ""}`}
               />
             </button>
 
-            {/* DROPDOWN */}
             {openMenu && (
               <div
                 className="
                   absolute right-0 mt-2 w-44
                   bg-white/90 backdrop-blur-lg
-                  border border-slate-200/70 shadow-xl
-                  rounded-xl py-2 text-sm z-50
-                  animate-fadeIn
+                  border border-slate-200
+                  shadow-xl rounded-xl py-2 text-sm
                 "
               >
-                <Link to="/User" className=" block w-full text-left mx-4 py-2 hover:bg-slate-100 rounded-lg transition">
+                <Link
+                  to="/User"
+                  className="block px-4 py-2 hover:bg-slate-100 rounded-lg"
+                >
                   Hồ sơ của tôi
                 </Link>
-                <button className="w-full text-left px-4 py-2 hover:bg-slate-100 rounded-lg transition">
+
+                <button className="w-full text-left px-4 py-2 hover:bg-slate-100 rounded-lg">
                   Cài đặt
                 </button>
+
                 <div className="h-px bg-slate-200 my-1" />
 
-                {/* LOGOUT */}
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                  className="w-full text-left px-4 py-2 text-rose-600 hover:bg-rose-50 rounded-lg"
                 >
                   Đăng xuất
                 </button>
@@ -123,5 +193,5 @@ export default function Topbar() {
         </div>
       </div>
     </header>
-  );
+  ); 
 }

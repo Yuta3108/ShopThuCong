@@ -383,3 +383,16 @@ export const topSellingProducts = async (req, res) => {
 
   res.json({ success: true, data: rows });
 };
+export const latestOrder = async (req, res) => {
+  const [[row]] = await db.query(`
+    SELECT OrderID
+    FROM orders
+    ORDER BY OrderID DESC
+    LIMIT 1
+  `);
+
+  res.json({
+    success: true,
+    orderId: row?.OrderID || null,
+  });
+};

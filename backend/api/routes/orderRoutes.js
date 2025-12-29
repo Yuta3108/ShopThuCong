@@ -11,7 +11,8 @@ import {
   statisticOrderByStatus,
   dashboardSummary,
   revenueByMonth,
-  topSellingProducts
+  topSellingProducts,
+ latestOrder
 } from "../controllers/orderController.js";
 import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js";
 
@@ -21,6 +22,7 @@ router.get("/statistic-by-status", authMiddleware, adminMiddleware,statisticOrde
 router.get("/dashboard-summary", authMiddleware, adminMiddleware, dashboardSummary);
 router.get("/revenue-by-month", authMiddleware, adminMiddleware, revenueByMonth);
 router.get("/top-selling-products", authMiddleware, adminMiddleware, topSellingProducts);
+router.get("/lastest", authMiddleware, adminMiddleware, latestOrder);
 // USER
 router.get("/user/:id", authMiddleware, getMyOrders);
 router.post("/", authMiddleware, createOrderFromCart);
