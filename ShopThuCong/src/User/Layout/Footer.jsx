@@ -2,7 +2,7 @@ import React from "react";
 
 const Footer = () => {
   return (
-    // nền trùng với Homepage: #F5F5F5
+    
     <footer className="bg-[#F5F5F5] text-slate-800 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Logo + info */}
@@ -116,7 +116,7 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Bottom line – cùng màu nền, không còn mảng trắng riêng */}
+      {/* Bottom line */}
       <div className="border-t border-slate-200 py-4 text-center text-xs md:text-sm text-slate-500">
         © 2025{" "}
         <span className="text-amber-700 font-semibold">ThenFong Store</span>.{" "}

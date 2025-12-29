@@ -274,3 +274,112 @@ export const cancelOrderZalo = async (req, res) => {
     res.status(500).json({ message: "Lỗi server" });
   }
 };
+export const statisticOrderByStatus = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT Status, COUNT(*) AS Total
+      FROM orders
+      GROUP BY Status
+    `);
+
+    res.json({
+      success: true,
+      data: rows,
+    });
+  } catch (err) {
+    console.error("Statistic error:", err);
+    res.status(500).json({ success: false });
+  }
+};
+export const dashboardSummary = async (req, res) => {
+  //  THÁNG HIỆN TẠI 
+  const [[current]] = await db.query(`
+    SELECT
+      COUNT(*) AS totalOrders,
+      SUM(CASE WHEN Status = 'completed' THEN total ELSE 0 END) AS totalRevenue,
+      COUNT(DISTINCT userId) AS totalCustomers
+    FROM orders
+    WHERE MONTH(createdAt) = MONTH(CURRENT_DATE())
+      AND YEAR(createdAt) = YEAR(CURRENT_DATE())
+  `);
+
+  //  THÁNG TRƯỚC 
+  const [[previous]] = await db.query(`
+    SELECT
+      COUNT(*) AS totalOrders,
+      SUM(CASE WHEN Status = 'completed' THEN total ELSE 0 END) AS totalRevenue,
+      COUNT(DISTINCT userId) AS totalCustomers
+    FROM orders
+    WHERE MONTH(createdAt) = MONTH(CURRENT_DATE() - INTERVAL 1 MONTH)
+      AND YEAR(createdAt) = YEAR(CURRENT_DATE() - INTERVAL 1 MONTH)
+  `);
+
+  //  HÔM NAY 
+  const [[today]] = await db.query(`
+    SELECT COUNT(*) AS todayOrders
+    FROM orders
+    WHERE DATE(createdAt) = CURDATE()
+  `);
+
+  //  FORMAT & SAFE NUMBER 
+  const curOrders = Number(current.totalOrders) || 0;
+  const preOrders = Number(previous.totalOrders) || 0;
+
+  const curRevenue = Number(current.totalRevenue) || 0;
+  const preRevenue = Number(previous.totalRevenue) || 0;
+
+  const curCustomers = Number(current.totalCustomers) || 0;
+  const preCustomers = Number(previous.totalCustomers) || 0;
+
+  const todayOrders = Number(today.todayOrders) || 0;
+
+  //  % GROWTH 
+  const calcGrowth = (cur, pre) =>
+    pre === 0 ? 0 : Number((((cur - pre) / pre) * 100).toFixed(1));
+
+  res.json({
+    success: true,
+    data: {
+      totalOrders: curOrders,
+      totalRevenue: curRevenue,
+      totalCustomers: curCustomers,
+      todayOrders,
+
+      orderGrowth: calcGrowth(curOrders, preOrders),
+      revenueGrowth: calcGrowth(curRevenue, preRevenue),
+      customerGrowth: calcGrowth(curCustomers, preCustomers),
+    },
+  });
+};
+
+export const revenueByMonth = async (req, res) => {
+  const [rows] = await db.query(`
+    SELECT 
+      DATE_FORMAT(createdAt, '%Y-%m') AS month,
+      SUM(total) AS revenue
+    FROM orders
+    WHERE Status = 'completed'
+    GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
+    ORDER BY month;
+  `);
+  res.json({ success: true, data: rows });
+};
+export const topSellingProducts = async (req, res) => {
+  const [rows] = await db.query(`
+    SELECT 
+      p.ProductID AS productId,
+      p.ProductName AS name,
+      p.ImageURL AS imageUrl,
+      SUM(oi.quantity) AS sold
+    FROM order_items oi
+    JOIN product_variants pv ON oi.VariantID = pv.VariantID
+    JOIN products p ON pv.ProductID = p.ProductID
+    JOIN orders o ON oi.OrderID = o.OrderID
+    WHERE o.Status = 'completed'
+    GROUP BY p.ProductID, p.ProductName
+    ORDER BY sold DESC
+    LIMIT 5
+  `);
+
+  res.json({ success: true, data: rows });
+};

@@ -8,11 +8,19 @@ import {
   updateOrderStatus,
   cancelOrder,
   cancelOrderZalo,
+  statisticOrderByStatus,
+  dashboardSummary,
+  revenueByMonth,
+  topSellingProducts
 } from "../controllers/orderController.js";
 import { authMiddleware, adminMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
-
+// dashboard
+router.get("/statistic-by-status", authMiddleware, adminMiddleware,statisticOrderByStatus);
+router.get("/dashboard-summary", authMiddleware, adminMiddleware, dashboardSummary);
+router.get("/revenue-by-month", authMiddleware, adminMiddleware, revenueByMonth);
+router.get("/top-selling-products", authMiddleware, adminMiddleware, topSellingProducts);
 // USER
 router.get("/user/:id", authMiddleware, getMyOrders);
 router.post("/", authMiddleware, createOrderFromCart);
