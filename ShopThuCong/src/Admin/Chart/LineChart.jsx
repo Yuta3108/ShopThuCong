@@ -31,7 +31,7 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-export default function LineChart() {
+export default function LineChart({ refreshKey }) {
   const [chartData, setChartData] = useState(null);
 
   // ================= FETCH DATA =================
@@ -66,13 +66,9 @@ export default function LineChart() {
     }
   };
 
-  // ================= REALTIME =================
   useEffect(() => {
     fetchRevenue();
-
-    const interval = setInterval(fetchRevenue, 5000); // realtime 5s
-    return () => clearInterval(interval);
-  }, []);
+  }, [refreshKey]);
 
   if (!chartData) {
     return <p className="text-slate-400">Loading...</p>;

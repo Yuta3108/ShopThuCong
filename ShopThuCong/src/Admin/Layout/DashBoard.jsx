@@ -25,6 +25,8 @@ export default function Dashboard() {
   const [loadingTop, setLoadingTop] = useState(true);
   const [summary, setSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const toggleSidebar = (state) =>
     setIsOpen(state !== undefined ? state : !isOpen);
   
@@ -67,8 +69,13 @@ export default function Dashboard() {
       setLoadingTop(false);
     }
   };
-
   fetchDashboardData();
+  const interval = setInterval(() => {
+    fetchDashboardData();
+    setRefreshKey((prev) => prev + 1);
+  }, 5000);
+  return () => clearInterval(interval);
+
 }, []);
   return (
     <div className="flex bg-[#F5F5F5] min-h-screen">
@@ -93,8 +100,8 @@ export default function Dashboard() {
 
             {/* ================= KPI CARDS ================= */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-              <KPIcard
-                  title="Tổng doanh thu"
+              <KPIcard 
+                  title="Tổng doanh thu của Tháng"
                   value={
                     loadingSummary || !summary
                       ? "—"
@@ -146,7 +153,7 @@ export default function Dashboard() {
                 </p>
 
                 <div className="flex-1 min-h-[240px]">
-                  <LineChart />
+                  <LineChart refreshKey={refreshKey} />
                 </div>
               </div>
 
@@ -159,7 +166,7 @@ export default function Dashboard() {
                 </p>
 
                 <div className="flex-1 min-h-[240px]">
-                  <PieChart />
+                  <PieChart refreshKey={refreshKey} />
                 </div>
               </div>
             </div>

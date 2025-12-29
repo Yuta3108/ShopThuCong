@@ -37,7 +37,7 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-export default function PieChart() {
+export default function PieChart({ refreshKey }) {
   const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
@@ -73,12 +73,7 @@ export default function PieChart() {
     };
     
     fetchStatistic();
-    const interval = setInterval(() => {
-    fetchStatistic();
-  }, 5000); 
-
-  return () => clearInterval(interval);
-  }, []);
+  }, [refreshKey]);
   
   if (!chartData) {
     return <p className="text-slate-500">Loading...</p>;
