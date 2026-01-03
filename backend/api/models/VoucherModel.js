@@ -102,3 +102,14 @@ export const lockVoucherIfNeeded = async (id) => {
     [id]
   );
 };
+export const autoLockInvalidVouchers = async () => {
+  await db.query(`
+    UPDATE vouchers
+    SET Status = 0
+    WHERE Status = 1
+      AND (
+        Quantity <= 0
+        OR (EndDate IS NOT NULL AND EndDate < NOW())
+      )
+  `);
+};

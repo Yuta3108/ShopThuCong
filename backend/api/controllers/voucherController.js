@@ -6,6 +6,7 @@ import {
   updateVoucher,
   deleteVoucher,
   lockVoucherIfNeeded,
+  autoLockInvalidVouchers
 } from "../models/VoucherModel.js";
 
 /*  HELPERS  */
@@ -38,7 +39,7 @@ const normalizeDate = (val) => {
 
 export const getVouchersController = async (req, res) => {
   try {
-    await lockVoucherIfNeeded ();
+    await autoLockInvalidVouchers();
     const rows = await getAllVouchers();
     res.json(rows);
   } catch (err) {
@@ -47,7 +48,6 @@ export const getVouchersController = async (req, res) => {
 };
 
 /*  CREATE  */
-
 export const createVoucherController = async (req, res) => {
   try {
     const d = req.body;
