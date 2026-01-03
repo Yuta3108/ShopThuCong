@@ -8,7 +8,7 @@ import {
   lockVoucherIfNeeded,
 } from "../models/VoucherModel.js";
 
-/* ------------------------- HELPERS ------------------------- */
+/*  HELPERS  */
 
 const toNumber = (val, fallback = 0) => {
   if (val === undefined || val === null || val === "") return fallback;
@@ -34,10 +34,11 @@ const normalizeDate = (val) => {
   return val;
 };
 
-/* ------------------------- GET ALL ------------------------- */
+/*  GET ALL  */
 
 export const getVouchersController = async (req, res) => {
   try {
+    await lockVoucherIfNeeded ();
     const rows = await getAllVouchers();
     res.json(rows);
   } catch (err) {
@@ -45,7 +46,7 @@ export const getVouchersController = async (req, res) => {
   }
 };
 
-/* ------------------------- CREATE ------------------------- */
+/*  CREATE  */
 
 export const createVoucherController = async (req, res) => {
   try {
@@ -79,7 +80,7 @@ export const createVoucherController = async (req, res) => {
   }
 };
 
-/* ------------------------- UPDATE ------------------------- */
+/*  UPDATE  */
 
 export const updateVoucherController = async (req, res) => {
   try {
@@ -131,7 +132,7 @@ export const updateVoucherController = async (req, res) => {
   }
 };
 
-/* ------------------------- DELETE ------------------------- */
+/*  DELETE  */
 
 export const deleteVoucherController = async (req, res) => {
   try {
@@ -172,7 +173,7 @@ export const deleteVoucherController = async (req, res) => {
   }
 };
 
-/* ------------------------- APPLY (USER) ------------------------- */
+/*  APPLY (USER)  */
 
 export const applyVoucherController = async (req, res) => {
   try {
@@ -199,7 +200,31 @@ export const applyVoucherController = async (req, res) => {
         message: `Đơn hàng chưa đạt ${Number(voucher.MinOrder).toLocaleString()}₫ để áp dụng`,
       });
     }
+    const now = new Date();
+    if (voucher.StartDate) {
+      const startDate = new Date(voucher.StartDate);
+      startDate.setHours(0, 0, 0, 0);
 
+      if (now < startDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Voucher chưa đến ngày áp dụng!",
+        });
+      }
+    }
+    if (voucher.EndDate) {
+    const endDate = new Date(voucher.EndDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    if (now > endDate) {
+      await lockVoucherIfNeeded(voucher.VoucherID); 
+
+      return res.status(400).json({
+        success: false,
+        message: "Voucher đã hết hạn áp dụng!",
+      });
+    }
+    }
     const discountValue = Number(voucher.DiscountValue || 0);
     const maxDiscount = Number(voucher.MaxDiscount || 0);
 
@@ -233,4 +258,4 @@ export const applyVoucherController = async (req, res) => {
     res.status(500).json({ success: false, message: "Lỗi server!" });
   }
 };
-
+ 

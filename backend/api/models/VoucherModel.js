@@ -91,9 +91,14 @@ export const decreaseVoucherQuantity = async (id) => {
 };
 export const lockVoucherIfNeeded = async (id) => {
   await db.query(
-    `UPDATE vouchers 
-     SET Status = 0 
-     WHERE VoucherID = ? AND Quantity <= 0`,
+    `UPDATE vouchers
+     SET Status = 0
+     WHERE VoucherID = ?
+       AND Status = 1
+       AND (
+            Quantity <= 0
+            OR (EndDate IS NOT NULL AND EndDate < NOW())
+       )`,
     [id]
   );
 };
