@@ -247,7 +247,7 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-10">
-            {/* ================= PRODUCT LIST ================= */}
+            {/*  PRODUCT LIST  */}
             <div className="space-y-4">
               {cart.map((item) => (
                 <div
@@ -302,7 +302,7 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* ================= SUMMARY ================= */}
+            {/*  SUMMARY  */}
             <aside className="lg:sticky lg:top-24 h-fit">
               <div className="bg-white p-6 rounded-2xl border shadow">
                 <h2 className="text-lg font-semibold mb-4">

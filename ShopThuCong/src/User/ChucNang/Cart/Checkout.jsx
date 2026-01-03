@@ -185,7 +185,7 @@ export default function CheckoutPage() {
 
   // --- HANDLE ORDER ---
   const handleOrder = async () => {
-    // 1️⃣ Validate địa chỉ
+    //  Validate địa chỉ
     if (!addressDetail || !toDistrictId || !toWardCode) {
       return Swal.fire({
         icon: "warning",
@@ -202,7 +202,7 @@ export default function CheckoutPage() {
       });
     }
 
-    // 2️⃣ Build địa chỉ đầy đủ
+    //  Build địa chỉ đầy đủ
     const ward = wards.find((w) => w.WardCode === toWardCode);
     const district = districts.find((d) => d.DistrictID == toDistrictId);
 
@@ -216,7 +216,7 @@ export default function CheckoutPage() {
 
     const fullAddress = `${addressDetail}, ${ward.WardName}, ${district.DistrictName}`;
 
-    // 3️⃣ Check token
+    //  Check token
     const token = localStorage.getItem("token");
     if (!token) {
       return Swal.fire({
@@ -227,7 +227,7 @@ export default function CheckoutPage() {
     }
 
     try {
-      // 4️⃣ Gửi đơn hàng (CHỈ GỬI FIELD BE DÙNG)
+      // Gửi đơn hàng (CHỈ GỬI FIELD BE DÙNG)
       const res = await axios.post(
         `${API}/orders`,
         {
@@ -252,7 +252,7 @@ export default function CheckoutPage() {
         return Swal.fire("Lỗi", "Không tạo được đơn hàng", "error");
       }
 
-      // 5️⃣ ZaloPay (GIỮ NGUYÊN)
+      // ZaloPay (GIỮ NGUYÊN)
       if (paymentMethod === "zalopay") {
         const zaloRes = await axios.post(
           `${API}/payment/zalopay`,
@@ -270,7 +270,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      // 6️⃣ Thành công
+      // Thành công
       Swal.fire({
         icon: "success",
         title: "Đặt hàng thành công",
