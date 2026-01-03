@@ -8,7 +8,7 @@ import ProductCard from "./ProductCard";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import QuickViewModal from "../../Layout/QuickViewModal";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function ProductCategoryPage() {
   const { slug } = useParams();

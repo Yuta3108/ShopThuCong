@@ -104,7 +104,7 @@ function DangKy() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/dangky`,
+        `https://backend-eta-ivory-29.vercel.app/api/dangky`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -5,7 +5,7 @@ import axios from "axios";
 import ProductCard from "../ChucNang/Products/ProductCard";
 import QuickViewModal from "./QuickViewModal";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function HomePage() {
   const [categories, setCategories] = useState([]);
@@ -62,7 +62,7 @@ export default function HomePage() {
 
       <main className="flex-grow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14">
-          {/* ===================== DANH MỤC ===================== */}
+          {/*  DANH MỤC  */}
           <section className="mb-14 md:mb-20">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -101,7 +101,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* ===================== SẢN PHẨM NỔI BẬT ===================== */}
+          {/*  SẢN PHẨM NỔI BẬT  */}
           <section className="mb-16 md:mb-20">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -143,7 +143,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* ===================== SẢN PHẨM THEO DANH MỤC ===================== */}
+          {/*  SẢN PHẨM THEO DANH MỤC  */}
           {categories.map((cat) => {
             const prods = productsByCat[cat.CategoryID] || [];
             if (!prods.length) return null;
@@ -180,7 +180,7 @@ export default function HomePage() {
             );
           })}
 
-          {/* ===================== POPUP QUICK VIEW ===================== */}
+          {/*  POPUP QUICK VIEW  */}
           {quickViewProduct && (
             <QuickViewModal
               product={quickViewProduct}

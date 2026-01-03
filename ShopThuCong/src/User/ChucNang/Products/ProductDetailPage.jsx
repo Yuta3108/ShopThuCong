@@ -4,7 +4,7 @@ import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
 import axios from "axios";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function ProductDetailPage() {
   const { categorySlug, productCode } = useParams();
@@ -118,7 +118,7 @@ export default function ProductDetailPage() {
       return;
     }
 
-    await fetch("http://localhost:5000/api/cart/add", {
+    await fetch("https://backend-eta-ivory-29.vercel.app/api/cart/add", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

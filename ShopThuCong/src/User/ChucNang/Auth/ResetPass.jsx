@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { Eye, EyeOff } from "lucide-react";
 import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
 
@@ -9,6 +10,8 @@ export default function DatLaiMatKhau() {
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,9 +23,18 @@ export default function DatLaiMatKhau() {
       });
       return;
     }
+    if(newPassword.length < 8  ||  !/[a-zA-Z]/.test(newPassword) ||
+        !/[0-9]/.test(newPassword) ) {
+      Swal.fire({
+        icon: "warning",  
+        title: "Mật khẩu phải có ít nhất 8 ký tự, chứa chữ cái và số!",
+        confirmButtonColor: "#fb7185",
+      });
+      return;
+    }
     try {
       const res = await fetch(
-        "http://localhost:5000/api/reset-password",
+        "https://backend-eta-ivory-29.vercel.app/api/reset-password",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -64,22 +76,44 @@ export default function DatLaiMatKhau() {
             Đặt lại mật khẩu
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4 text-sm">
-            <input
-              type="password"
-              placeholder="Nhập mật khẩu mới"
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Xác nhận mật khẩu mới"
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+                <input
+                  type={showNew ? "text" : "password"}
+                  placeholder="Nhập mật khẩu mới"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg 
+                            focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowNew(!showNew)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                >
+                  {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            <div className="relative">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  placeholder="Xác nhận mật khẩu mới"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg 
+                            focus:ring-2 focus:ring-rose-200 focus:border-rose-400 focus:outline-none"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                >
+                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             <button
               type="submit"
               className="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-full font-semibold shadow-md hover:shadow-lg transition-all"

@@ -4,7 +4,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { Search, Lock, Unlock } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 /* ================= AXIOS CLIENT ================= */
 const axiosClient = axios.create({

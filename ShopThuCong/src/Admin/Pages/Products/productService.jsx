@@ -1,7 +1,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 const axiosClient = axios.create({
   baseURL: API,
@@ -46,7 +46,7 @@ axiosClient.interceptors.response.use(
   }
 );
 
-// =================  PRODUCTS =================
+//   PRODUCTS 
 export const saveProduct = async (prod, isEdit = false) => {
   const url = isEdit ? `/products/${prod.ProductID}` : `/products`;
   const method = isEdit ? "put" : "post";
@@ -58,7 +58,7 @@ export const deleteProduct = async (id) => {
   await axiosClient.delete(`/products/${id}`);
 };
 
-// =================  VARIANTS =================
+//   VARIANTS 
 export const saveVariant = async (ProductID, variant, isEdit = false) => {
   const url = isEdit
     ? `/variants/${variant.VariantID}`
@@ -80,7 +80,7 @@ export const deleteImage = async (imageId) => {
   await axiosClient.delete(`/variants/images/${imageId}`);
 };
 
-// =================  ATTRIBUTES =================
+//   ATTRIBUTES 
 export const createAttribute = async (AttributeName) => {
   await axiosClient.post(`/attributes`, { AttributeName });
 };

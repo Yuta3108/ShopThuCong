@@ -6,7 +6,7 @@ import OrderDetailModal from "../../../Admin/Pages/Order/OrderDetailModal";
 import ResetPasswordModal from "./ResetPasswordModal";
 
 import { orderStatusText, orderStatusColor } from "../../../utils/orderStatus";
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 export default function UserProfile() {
   const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);

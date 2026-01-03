@@ -18,9 +18,9 @@ ChartJS.register(
   Tooltip
 );
 
-// ================= AXIOS CLIENT =================
+//  AXIOS CLIENT 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://backend-eta-ivory-29.vercel.app/api",
 });
 
 axiosClient.interceptors.request.use((config) => {
@@ -34,7 +34,7 @@ axiosClient.interceptors.request.use((config) => {
 export default function LineChart({ refreshKey }) {
   const [chartData, setChartData] = useState(null);
 
-  // ================= FETCH DATA =================
+  //  FETCH DATA 
   const fetchRevenue = async () => {
     try {
       const res = await axiosClient.get("/orders/revenue-by-month");

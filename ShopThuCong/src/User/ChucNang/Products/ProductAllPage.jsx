@@ -7,7 +7,7 @@ import ProductCard from "./ProductCard";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import QuickViewModal from "../../Layout/QuickViewModal";
 import { useSearchParams } from "react-router-dom";
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function ProductAllPage() {
   const [products, setProducts] = useState([]);

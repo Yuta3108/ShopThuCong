@@ -6,7 +6,7 @@ import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
 import { Phone } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
@@ -478,8 +478,9 @@ export default function CheckoutPage() {
                 </label>
                 <textarea
                   className="w-full p-3 border rounded-xl bg-white focus:ring-2 focus:ring-rose-400 outline-none h-24"
-                  placeholder="Ghi chú cho người bán (tuỳ chọn)"
+                  placeholder="Ghi chú cho người bán tối đa 200 ký tự..."
                   value={note}
+                  maxLength={200}
                   onChange={(e) => setNote(e.target.value)}
                 />
               </div>

@@ -7,10 +7,11 @@ import axios from "axios";
 import LineChart from "../Chart/LineChart";
 import KPIcard from "../Chart/KPIcard";
 import PieChart from "../Chart/Piechart";
+import BarChart from "../Chart/BarChart";
 
-// ================= AXIOS CLIENT =================
+ 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://backend-eta-ivory-29.vercel.app/api",
 });
 
 axiosClient.interceptors.request.use((config) => {
@@ -31,7 +32,7 @@ export default function Dashboard() {
     setIsOpen(state !== undefined ? state : !isOpen);
   
   const navigate = useNavigate();
-  // ================= CHECK TOKEN =================
+  //  CHECK TOKEN 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -48,13 +49,14 @@ export default function Dashboard() {
     }
   }, []);
   
-  // ================= FETCH KPI =================
+  //  FETCH KPI 
   useEffect(() => {
   const fetchDashboardData = async () => {
     try {
       const [summaryRes, topProductsRes] = await Promise.all([
         axiosClient.get("/orders/dashboard-summary"),
         axiosClient.get("/orders/top-selling-products"),
+
       ]);
 
       // KPI summary
@@ -98,7 +100,7 @@ export default function Dashboard() {
               Tổng quan hoạt động của cửa hàng hôm nay
             </p>
 
-            {/* ================= KPI CARDS ================= */}
+            {/*  KPI CARDS  */}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
               <KPIcard 
                   title="Tổng doanh thu của Tháng"
@@ -142,7 +144,7 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* ================= CHARTS ================= */}
+            {/*  CHARTS  */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm h-[350px] flex flex-col">
                 <h3 className="text-sm font-semibold text-slate-800 mb-1">
@@ -170,8 +172,32 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+              <BarChart
+                title="Doanh thu theo ngày"
+                type="day"
+                refreshKey={refreshKey}
+              />
 
-            {/* ================= BEST SELLER ================= */}
+              <BarChart
+                title="Doanh thu theo tháng"
+                type="month"
+                refreshKey={refreshKey}
+              />
+
+              <BarChart
+                title="Doanh thu theo quý"
+                type="quarter"
+                refreshKey={refreshKey}
+              />
+
+              <BarChart
+                title="Doanh thu theo năm"
+                type="year"
+                refreshKey={refreshKey}
+              />
+            </div>
+            {/*  BEST SELLER  */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
               <h3 className="text-sm font-semibold text-slate-800 mb-1">
                 Sản phẩm bán chạy

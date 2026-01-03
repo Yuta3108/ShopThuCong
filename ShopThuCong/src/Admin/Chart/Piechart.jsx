@@ -12,7 +12,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://backend-eta-ivory-29.vercel.app/api",
 });
 
 const STATUS_LABEL = {

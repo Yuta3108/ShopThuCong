@@ -6,7 +6,7 @@ import axios from "axios";
 
 /* ================= AXIOS CLIENT ================= */
 const axiosClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: "https://backend-eta-ivory-29.vercel.app/api",
 });
 
 axiosClient.interceptors.request.use((config) => {

@@ -396,3 +396,98 @@ export const latestOrder = async (req, res) => {
     orderId: row?.OrderID || null,
   });
 };
+export const revenueByTime = async (req, res) => {
+  try {
+    const { type = "month" } = req.query;
+    let sql = "";
+
+    switch (type) {
+      case "day":
+        sql = `
+        WITH RECURSIVE days AS (
+          SELECT CURDATE() - INTERVAL 6 DAY AS d
+          UNION ALL
+          SELECT d + INTERVAL 1 DAY
+          FROM days
+          WHERE d < CURDATE()
+        )
+        SELECT
+          DATE_FORMAT(days.d, '%d/%m/%Y') AS label,
+          COALESCE(SUM(o.total), 0) AS value
+        FROM days
+        LEFT JOIN orders o
+          ON DATE(o.CreatedAt) = days.d
+          AND o.Status = 'completed'
+        GROUP BY days.d
+        ORDER BY days.d
+      `;
+    break;
+
+      case "month":
+        sql = `
+          SELECT 
+            DATE_FORMAT(CreatedAt, '%Y-%m') AS label,
+            SUM(total) AS value
+          FROM orders
+          WHERE Status = 'completed'
+          GROUP BY DATE_FORMAT(CreatedAt, '%Y-%m')
+          ORDER BY label
+        `;
+        break;
+
+      case "quarter":
+        sql = `
+          SELECT 
+            YEAR(CreatedAt) AS year,
+            QUARTER(CreatedAt) AS quarter,
+            SUM(total) AS value
+          FROM orders
+          WHERE Status = 'completed'
+            AND CreatedAt IS NOT NULL
+          GROUP BY YEAR(CreatedAt), QUARTER(CreatedAt)
+          ORDER BY YEAR(CreatedAt), QUARTER(CreatedAt)
+        `;
+        break;
+
+      case "year":
+        sql = `
+          SELECT 
+            YEAR(CreatedAt) AS label,
+            SUM(total) AS value
+          FROM orders
+          WHERE Status = 'completed'
+          GROUP BY YEAR(CreatedAt)
+          ORDER BY label
+        `;
+        break;
+
+      default:
+        return res.status(400).json({
+          success: false,
+          message: "type không hợp lệ (day | month | quarter | year)",
+        });
+    }
+
+    const [rows] = await db.query(sql);
+    let labels = [];
+    let values = [];
+    if (type === "quarter") {
+      labels = rows.map(r => `Q${r.quarter}/${r.year}`);
+      values = rows.map(r => Number(r.value));
+    } else {
+      labels = rows.map(r => r.label);
+      values = rows.map(r => Number(r.value));
+    }
+    res.json({
+      success: true,
+      type,
+      labels,
+      values,
+      raw: rows,
+    });
+
+  } catch (err) {
+    console.error("Revenue stats error:", err);
+    res.status(500).json({ success: false });
+  }
+};
