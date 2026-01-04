@@ -1,53 +1,48 @@
-import { Link } from "react-router-dom";
-import { CheckCircle } from "lucide-react";
+import { useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Swal from "sweetalert2";
+
+const API = "https://backend-eta-ivory-29.vercel.app/api";
 
 export default function PaymentSuccess() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const orderId = params.get("orderId");
+
+  useEffect(() => {
+    if (!orderId) {
+      Swal.fire("Lỗi", "Không tìm thấy đơn hàng", "error");
+      return navigate("/");
+    }
+
+    // GỌI BACKEND, KHÔNG GỌI ZALOPAY
+    axios
+      .post(`${API}/payment/confirm-zalopay`, { orderId })
+      .then(res => {
+    if (res.data.status === "paid") {
+      Swal.fire("Thành công", "Thanh toán ZaloPay thành công", "success");
+      navigate("/user");
+    } else {
+      Swal.fire(
+        "Đang xử lý",
+        "Giao dịch đang chờ xác nhận từ ZaloPay",
+        "info"
+      );
+    }
+      })
+      .catch(() => {
+        Swal.fire(
+          "Thông báo",
+          "Đơn hàng đang được xử lý",
+          "info"
+        );
+      });
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex items-center justify-center px-4">
-      <div className="bg-white shadow-xl rounded-3xl p-8 max-w-md w-full text-center">
-
-        {/* ICON */}
-        <div className="flex justify-center mb-4">
-          <CheckCircle
-            className="text-emerald-500"
-            size={88}
-            strokeWidth={1.5}
-          />
-        </div>
-
-        {/* TITLE */}
-        <h1 className="text-2xl font-semibold text-slate-800">
-          Đặt hàng thành công!
-        </h1>
-
-        {/* SUBTEXT */}
-        <p className="text-slate-500 mt-2 leading-relaxed">
-          Cảm ơn bạn đã mua hàng tại <b>ThenFong Store</b>.<br />
-          Đơn hàng của bạn đã được ghi nhận và đang được xử lý.
-        </p>
-
-        {/* ACTIONS */}
-        <div className="mt-6 space-y-3">
-          <Link
-            to="/user"
-            className="block w-full py-3 rounded-xl 
-                       bg-emerald-500 text-white font-medium 
-                       hover:bg-emerald-600 transition"
-          >
-            Xem đơn hàng của tôi
-          </Link>
-
-          <Link
-            to="/"
-            className="block w-full py-3 rounded-xl 
-                       border border-slate-300 text-slate-700 
-                       font-medium hover:bg-slate-100 transition"
-          >
-            Tiếp tục mua sắm
-          </Link>
-        </div>
-
-      </div>
-    </div>
+    <p className="text-center py-10">
+      Đang xác nhận thanh toán...
+    </p>
   );
 }

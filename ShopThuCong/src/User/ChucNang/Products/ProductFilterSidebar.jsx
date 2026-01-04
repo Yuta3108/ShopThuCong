@@ -2,25 +2,76 @@ import React from "react";
 import { ChevronDown } from "lucide-react";
 
 export default function ProductFilterSidebar({
+  // CATEGORY FILTER
+  categories = [],
+  selectedCategoryId,
+  setSelectedCategoryId,
+
+  // TYPE FILTER 
   openCatBox,
   setOpenCatBox,
-  openPriceBox,
-  setOpenPriceBox,
   filterType,
   setFilterType,
+
+  // PRICE FILTER
+  openPriceBox,
+  setOpenPriceBox,
   filterPrice,
   setFilterPrice,
+
+  // SLIDER
+  priceRange,
+  setPriceRange,
+  showSliderPrice = false,
+
+  // CLEAR
+  onClearFilter,
 }) {
   return (
-    <div className="col-span-3 space-y-6">
-      {/* DANH MỤC (chỉ hiện khi có setFilterType truyền vào) */}
+    <div className="lg:col-span-3 space-y-6">
+
+      {/* DANH MỤC SẢN PHẨM  */}
+      {categories.length > 0 && (
+        <div className="bg-white border rounded-2xl p-4 shadow-sm">
+          <p className="font-semibold text-sm mb-3">Loại sản phẩm</p>
+
+          <ul className="space-y-2 text-sm">
+            <li
+              onClick={() => setSelectedCategoryId(null)}
+              className={`cursor-pointer ${
+                selectedCategoryId === null
+                  ? "text-rose-500 font-semibold"
+                  : "text-slate-700"
+              }`}
+            >
+              Tất cả
+            </li>
+
+            {categories.map((cat) => (
+              <li
+                key={cat.CategoryID}
+                onClick={() => setSelectedCategoryId(cat.CategoryID)}
+                className={`cursor-pointer hover:text-rose-500 ${
+                  selectedCategoryId === cat.CategoryID
+                    ? "text-rose-500 font-semibold"
+                    : "text-slate-700"
+                }`}
+              >
+                {cat.CategoryName}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* PHÂN LOẠI  */}
       {setFilterType && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+        <div className="bg-white border rounded-2xl p-4 shadow-sm">
           <button
             onClick={() => setOpenCatBox(!openCatBox)}
-            className="w-full flex justify-between items-center font-semibold text-sm text-slate-900"
+            className="w-full flex justify-between items-center font-semibold text-sm"
           >
-            Danh mục sản phẩm
+            Phân loại
             <ChevronDown
               size={18}
               className={`${openCatBox ? "rotate-180" : ""} transition`}
@@ -28,43 +79,34 @@ export default function ProductFilterSidebar({
           </button>
 
           {openCatBox && (
-            <ul className="mt-4 space-y-2 text-slate-700 text-sm animate-fadeIn">
-              <li
-                onClick={() => setFilterType("hot")}
-                className={`cursor-pointer hover:text-rose-500 ${
-                  filterType === "hot" ? "text-rose-500 font-semibold" : ""
-                }`}
-              >
-                Được mua nhiều
-              </li>
-
-              <li
-                onClick={() => setFilterType("new")}
-                className={`cursor-pointer hover:text-rose-500 ${
-                  filterType === "new" ? "text-rose-500 font-semibold" : ""
-                }`}
-              >
-                Sản phẩm mới
-              </li>
-
-              <li
-                onClick={() => setFilterType(null)}
-                className={`cursor-pointer hover:text-rose-500 ${
-                  filterType === null ? "text-rose-500 font-semibold" : ""
-                }`}
-              >
-                Tất cả sản phẩm
-              </li>
+            <ul className="mt-4 space-y-2 text-sm">
+              {[
+                { key: "hot", label: " Được mua nhiều" },
+                { key: "new", label: "Sản phẩm mới" },
+                { key: null, label: " Tất cả sản phẩm" },
+              ].map((item) => (
+                <li
+                  key={String(item.key)}
+                  onClick={() => setFilterType(item.key)}
+                  className={`cursor-pointer hover:text-rose-500 ${
+                    filterType === item.key
+                      ? "text-rose-500 font-semibold"
+                      : "text-slate-700"
+                  }`}
+                >
+                  {item.label}
+                </li>
+              ))}
             </ul>
           )}
         </div>
       )}
 
-      {/* GIÁ */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+      {/* ===== GIÁ ===== */}
+      <div className="bg-white border rounded-2xl p-4 shadow-sm">
         <button
           onClick={() => setOpenPriceBox(!openPriceBox)}
-          className="w-full flex justify-between items-center font-semibold text-sm text-slate-900"
+          className="w-full flex justify-between items-center font-semibold text-sm"
         >
           Giá
           <ChevronDown
@@ -74,81 +116,69 @@ export default function ProductFilterSidebar({
         </button>
 
         {openPriceBox && (
-          <ul className="mt-4 space-y-3 text-sm text-slate-700 animate-fadeIn">
-            <li>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="price"
-                  value="under100"
-                  checked={filterPrice === "under100"}
-                  onClick={() =>
-                    setFilterPrice(
-                      filterPrice === "under100" ? null : "under100"
-                    )
-                  }
-                  readOnly
-                />
-                <span>Dưới 100.000₫</span>
-              </label>
-            </li>
+          <>
+            {/* RADIO */}
+            <ul className="mt-4 space-y-2 text-sm text-slate-700">
+              {[
+                ["under100", "Dưới 100.000₫"],
+                ["100-200", "100.000 - 200.000₫"],
+                ["200-500", "200.000 - 500.000₫"],
+                ["above500", "Trên 500.000₫"],
+              ].map(([value, label]) => (
+                <li key={value}>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="price"
+                      checked={filterPrice === value}
+                      onClick={() =>
+                        setFilterPrice(
+                          filterPrice === value ? null : value
+                        )
+                      }
+                      readOnly
+                    />
+                    <span>{label}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
 
-            <li>
-              <label className="flex items-center gap-2 cursor-pointer">
+            {/* SLIDER */}
+            {showSliderPrice && (
+              <div className="mt-4 space-y-2">
                 <input
-                  type="radio"
-                  name="price"
-                  value="100-200"
-                  checked={filterPrice === "100-200"}
-                  onClick={() =>
-                    setFilterPrice(
-                      filterPrice === "100-200" ? null : "100-200"
-                    )
+                  type="range"
+                  min={0}
+                  max={500000}
+                  step={10000}
+                  value={priceRange[1]}
+                  onChange={(e) =>
+                    setPriceRange([0, Number(e.target.value)])
                   }
-                  readOnly
+                  className="w-full accent-rose-500"
                 />
-                <span>100.000 - 200.000₫</span>
-              </label>
-            </li>
-
-            <li>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="price"
-                  value="200-500"
-                  checked={filterPrice === "200-500"}
-                  onClick={() =>
-                    setFilterPrice(
-                      filterPrice === "200-500" ? null : "200-500"
-                    )
-                  }
-                  readOnly
-                />
-                <span>200.000 - 500.000₫</span>
-              </label>
-            </li>
-
-            <li>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="price"
-                  value="above500"
-                  checked={filterPrice === "above500"}
-                  onClick={() =>
-                    setFilterPrice(
-                      filterPrice === "above500" ? null : "above500"
-                    )
-                  }
-                  readOnly
-                />
-                <span>Trên 500.000₫</span>
-              </label>
-            </li>
-          </ul>
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>0đ</span>
+                  <span>{priceRange[1].toLocaleString()}đ</span>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
+
+      {/*CLEAR FILTER  */}
+      {onClearFilter && (
+          <div className="bg-white border rounded-2xl p-4 shadow-sm">
+            <button
+              onClick={onClearFilter}
+              className="w-full text-sm text-rose-500 font-medium hover:underline"
+            >
+              Xóa bộ lọc
+            </button>
+          </div>
+        )}
     </div>
   );
 }

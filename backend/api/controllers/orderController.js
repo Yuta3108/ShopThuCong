@@ -249,29 +249,41 @@ export const cancelOrder = async (req, res) => {
 };
 
 export const cancelOrderZalo = async (req, res) => {
+  const conn = await db.getConnection();
   try {
     const { orderId } = req.params;
-    const order = await getOrderDetailModel(orderId);
+
+    await conn.beginTransaction();
+
+    const order = await getOrderDetailModel(orderId, conn);
     if (!order) {
+      await conn.rollback();
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
     }
+
     if (order.Status !== "pending") {
+      await conn.rollback();
       return res
         .status(400)
         .json({ message: "Chỉ huỷ được đơn đang chờ xử lý" });
     }
 
-    const items = await getOrderItemsModel(orderId);
-    await restoreStockModel(items);
+    const items = await getOrderItemsModel(orderId, conn);
+    await restoreStockModel(items, conn);
 
     if (order.VoucherCode) {
-      await restoreVoucherModel(order.VoucherCode);
+      await restoreVoucherModel(order.VoucherCode, conn);
     }
 
-    await cancelOrderZaloModel(orderId);
+    await cancelOrderZaloModel(orderId, conn);
+
+    await conn.commit();
     res.json({ success: true, message: "Huỷ đơn ZaloPay thành công" });
-  } catch {
+  } catch (err) {
+    await conn.rollback();
     res.status(500).json({ message: "Lỗi server" });
+  } finally {
+    conn.release();
   }
 };
 export const statisticOrderByStatus = async (req, res) => {

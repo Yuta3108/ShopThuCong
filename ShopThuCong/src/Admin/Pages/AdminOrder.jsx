@@ -36,7 +36,7 @@ export default function AdminOrderPage() {
 
   const toggleSidebar = (state) =>
     setIsOpen(state !== undefined ? state : !isOpen);
-
+ 
   // Popup Edit Status
   const [showEdit, setShowEdit] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -51,7 +51,7 @@ export default function AdminOrderPage() {
   const itemsPerPage = 10;
 
   const user = JSON.parse(localStorage.getItem("user"));
-
+  const isLockedStatus = (status) => status === "cancelled" || status === "completed";
   // PROTECT ADMIN
   if (!user || user.role !== "admin") {
     return (
@@ -122,6 +122,7 @@ export default function AdminOrderPage() {
   // FILTER
   const filtered = orders.filter((o) => {
     const s = search.toLowerCase();
+    
     return (
       o.OrderID.toString().includes(s) ||
       o.ReceiverName?.toLowerCase().includes(s) ||
@@ -189,13 +190,20 @@ export default function AdminOrderPage() {
               {formatMoney(Math.max(0, o.Total))}₫
             </p>
 
-              <div className="flex gap-2 mt-4">
-                <button
+              <button
+                  disabled={isLockedStatus(o.Status)}
                   onClick={() => {
+                    if (isLockedStatus(o.Status)) return;
                     setEditData(o);
                     setShowEdit(true);
                   }}
-                  className="flex-1 py-2 rounded-lg bg-yellow-500 text-white"
+                  className={`flex-1 py-2 rounded-lg
+                    ${
+                      isLockedStatus(o.Status)
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-yellow-500 text-white"
+                    }
+                  `}
                 >
                   Sửa
                 </button>
@@ -214,7 +222,6 @@ export default function AdminOrderPage() {
                   Xoá
                 </button>
               </div>
-            </div>
           ))}
         </div>
 
@@ -266,15 +273,27 @@ export default function AdminOrderPage() {
                   <td className="p-3">
                     <div className="flex justify-center gap-3">
                       <button
-                        onClick={() => {
-                          setEditData(o);
-                          setShowEdit(true);
-                        }}
-                        className="p-2 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-yellow-700 shadow-sm transition"
-                      >
-                        <Pencil size={18} />
-                      </button>
-
+                              disabled={isLockedStatus(o.Status)}
+                              onClick={() => {
+                                if (isLockedStatus(o.Status)) return;
+                                setEditData(o);
+                                setShowEdit(true);
+                              }}
+                              className={`p-2 rounded-lg shadow-sm transition
+                                ${
+                                  isLockedStatus(o.Status)
+                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                    : "bg-yellow-50 hover:bg-yellow-100 text-yellow-700"
+                                }
+                              `}
+                              title={
+                                isLockedStatus(o.Status)
+                                  ? "Đơn hàng đã kết thúc, không thể chỉnh sửa"
+                                  : "Cập nhật trạng thái"
+                              }
+                            >
+                              <Pencil size={18} />
+                       </button>
                       <button
                         onClick={() => handleViewDetail(o.OrderID)}
                         className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-600 shadow-sm transition"

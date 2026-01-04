@@ -8,7 +8,6 @@ export default function OrderStatusModal({
   onSubmit,
 }) {
   if (!open) return null;
-
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50 animate-fadeIn">
       <form

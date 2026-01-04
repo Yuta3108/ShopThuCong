@@ -67,3 +67,41 @@ export const zaloPayCallback = async (req, res) => {
   }
 };
 
+export const confirmZaloPayOrder = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ message: "Thiếu orderId" });
+    }
+
+    // Lấy trạng thái đơn
+    const [rows] = await db.query(
+      "SELECT Status, PaymentMethod FROM orders WHERE OrderID = ?",
+      [orderId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    const order = rows[0];
+
+    // CHỈ CHECK, KHÔNG UPDATE
+    if (order.PaymentMethod !== "zalopay") {
+      return res.status(400).json({ message: "Sai phương thức thanh toán" });
+    }
+
+    // Callback đã xử lý xong
+    if (order.Status === "processing") {
+      return res.json({ success: true, status: "paid" });
+    }
+
+    // Chưa thấy callback
+    return res.json({ success: true, status: "pending" });
+
+  } catch (err) {
+    console.error("Confirm ZaloPay error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

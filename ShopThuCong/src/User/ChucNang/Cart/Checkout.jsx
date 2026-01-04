@@ -283,6 +283,10 @@ export default function CheckoutPage() {
       navigate("/");
     } catch (err) {
       console.error("Order error:", err);
+      localStorage.removeItem("selectedVoucher");
+      localStorage.removeItem("pendingOrderId");
+      setVoucherCode("");
+      setDiscount(0);
       Swal.fire({
         icon: "error",
         title: "Lỗi đặt hàng",
@@ -290,6 +294,39 @@ export default function CheckoutPage() {
       });
     }
   };
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get("status"); // cancel | fail | success 
+
+  if (status === "cancel" || status === "fail") {
+    const orderId = localStorage.getItem("pendingOrderId");
+
+    if (orderId) {
+      // GỌI API HUỶ ĐƠN ZALOPAY
+      axios
+        .post(`${API}/orders/${orderId}/cancel-zalopay`)
+        .catch((err) => {
+          console.error("Cancel order error:", err);
+        });
+    }
+
+    //  CLEAR LOCAL
+    localStorage.removeItem("pendingOrderId");
+    localStorage.removeItem("selectedVoucher");
+
+    setVoucherCode("");
+    setDiscount(0);
+
+    Swal.fire({
+      icon: "warning",
+      title: "Thanh toán không thành công",
+      text: "Đơn hàng đã được huỷ. Vui lòng thử lại.",
+    });
+
+    // DỌN URL cho sạch
+    window.history.replaceState({}, document.title, "/checkout");
+  }
+}, []);
 
   if (loading)
     return (
