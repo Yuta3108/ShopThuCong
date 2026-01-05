@@ -255,7 +255,9 @@ export const cancelOrderZalo = async (req, res) => {
 
     await conn.beginTransaction();
 
-    const order = await getOrderDetailModel(orderId, conn);
+    const orderDetail = await getOrderDetailModel(orderId, conn);
+    const order = orderDetail?.order;
+
     if (!order) {
       await conn.rollback();
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });

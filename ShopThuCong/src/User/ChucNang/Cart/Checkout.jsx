@@ -296,7 +296,7 @@ export default function CheckoutPage() {
   };
   useEffect(() => {
   const params = new URLSearchParams(window.location.search);
-  const status = params.get("status"); // cancel | fail | success 
+  const status = params.get("status"); 
 
   if (status === "cancel" || status === "fail") {
     const orderId = localStorage.getItem("pendingOrderId");

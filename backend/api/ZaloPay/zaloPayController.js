@@ -128,7 +128,7 @@ export const confirmZaloPayOrder = async (req, res) => {
       "UPDATE orders SET Status = 'cancelled' WHERE OrderID = ? AND Status = 'pending'",
       [orderId]
     );
-
+    console.log("Đã hủy đơn hàng ZaloPay với OrderID:", orderId);
     return res.json({ success: true });
   } catch (err) {
     console.error("Lỗi khi hủy đơn hàng ZaloPay:", err);
