@@ -47,18 +47,29 @@ export const zaloPayCallback = async (req, res) => {
     }
 
     const parsed = JSON.parse(data);
-    const embed = JSON.parse(parsed.embed_data || "{}");
+
+    let embed = {};
+    if (typeof parsed.embed_data === "string") {
+      embed = JSON.parse(parsed.embed_data);
+    } else if (typeof parsed.embed_data === "object") {
+      embed = parsed.embed_data;
+    }
+
     const orderId = embed.orderId;
 
+    console.log("CALLBACK ORDER ID:", orderId);
+
     if (!orderId) {
-      console.log("Không tìm thấy orderId trong callback:", parsed);
+      console.error("CALLBACK KHÔNG CÓ orderId:", parsed);
       return res.json({ return_code: -1, return_message: "Thiếu orderId" });
     }
 
-    await db.query(
-      "UPDATE orders SET Status='processing' WHERE OrderID=?",
+    const [result] = await db.query(
+      "UPDATE orders SET Status='processing', UpdatedAt = NOW() WHERE OrderID=?",
       [orderId]
     );
+
+    console.log("UPDATE RESULT:", result);
 
     return res.json({ return_code: 1, return_message: "success" });
   } catch (err) {

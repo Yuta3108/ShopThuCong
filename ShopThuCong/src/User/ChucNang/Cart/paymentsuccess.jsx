@@ -31,7 +31,7 @@ export default function PaymentSuccess() {
         localStorage.removeItem("pendingOrderId");
 
         Swal.fire("Thành công", "Thanh toán ZaloPay thành công", "success");
-        navigate("/user");
+        navigate("/");
       } else {
         retry++;
         if (retry >= maxRetry) {
@@ -42,7 +42,7 @@ export default function PaymentSuccess() {
             "Bạn đã huỷ hoặc giao dịch chưa hoàn tất",
             "warning"
           );
-          navigate("/checkout");
+          navigate("/");
         }
       }
     } catch (err) {
