@@ -105,3 +105,22 @@ export const confirmZaloPayOrder = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+ export const CancelZaloPayOrder = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ message: "Thiếu orderId" });
+    }
+
+    await db.query(
+      "UPDATE orders SET Status = 'cancelled' WHERE OrderID = ? AND Status = 'pending'",
+      [orderId]
+    );
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Lỗi khi hủy đơn hàng ZaloPay:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

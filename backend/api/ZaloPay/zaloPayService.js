@@ -9,7 +9,7 @@ export const createZaloPayOrderService = async (amount, orderId) => {
 
     // embed_data PHẢI có orderId
     const embed_data = {
-      redirecturl: `https://shop-thu-cong.vercel.app/payment-success?orderId=${orderId}`,
+      redirecturl: `https://shop-thu-cong.vercel.app/payment-success?orderId=${orderId}&source=zalopay`,
       orderId: orderId
     };
 

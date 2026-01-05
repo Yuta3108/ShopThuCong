@@ -11,34 +11,49 @@ export default function PaymentSuccess() {
   const orderId = params.get("orderId");
 
   useEffect(() => {
-    if (!orderId) {
-      Swal.fire("Lỗi", "Không tìm thấy đơn hàng", "error");
-      return navigate("/");
-    }
+  if (!orderId) {
+    Swal.fire("Lỗi", "Không tìm thấy đơn hàng", "error");
+    return navigate("/");
+  }
 
-    // GỌI BACKEND, KHÔNG GỌI ZALOPAY
-    axios
-      .post(`${API}/payment/confirm-zalopay`, { orderId })
-      .then(res => {
-    if (res.data.status === "paid") {
-      Swal.fire("Thành công", "Thanh toán ZaloPay thành công", "success");
-      navigate("/user");
-    } else {
-      Swal.fire(
-        "Đang xử lý",
-        "Giao dịch đang chờ xác nhận từ ZaloPay",
-        "info"
+  let retry = 0;
+  const maxRetry = 5;
+
+  const interval = setInterval(async () => {
+    try {
+      const res = await axios.post(
+        `${API}/payment/confirm-zalopay`,
+        { orderId }
       );
+
+      if (res.data.status === "paid") {
+        clearInterval(interval);
+        localStorage.removeItem("pendingOrderId");
+
+        Swal.fire("Thành công", "Thanh toán ZaloPay thành công", "success");
+        navigate("/user");
+      } else {
+        retry++;
+        if (retry >= maxRetry) {
+          clearInterval(interval);
+
+          Swal.fire(
+            "Đã huỷ",
+            "Bạn đã huỷ hoặc giao dịch chưa hoàn tất",
+            "warning"
+          );
+          navigate("/checkout");
+        }
+      }
+    } catch (err) {
+      clearInterval(interval);
+      Swal.fire("Lỗi", "Không xác nhận được đơn hàng", "error");
+      navigate("/");
     }
-      })
-      .catch(() => {
-        Swal.fire(
-          "Thông báo",
-          "Đơn hàng đang được xử lý",
-          "info"
-        );
-      });
-  }, []);
+  }, 2000);
+
+  return () => clearInterval(interval);
+}, []);
 
   return (
     <p className="text-center py-10">
