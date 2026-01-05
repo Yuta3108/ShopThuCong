@@ -30,7 +30,7 @@ router.get("/revenue", authMiddleware, adminMiddleware, revenueByTime);
 router.get("/user/:id", authMiddleware, getMyOrders);
 router.post("/", authMiddleware, createOrderFromCart);
 router.post("/:orderId/cancel", authMiddleware, cancelOrder);
-router.post("/:orderId/cancel-zalopay", authMiddleware, cancelOrderZalo);
+router.post("/:orderId/cancel-zalopay", cancelOrderZalo);
 // ADMIN
 router.get("/", authMiddleware, adminMiddleware, getAllOrders);
 router.get("/:id", authMiddleware, getOrderDetail);
