@@ -10,7 +10,7 @@ export default function PaymentSuccess() {
   const navigate = useNavigate();
   const orderId = params.get("orderId");
 
-  const [progress, setProgress] = useState(10);
+  const [progress, setProgress] = useState(15);
   const [statusText, setStatusText] = useState(
     "Đang xác nhận thanh toán với ZaloPay…"
   );
@@ -22,7 +22,7 @@ export default function PaymentSuccess() {
     }
 
     let retry = 0;
-    const MAX_RETRY = 20; // ~40s
+    const MAX_RETRY = 20;
     const INTERVAL = 2000;
 
     const timer = setInterval(async () => {
@@ -37,7 +37,7 @@ export default function PaymentSuccess() {
         if (res.data.status === "paid") {
           clearInterval(timer);
           setProgress(100);
-          setStatusText("Thanh toán thành công!");
+          setStatusText("Thanh toán thành công ");
 
           setTimeout(() => {
             Swal.fire("Thành công", "Thanh toán thành công", "success");
@@ -72,30 +72,30 @@ export default function PaymentSuccess() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f0f0f] via-[#151515] to-[#0a0a0a]">
-      <div className="w-[360px] bg-white/5 backdrop-blur border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.6)] p-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-[360px] bg-white rounded-2xl shadow-xl border border-gray-200 p-6 text-center">
         {/* SPINNER */}
         <div className="flex justify-center mb-4">
-          <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
         </div>
 
         {/* TITLE */}
-        <h2 className="text-lg font-semibold text-white mb-1">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
           Đang xử lý thanh toán
         </h2>
 
         {/* STATUS */}
-        <p className="text-sm text-gray-400 mb-4">{statusText}</p>
+        <p className="text-sm text-gray-500 mb-4">{statusText}</p>
 
-        {/* PROGRESS */}
-        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+        {/* PROGRESS BAR */}
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
 
-        <p className="text-xs text-gray-500 mt-3">
+        <p className="text-xs text-gray-400 mt-3">
           Vui lòng không tắt trình duyệt…
         </p>
       </div>
