@@ -416,7 +416,7 @@ export default function UserProfile() {
                         className="p-5 border rounded-xl shadow bg-white"
                       >
                         <div className="flex justify-between">
-                          <p className="font-semibold">Mã đơn: #{order.OrderID}</p>
+                          <p className="font-semibold">Đơn Hàng</p>
 
                           {/* Badge trạng thái  */}
                           <span

@@ -23,7 +23,7 @@ import {
   CheckStockProduct,
 } from "../models/variantsModel.js";
 import { autoDeactivateProductIfOutOfStock } from "../models/productsModel.js";
-import {sendInvoiceEmail} from "../config/sendInvoiceEmail.js"
+import { sendInvoiceEmail } from "../config/sendInvoiceEmail.js"
 
 export const createOrderFromCart = async (req, res) => {
   const conn = await db.getConnection();
@@ -117,7 +117,7 @@ export const createOrderFromCart = async (req, res) => {
 
     // ORDER ITEMS
     await createOrderItemsModel(orderId, items);
-    
+
     // TRỪ KHO
     for (const item of items) {
       await decreaseStockProduct(item.VariantID, item.Quantity);
@@ -138,22 +138,22 @@ export const createOrderFromCart = async (req, res) => {
     await conn.commit();
     // GỬI EMAIL HOÁ ĐƠN
     try {
-    await sendInvoiceEmail({
-      receiverName,
-      phone,
-      email,
-      address,
-      total,
-      paymentMethod,
-      items: items.map((i) => ({
-        ProductName: i.ProductName,
-        Qty: i.Quantity,
-        Price: i.UnitPrice,
-      })),
-    });
-  } catch (emailErr) {
-    console.error("Lỗi gửi email hoá đơn:", emailErr);
-  }
+      await sendInvoiceEmail({
+        receiverName,
+        phone,
+        email,
+        address,
+        total,
+        paymentMethod,
+        items: items.map((i) => ({
+          ProductName: i.ProductName,
+          Qty: i.Quantity,
+          Price: i.UnitPrice,
+        })),
+      });
+    } catch (emailErr) {
+      console.error("Lỗi gửi email hoá đơn:", emailErr);
+    }
     // TRẢ RESPONSE DUY NHẤT
     return res.json({
       success: true,
@@ -164,7 +164,7 @@ export const createOrderFromCart = async (req, res) => {
     console.error("Lỗi createOrderFromCart:", err);
     try {
       await conn.rollback();
-    } catch {}
+    } catch { }
     return res.status(500).json({ message: "Lỗi server khi tạo đơn hàng" });
   } finally {
     conn.release();
@@ -255,9 +255,24 @@ export const cancelOrderZalo = async (req, res) => {
 
     await conn.beginTransaction();
 
-    const orderDetail = await getOrderDetailModel(orderId, conn);
-    const order = orderDetail?.order;
+    const [rows] = await conn.query(
+      "SELECT * FROM orders WHERE OrderID = ?",
+      [orderId]
+    );
 
+    const order = rows[0];
+
+    if (!order) {
+      await conn.rollback();
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    if (order.Status !== "pending") {
+      await conn.rollback();
+      return res
+        .status(400)
+        .json({ message: "Chỉ huỷ được đơn đang chờ xử lý" });
+    }
     if (!order) {
       await conn.rollback();
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
@@ -437,7 +452,7 @@ export const revenueByTime = async (req, res) => {
         GROUP BY days.d
         ORDER BY days.d
       `;
-    break;
+        break;
 
       case "month":
         sql = `
