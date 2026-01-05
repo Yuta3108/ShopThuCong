@@ -1,3 +1,4 @@
+import db from "../db.js";
 export const autoCancelPendingOrders = () => {
   setInterval(async () => {
     try {
