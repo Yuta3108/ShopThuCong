@@ -12,6 +12,5 @@ router.post("/zalopay",authMiddleware, createZaloPayOrder);
 
 // Callback từ ZaloPay
 router.post("/zalo-callback", zaloPayCallback);
-router.post(
-  "/confirm-zalopay", authMiddleware,confirmZaloPayOrder);
+router.post("/confirm-zalopay", authMiddleware,confirmZaloPayOrder);
 export default router;
