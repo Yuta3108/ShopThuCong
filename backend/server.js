@@ -15,6 +15,8 @@ import cartRoutes from "./api/routes/cartRoutes.js";
 import orderRoutes from "./api/routes/orderRoutes.js";
 import zaloPayRoutes from "./api/ZaloPay/zaloPayRoutes.js";
 import shippingRoutes from "./api/GHN/shippingRoutes.js";
+import { autoCancelPendingOrders } from ".api/config/AutoZalopay.js";
+autoCancelPendingOrders();
 dotenv.config();
 const app = express();
 app.use(cors());

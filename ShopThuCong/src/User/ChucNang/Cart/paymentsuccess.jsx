@@ -11,53 +11,57 @@ export default function PaymentSuccess() {
   const orderId = params.get("orderId");
 
   useEffect(() => {
-  if (!orderId) {
-    Swal.fire("Lỗi", "Không tìm thấy đơn hàng", "error");
-    return navigate("/");
-  }
+    if (!orderId) {
+      Swal.fire("Lỗi", "Không tìm thấy đơn hàng", "error");
+      return navigate("/");
+    }
 
-  let retry = 0;
-  const maxRetry = 5;
+    let retry = 0;
+    const MAX_RETRY = 20;      // ~40s
+    const INTERVAL = 2000;    // 3s
 
-  const interval = setInterval(async () => {
-    try {
-      const res = await axios.post(
-        `${API}/payment/confirm-zalopay`,
-        { orderId }
-      );
+    const timer = setInterval(async () => {
+      try {
+        const res = await axios.post(
+          `${API}/payment/confirm-zalopay`,
+          { orderId }
+        );
 
-      if (res.data.status === "paid") {
-        clearInterval(interval);
-        localStorage.removeItem("pendingOrderId");
+        if (res.data.status === "paid") {
+          clearInterval(timer);
+          Swal.fire("Thành công", "Thanh toán thành công", "success");
+          return navigate("/user/orders");
+        }
 
-        Swal.fire("Thành công", "Thanh toán ZaloPay thành công", "success");
-        navigate("/");
-      } else {
         retry++;
-        if (retry >= maxRetry) {
-          clearInterval(interval);
+        if (retry >= MAX_RETRY) {
+          clearInterval(timer);
+
+          //  HUỶ CHỦ ĐỘNG KHI QUAY VỀ SITE
+          await axios.post(
+            `${API}/orders/${orderId}/cancel-zalopay`
+          );
 
           Swal.fire(
             "Đã huỷ",
-            "Bạn đã huỷ hoặc giao dịch chưa hoàn tất",
+            "Thanh toán không hoàn tất. Đơn hàng đã bị huỷ.",
             "warning"
           );
           navigate("/");
         }
+      } catch (e) {
+        clearInterval(timer);
+        Swal.fire("Lỗi", "Không xác nhận được trạng thái", "error");
+        navigate("/");
       }
-    } catch (err) {
-      clearInterval(interval);
-      Swal.fire("Lỗi", "Không xác nhận được đơn hàng", "error");
-      navigate("/");
-    }
-  }, 2000);
+    }, INTERVAL);
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <p className="text-center py-10">
-      Đang xác nhận thanh toán...
-    </p>
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Đang xác nhận thanh toán...</p>
+    </div>
   );
 }
