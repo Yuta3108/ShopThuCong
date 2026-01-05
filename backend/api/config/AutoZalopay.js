@@ -12,7 +12,7 @@ export const autoCancelPendingOrders = () => {
 
       if (result.affectedRows > 0) {
         console.log(
-          `⏱ Auto-cancel ${result.affectedRows} đơn ZaloPay sau 15 phút`
+          `Auto-cancel ${result.affectedRows} đơn ZaloPay sau 15 phút`
         );
       }
     } catch (err) {
