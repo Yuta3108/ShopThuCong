@@ -41,7 +41,7 @@ export default function PaymentSuccess() {
 
           setTimeout(() => {
             Swal.fire("Thành công", "Thanh toán thành công", "success");
-            navigate("/user/orders");
+            navigate("/");
           }, 800);
           return;
         }
