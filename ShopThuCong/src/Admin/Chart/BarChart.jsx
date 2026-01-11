@@ -13,7 +13,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
 // AXIOS CLIENT (GIỐNG MẤY FILE TRƯỚC)
 const axiosClient = axios.create({
-  baseURL: "https://backend-eta-ivory-29.vercel.app/api",
+  baseURL: "http://localhost:5000/api",
 });
 
 axiosClient.interceptors.request.use((config) => {

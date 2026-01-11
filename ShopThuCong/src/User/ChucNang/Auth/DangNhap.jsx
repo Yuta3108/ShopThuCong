@@ -26,7 +26,7 @@ function DangNhap() {
     }
     try {
       const response = await fetch(
-        `https://backend-eta-ivory-29.vercel.app/api/dangnhap`,
+        `http://localhost:5000/api/dangnhap`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ function DangNhap() {
         const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
 
         await fetch(
-          `https://backend-eta-ivory-29.vercel.app/api/cart/merge`,
+          `http://localhost:5000/api/cart/merge`,
           {
             method: "POST",
             headers: {

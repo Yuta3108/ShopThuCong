@@ -110,9 +110,10 @@ export const updateVoucherController = async (req, res) => {
     }
     if (payload.StartDate) {
       const now = new Date();
+      now.setHours(0, 0, 0, 0);
       const start = new Date(payload.StartDate);
-
-      if (now >= start) {
+      start.setHours(0, 0, 0, 0);
+      if (now > start) {
         return res.status(403).json({
           message: "Voucher đã bắt đầu, không thể chỉnh sửa ngày",
         });

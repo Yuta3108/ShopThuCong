@@ -6,7 +6,7 @@ import OrderDetailModal from "../Pages/Order/OrderDetailModal";
 import OrderStatusModal from "../Pages/Order/OrderStatusModal";
 import { orderStatusText, orderStatusColor } from "../../utils/orderStatus";
 import Swal from "sweetalert2";
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 // Format tiền
 const formatMoney = (value) =>

@@ -1,5 +1,6 @@
 import React from "react";
 import { X } from "lucide-react";
+import Swal from "sweetalert2";
 
 // Format tiền chuẩn
 const formatMoney = (value) =>
@@ -18,13 +19,37 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
 
   const update = (k, v) => setData({ ...data, [k]: v });
 
+  // RÀNG BUỘC NGÀY 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const startDate = data.StartDate ? new Date(data.StartDate) : null;
+  if (startDate) startDate.setHours(0, 0, 0, 0);
+
+  // Voucher đã bắt đầu trước hôm nay → KHÓA sửa ngày
+  const isStarted =data.Status === 1 &&startDate &&startDate < today;
+  
+  const handleSubmit = () => {
+    // Chặn chọn ngày trong quá khứ
+    if (startDate && startDate < today) {
+      Swal.fire({
+        icon: "warning",
+        title: "Ngày bắt đầu không hợp lệ",
+        text: "Ngày bắt đầu không được nhỏ hơn hôm nay.",
+      });
+      return;
+    }
+
+    onSubmit(data);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50 animate-fadeIn">
       <form
         className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl animate-scaleIn relative"
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit(data);
+          handleSubmit();
         }}
       >
         {/* Close */}
@@ -36,9 +61,17 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
           <X size={22} />
         </button>
 
-        <h2 className="text-xl font-semibold text-blue-600 mb-4">
+        <h2 className="text-xl font-semibold text-blue-600 mb-3">
           Sửa Voucher
         </h2>
+
+        {/*  THÔNG BÁO RÀNG BUỘC */}
+        {isStarted && (
+          <div className="mb-3 rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-700">
+            ⚠ Voucher đã bắt đầu hiệu lực, không thể chỉnh sửa{" "}
+            <b>Ngày bắt đầu</b>.
+          </div>
+        )}
 
         <div className="space-y-3">
           {/* CODE */}
@@ -125,27 +158,30 @@ export default function EditVoucherModal({ data, setData, onClose, onSubmit }) {
               />
             </div>
 
-            {/* START */}
+            {/* START DATE */}
             <div>
-              <label className="text-sm"> Ngày Bắt đầu</label>
+              <label className="text-sm">Ngày bắt đầu</label>
               <input
-                  type="date"
-                  className={inputClass}
-                  value={data.StartDate}
-                  onChange={(e) => update("StartDate", e.target.value)}
-                />
+                type="date"
+                className={`${inputClass} ${
+                  isStarted ? "bg-slate-200 cursor-not-allowed" : ""
+                }`}
+                disabled={isStarted}
+                value={data.StartDate}
+                onChange={(e) => update("StartDate", e.target.value)}
+              />
             </div>
 
-            {/* END */}
+            {/* END DATE */}
             <div>
-              <label className="text-sm">Ngày Kết thúc</label>
-                    <input
-                    type="date"
-                    className={inputClass}
-                    value={data.EndDate}
-                    min={data.StartDate || undefined}
-                    onChange={(e) => update("EndDate", e.target.value)}
-                  />
+              <label className="text-sm">Ngày kết thúc</label>
+              <input
+                type="date"
+                className={inputClass}
+                value={data.EndDate}
+                min={data.StartDate || undefined}
+                onChange={(e) => update("EndDate", e.target.value)}
+              />
             </div>
 
             {/* STATUS */}

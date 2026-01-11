@@ -20,7 +20,7 @@ ChartJS.register(
 
 //  AXIOS CLIENT 
 const axiosClient = axios.create({
-  baseURL: "https://backend-eta-ivory-29.vercel.app/api",
+  baseURL: "http://localhost:5000/api",
 });
 
 axiosClient.interceptors.request.use((config) => {

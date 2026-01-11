@@ -6,7 +6,7 @@ import AddVoucherModal from "./Voucher/AddVoucherModal";
 import EditVoucherModal from "./Voucher/EditVoucherModal";
 import { Search, Plus, Gift, Calendar, Percent, Trash2, Edit } from "lucide-react";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 // AXIOS CLIENT
 const axiosClient = axios.create({ baseURL: API });

@@ -4,7 +4,7 @@ import { Search, Plus, X, ImageOff } from "lucide-react";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 /*  AXIOS CLIENT  */
 const axiosClient = axios.create({

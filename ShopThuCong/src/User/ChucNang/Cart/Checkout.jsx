@@ -6,7 +6,7 @@ import Header from "../../Layout/Header";
 import Footer from "../../Layout/Footer";
 import { Phone } from "lucide-react";
 
-const API = "https://backend-eta-ivory-29.vercel.app/api";
+const API = "http://localhost:5000/api";
 
 const formatMoney = (value) =>
   new Intl.NumberFormat("vi-VN").format(Number(value) || 0);
