@@ -19,7 +19,47 @@ import AdminOrderPage from './Admin/Pages/AdminOrder';
 import XacThucEmail from './User/ChucNang/Auth/XacThucEmail'
 import AdminCategories from './Admin/Pages/AdminCategories'
 import Paymentsuccess from './User/ChucNang/Cart/paymentsuccess';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+const ONE_DAY=1000*60*60*24;
 function App() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const logout = () => {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("cartMode");
+      localStorage.removeItem("lastActiveTime");
+      alert("Phiên đăng nhập đã hết hạn");
+      navigate("/login");
+    };
+
+    const updateLastActive = () => {
+      localStorage.setItem("lastActiveTime", Date.now());
+    };
+
+    //  Check khi load app
+    const lastActive = localStorage.getItem("lastActiveTime");
+    if (lastActive && Date.now() - Number(lastActive) > ONE_DAY) {
+      logout();
+      return;
+    }
+
+    // Theo dõi hành vi người dùng
+    ["mousemove", "keydown", "click", "scroll"].forEach((event) =>
+      window.addEventListener(event, updateLastActive)
+    );
+
+    // Lần đầu vào app
+    updateLastActive();
+    return () => {
+      ["mousemove", "keydown", "click", "scroll"].forEach((event) =>
+        window.removeEventListener(event, updateLastActive)
+      );
+    };
+  }, [navigate]);
+
   return (
     
     <Routes>
