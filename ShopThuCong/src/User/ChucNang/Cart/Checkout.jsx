@@ -56,7 +56,7 @@ export default function CheckoutPage() {
       setShippingFee(fee);
     } catch (err) {
       console.error("GHN fee error:", err);
-      setShippingFee(0);
+      setShippingFee(30000);
     }
   };
   // --- APPLY VOUCHER  ---

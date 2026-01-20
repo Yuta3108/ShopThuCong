@@ -21,6 +21,7 @@ import AdminCategories from './Admin/Pages/AdminCategories'
 import Paymentsuccess from './User/ChucNang/Cart/paymentsuccess';
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 const ONE_DAY=1000*60*60*24;
 function App() {
   const navigate = useNavigate();
@@ -31,7 +32,11 @@ function App() {
       localStorage.removeItem("token");
       localStorage.removeItem("cartMode");
       localStorage.removeItem("lastActiveTime");
-      alert("Phiên đăng nhập đã hết hạn");
+      Swal.fire({
+        title: "Phiên đăng nhập đã hết hạn",
+        icon: "warning",
+        confirmButtonText: "OK"
+      });
       navigate("/login");
     };
 

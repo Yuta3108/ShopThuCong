@@ -61,6 +61,7 @@ export default function ResetPasswordModal({ open, onClose, onSubmit }) {
                 type={showNew ? "text" : "password"}
                 value={newPass}
                 onChange={(e) => setNewPass(e.target.value)}
+                
                 className="w-full border rounded-lg px-4 py-2 pr-10 bg-slate-50 focus:ring-2 focus:ring-rose-300 outline-none"
                 placeholder="Nhập mật khẩu mới"
               />
@@ -79,7 +80,11 @@ export default function ResetPasswordModal({ open, onClose, onSubmit }) {
 
         {/* Submit */}
         <button
-          onClick={() => onSubmit(oldPass, newPass)}
+          onClick={() => 
+            {onSubmit(oldPass, newPass);
+            setNewPass("");
+            setOldPass("");
+          }}
           className="w-full mt-5 py-2 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-full shadow"
         >
           Xác nhận thay đổi

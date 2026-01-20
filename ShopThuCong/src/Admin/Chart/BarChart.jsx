@@ -11,7 +11,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
-// AXIOS CLIENT (GIỐNG MẤY FILE TRƯỚC)
+// AXIOS CLIENT 
 const axiosClient = axios.create({
   baseURL: "http://localhost:5000/api",
 });
