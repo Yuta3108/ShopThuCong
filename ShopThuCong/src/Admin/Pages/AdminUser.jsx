@@ -97,31 +97,49 @@ export default function AdminUser() {
 
   /* ================= LOCK / UNLOCK USER ================= */
   const handleToggleLock = async (id, status) => {
-    const isLocking = status === 1;
+  const isLocking = status === 1;
 
-    if (
-      !window.confirm(
-        isLocking
-          ? "Bạn có chắc muốn khoá tài khoản này?"
-          : "Bạn có chắc muốn mở khoá tài khoản này?"
+  const result = await Swal.fire({
+    title: isLocking ? "Xác nhận khoá tài khoản" : "Xác nhận mở khoá tài khoản",
+    text: isLocking
+      ? "Bạn có chắc muốn khoá tài khoản này?"
+      : "Bạn có chắc muốn mở khoá tài khoản này?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: isLocking ? "#ef4444" : "#22c55e",
+    cancelButtonColor: "#64748b",
+    confirmButtonText: isLocking ? "Khoá" : "Mở khoá",
+    cancelButtonText: "Huỷ",
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    await axiosClient.put(`/users/${id}/status`, {
+      Status: isLocking ? 0 : 1,
+    });
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.UserID === id ? { ...u, Status: isLocking ? 0 : 1 } : u
       )
-    )
-      return;
+    );
 
-    try {
-      await axiosClient.put(`/users/${id}/status`, {
-        Status: isLocking ? 0 : 1,
-      });
-
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.UserID === id ? { ...u, Status: isLocking ? 0 : 1 } : u
-        )
-      );
-    } catch {
-      alert("Không thể thay đổi trạng thái người dùng!");
-    }
-  };
+    // Thông báo thành công
+    Swal.fire({
+      icon: "success",
+      title: isLocking ? "Đã khoá tài khoản" : "Đã mở khoá tài khoản",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Thất bại",
+      text: "Không thể thay đổi trạng thái người dùng!",
+    });
+  }
+};
 
   /* ================= FILTER ================= */
   const filteredUsers = users.filter((u) => {
